@@ -1,8 +1,6 @@
-########################################
-### P O L O N E Z  A U T O D R I V E ###
-########################################
+# P O L O N E Z - A U T O D R I V E #
 
-Author: Maciej Skorus
+Created by: Maciej Skorus
 
 Simple three.js Synthwave styled animation.
 All models are created with 3Ds Max 2018 and exported in .fbx files with animations.
