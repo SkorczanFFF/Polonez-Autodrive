@@ -5,6 +5,9 @@ Created by: Maciej Skorus
 Simple three.js Synthwave styled animation.
 All models are created with 3Ds Max 2018 and exported in .fbx files with animations.
 
+# # LIVE DEMO # #
+www.polonezautodrive.cba.pl
+
 # # INFO # #
 - resolution half reduced to get better 80's experience
 - user can play with scene colors and models with GUI
