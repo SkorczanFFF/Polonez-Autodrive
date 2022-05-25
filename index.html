@@ -82,63 +82,63 @@
 			light = new THREE.AmbientLight(white, 0.90);
 			scene.add(light);
 
-			var sunDirLight = new THREE.DirectionalLight( 0xcacaca, 0.5 );
-				sunDirLight.position.set( 0, 15, -50 );
+			var sunDirLight = new THREE.DirectionalLight(0xcacaca, 0.5);
+				sunDirLight.position.set(0, 15, -50);
 				sunDirLight.castShadow = true;
 				sunDirLight.shadow.radius = 8;
-					scene.add( sunDirLight );
+					scene.add(sunDirLight);
 					
-			var sunDirLight2 = new THREE.DirectionalLight( white, 0.25 );
-				sunDirLight2.position.set( -5, 17, -50 );
+			var sunDirLight2 = new THREE.DirectionalLight(white, 0.25);
+				sunDirLight2.position.set(-5, 17, -50);
 				sunDirLight2.castShadow = true;
 				sunDirLight2.shadow.radius = 8;
-					scene.add( sunDirLight2 );
-			var sunDirLight3 = new THREE.DirectionalLight( white, 0.25 );
-				sunDirLight3.position.set( 5, 17, -50 );
+					scene.add(sunDirLight2);
+			var sunDirLight3 = new THREE.DirectionalLight(white, 0.25);
+				sunDirLight3.position.set(5, 17, -50);
 				sunDirLight3.castShadow = true;
 				sunDirLight3.shadow.radius = 8;
-					scene.add( sunDirLight3 );
+					scene.add(sunDirLight3);
 			
-			var sunDirLight4 = new THREE.DirectionalLight( pink, 0.15 );
-				sunDirLight4.position.set( -10, 20, -50 );
+			var sunDirLight4 = new THREE.DirectionalLight(pink, 0.15);
+				sunDirLight4.position.set(-10, 20, -50);
 				sunDirLight4.castShadow = true;
 				sunDirLight4.shadow.radius = 8;
-					scene.add( sunDirLight4 );
-			var sunDirLight5 = new THREE.DirectionalLight( pink, 0.15 );
-				sunDirLight5.position.set( 10, 20, -50 );
+					scene.add(sunDirLight4);
+			var sunDirLight5 = new THREE.DirectionalLight(pink, 0.15);
+				sunDirLight5.position.set(10, 20, -50);
 				sunDirLight5.castShadow = true;
 				sunDirLight5.shadow.radius = 8;
-					scene.add( sunDirLight5 );
+					scene.add(sunDirLight5);
 
 
 			//################## M O D E L E ##################
 			//słońce
 			//var sunGeometry = new THREE.SphereGeometry(180, 32, 32)
 			var sunGeometry = new THREE.CircleBufferGeometry(200, 20, 0, 3.1);
-			var sunMaterial = new THREE.MeshPhongMaterial( {
+			var sunMaterial = new THREE.MeshPhongMaterial({
 				color: yellow,
 				fog: false, 
 				transparent: false,
 				shininess: 20
-			} );
+			});
 		
 			sun = new THREE.Mesh(sunGeometry, sunMaterial);
 			sun.position.set(1, -20, -350);
 				scene.add(sun);
 			//slonce efekt
-			var sunEffectGeometry = new THREE.PlaneGeometry( 460, 460, 1 );
+			var sunEffectGeometry = new THREE.PlaneGeometry(460, 460, 1);
 			THREE.ImageUtils.crossOrigin = '';
 				sunTexture = THREE.ImageUtils.loadTexture('https://i.ibb.co/3RnxSZ7/suneffectalt.png');
 				sunTexture.anisotropy = 16;
 				sunTexture.wrapS = sunTexture.wrapT = THREE.RepeatWrapping;
 				sunTexture.repeat.set(1,1);
-			var sunEffectMaterial = new THREE.MeshPhongMaterial( {
+			var sunEffectMaterial = new THREE.MeshPhongMaterial({
 				map: sunTexture,
 				transparent: true,
 				color: red,
 				fog: false, 
 				visible: true
-			} );
+			});
 		
 			sunEffect = new THREE.Mesh(sunEffectGeometry, sunEffectMaterial);
 			sunEffect.position.set(0, -35, -349.5);
@@ -147,9 +147,9 @@
 
 			road = new THREE.PlaneGeometry(200, 200, 1, 1);
 				road.rotateX(-Math.PI / 2);
-			roadMaterial = new THREE.MeshPhongMaterial( {
+			roadMaterial = new THREE.MeshPhongMaterial({
 				color: aqua
-			} );
+			});
 
 			roadMesh = new THREE.Mesh(road, roadMaterial);
 			roadMesh.receiveShadow = true;
@@ -181,53 +181,53 @@
 			});
 			
 			polonez = new THREE.FBXLoader();
-			polonez.load( 'models/polonez.FBX', function ( polonez ) {
-				polonez.traverse( function ( child ) {
+			polonez.load('models/polonez.FBX', function (polonez){
+				polonez.traverse( function (child) {
 					child.material = polonezMaterial;
 					child.castShadow = true;
 					child.receiveShadow = true;
-				} );
-				mixerPolonez = new THREE.AnimationMixer( polonez );
-				var action = mixerPolonez.clipAction( polonez.animations[ 0 ] );
+				});
+				mixerPolonez = new THREE.AnimationMixer(polonez);
+				var action = mixerPolonez.clipAction(polonez.animations[0]);
 				
 				action.play();
 				scene.add(polonez); 
-			} );
+			});
 
 			//siatka poloneza
-			polonezWireframeMaterial = new THREE.MeshPhongMaterial( { 
+			polonezWireframeMaterial = new THREE.MeshPhongMaterial({ 
 				color: violet,
 				wireframe: true,
 				fog: true,
 				visible: true		
-			} );
+			});
 			polonezWireframeMaterial.receiveShadow = true;
 			polonezWireframe = new THREE.FBXLoader();
-			polonezWireframe.load( 'models/polonez.FBX', function ( polonezWireframe ) {
-				polonezWireframe.traverse( function ( child ) {
-					if( child.material ) {
+			polonezWireframe.load('models/polonez.FBX', function (polonezWireframe) {
+				polonezWireframe.traverse( function (child) {
+					if(child.material) {
 							child.material = polonezWireframeMaterial;
 							child.castShadow = true;
 							child.receiveShadow = true;
-						}
-				} );
-				mixerPolonezWireframe = new THREE.AnimationMixer( polonezWireframe );
-				var action = mixerPolonezWireframe.clipAction( polonezWireframe.animations[ 0 ] );
+					}
+				});
+				mixerPolonezWireframe = new THREE.AnimationMixer(polonezWireframe);
+				var action = mixerPolonezWireframe.clipAction(polonezWireframe.animations[0]);
 				
 					action.play();
 			    	scene.add(polonezWireframe); 
-			} );
+			});
 
 			//gory
-			hillsMaterial = new THREE.MeshPhongMaterial( { 
+			hillsMaterial = new THREE.MeshPhongMaterial({ 
 				color: violet,
 				fog: true,
 				visible: true	
-			} );
+			});
 			hills = new THREE.FBXLoader();
-				hills.load( 'models/hills.FBX', function ( hills ) {
-					hills.traverse( function ( child ) {
-						if( child.material ) {
+				hills.load('models/hills.FBX', function (hills) {
+					hills.traverse( function (child) {
+						if(child.material) {
 							child.material = hillsMaterial;
 							child.castShadow = true;
 						}
@@ -241,18 +241,17 @@
 				wireframe: true,
 				fog: true,
 				visible: true			
-			} );
+			});
 			hillsWireframe = new THREE.FBXLoader();
-				hillsWireframe.load( 'models/hills.FBX', function ( hillsWireframe ) {
-					hillsWireframe.traverse( function ( child ) {
-						if( child.material ) {
+				hillsWireframe.load('models/hills.FBX', function (hillsWireframe) {
+					hillsWireframe.traverse( function (child) {
+						if(child.material) {
 							child.material = hillsWireframeMaterial;
 							child.castShadow = true;
 						}
 					});
 					scene.add(hillsWireframe);
-
-				} );
+				});
 
 			//boczne tło
 			sideMaterial = new THREE.MeshPhongMaterial({
@@ -261,19 +260,19 @@
 				visible: true
 			});
 			side = new THREE.FBXLoader();
-			side.load( 'models/side.FBX', function ( side ) {
-				side.traverse( function ( child ) {
-					if( child.material ) {
+			side.load('models/side.FBX', function (side) {
+				side.traverse( function (child) {
+					if(child.material) {
 						child.material = sideMaterial;
 						child.castShadow = true;
 					}
-				} );
-				mixerSide = new THREE.AnimationMixer( side );
-				var action = mixerSide.clipAction( side.animations[ 0 ] );
+				});
+				mixerSide = new THREE.AnimationMixer(side);
+				var action = mixerSide.clipAction(side.animations[0]);
 					
 					action.play();
 			    	scene.add(side); 
-			} );
+			});
 
 			//siatka bocznego tla
 			sideWireframeMaterial = new THREE.MeshPhongMaterial({
@@ -283,14 +282,14 @@
 				visible: true
 			});
 			sideWireframe = new THREE.FBXLoader();
-			sideWireframe.load( 'models/side.FBX', function ( sideWireframe ) {
-				sideWireframe.traverse( function ( child ) {
-					if( child.material ) {
+			sideWireframe.load('models/side.FBX', function (sideWireframe) {
+				sideWireframe.traverse(function (child) {
+					if(child.material) {
 						child.material = sideWireframeMaterial;
 					}
 				} );
-				mixerSideWireframe = new THREE.AnimationMixer( sideWireframe );
-				var action = mixerSideWireframe.clipAction( sideWireframe.animations[ 0 ] );
+				mixerSideWireframe = new THREE.AnimationMixer(sideWireframe);
+				var action = mixerSideWireframe.clipAction(sideWireframe.animations[0]);
 					
 					action.play();
 			    	scene.add(sideWireframe); 
@@ -400,10 +399,10 @@
 			function animate() {
 				requestAnimationFrame(animate);
 					var delta = clock.getDelta();
-					mixerPolonez.update( delta );
-					mixerPolonezWireframe.update( delta );
-					mixerSide.update( delta );
-					mixerSideWireframe.update( delta );
+					mixerPolonez.update(delta);
+					mixerPolonezWireframe.update(delta);
+					mixerSide.update(delta);
+					mixerSideWireframe.update(delta);
 			}
 
 			function render() {
@@ -418,8 +417,8 @@
 
 				function resize(renderer) {
 					const canvas = renderer.domElement;
-					const width = canvas.clientWidth / 3; //zmniejszenie rozdzielczosci dla klimatu lat 80 + poprawa wydajności
-					const height = canvas.clientHeight / 3;
+					const width = canvas.clientWidth / 2; //zmniejszenie rozdzielczosci dla klimatu lat 80 + poprawa wydajności
+					const height = canvas.clientHeight / 2;
 					const resize = canvas.width !== width || canvas.height !== height;
 						if (resize) {
 							renderer.setSize(width, height, false);
