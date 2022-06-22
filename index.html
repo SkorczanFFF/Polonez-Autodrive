@@ -82,7 +82,7 @@
 			light = new THREE.AmbientLight(white, 0.90);
 			scene.add(light);
 
-			var sunDirLight = new THREE.DirectionalLight(0xcacaca, 0.5);
+			var sunDirLight = new THREE.DirectionalLight(white, 0.5);
 				sunDirLight.position.set(0, 15, -50);
 				sunDirLight.castShadow = true;
 				sunDirLight.shadow.radius = 8;
@@ -99,12 +99,12 @@
 				sunDirLight3.shadow.radius = 8;
 					scene.add(sunDirLight3);
 			
-			var sunDirLight4 = new THREE.DirectionalLight(pink, 0.15);
+			var sunDirLight4 = new THREE.DirectionalLight(white, 0.15);
 				sunDirLight4.position.set(-10, 20, -50);
 				sunDirLight4.castShadow = true;
 				sunDirLight4.shadow.radius = 8;
 					scene.add(sunDirLight4);
-			var sunDirLight5 = new THREE.DirectionalLight(pink, 0.15);
+			var sunDirLight5 = new THREE.DirectionalLight(white, 0.15);
 				sunDirLight5.position.set(10, 20, -50);
 				sunDirLight5.castShadow = true;
 				sunDirLight5.shadow.radius = 8;
