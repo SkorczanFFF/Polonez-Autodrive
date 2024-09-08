@@ -35,6 +35,11 @@
         sideMaterial,
         sideWireframeMaterial;
       var mixerPolonez, mixerPolonezWireframe, mixerSide, mixerSideWireframe;
+      var boxMaterial,
+        boxGeometry,
+        boxSpeed = 0.05; // Adjust the speed as necessary
+      var palmModel = null;
+      var palmWireframeModel = null;
       var gui, stats, composer;
       var clock = new THREE.Clock();
 
@@ -318,6 +323,120 @@
         });
         //################## M O D E L E ##################
         displayGUI();
+        setInterval(spawnPalm, 1500);
+      }
+
+      var palmLoader = new THREE.FBXLoader();
+      palmLoader.load(
+        "models/palm.fbx",
+        function (loadedPalmModel) {
+          palmModel = loadedPalmModel;
+          palmWireframeModel = loadedPalmModel.clone();
+
+          var palmMaterial = new THREE.MeshPhongMaterial({
+            color: 0x56a0ff,
+            fog: true,
+            visible: true,
+          });
+
+          var palmWireframeMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffdf7c,
+            wireframe: true,
+            fog: true,
+            visible: true,
+          });
+
+          palmModel.traverse(function (child) {
+            if (child.isMesh) {
+              child.material = palmMaterial;
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          });
+
+          palmWireframeModel.traverse(function (child) {
+            if (child.isMesh) {
+              child.material = palmWireframeMaterial;
+              child.castShadow = true;
+              child.receiveShadow = false;
+              child.linewidth = 0.1;
+            }
+          });
+        },
+        undefined,
+        function (error) {
+          console.error(
+            "An error happened while loading the palm model:",
+            error
+          );
+        }
+      );
+
+      function createPalm(xPosition, rotationY) {
+        if (!palmModel || !palmWireframeModel) {
+          console.error("Palm models not loaded yet.");
+          return;
+        }
+        var palmNormal = palmModel.clone();
+        palmNormal.position.set(xPosition, 0, -100);
+        palmNormal.castShadow = true;
+        palmNormal.receiveShadow = true;
+        palmNormal.rotation.y = rotationY;
+        palmNormal.userData.isPalm = true;
+
+        var palmWireframe = palmWireframeModel.clone();
+        palmWireframe.position.set(xPosition, 0, -100);
+        palmWireframe.castShadow = true;
+        palmWireframe.receiveShadow = false;
+        palmWireframe.rotation.y = rotationY;
+        palmWireframe.userData.isPalmWireframe = true;
+
+        scene.add(palmNormal);
+        scene.add(palmWireframe);
+        updatePalmVisibility();
+
+        return { normal: palmNormal, wireframe: palmWireframe };
+      }
+
+      function updatePalmVisibility() {
+        scene.traverse(function (object) {
+          if (object.userData.isPalm) {
+            object.visible = parameters.showPalm;
+          }
+          if (object.userData.isPalmWireframe) {
+            object.visible = parameters.showPalmWireframe;
+          }
+        });
+      }
+
+      function spawnPalm() {
+        var rotationLeft = Math.random() * 2 * Math.PI;
+        var rotationRight = Math.random() * 2 * Math.PI;
+
+        var palm1 = createPalm(-9, rotationLeft);
+        var palm2 = createPalm(9, rotationRight);
+
+        animatePalm(palm1.normal);
+        animatePalm(palm1.wireframe);
+        animatePalm(palm2.normal);
+        animatePalm(palm2.wireframe);
+      }
+
+      function animatePalm(palm) {
+        var startTime = Date.now();
+        var duration = 14000; // Time in milliseconds for the palm to move across the road
+
+        function update() {
+          var elapsedTime = Date.now() - startTime;
+          var progress = Math.min(elapsedTime / duration, 1);
+          palm.position.z = -100 + progress * 200; // Move from -100 to +100 along z-axis
+          if (progress < 1) {
+            requestAnimationFrame(update);
+          } else {
+            scene.remove(palm);
+          }
+        }
+        update();
       }
 
       function displayGUI() {
@@ -343,6 +462,11 @@
           roadColor: "#40d5db",
           roadWireframeColor: "#c348dd",
           showRoadWireframe: true,
+
+          palmColor: "#56a0ff",
+          showPalm: true,
+          palmWireframeColor: "#ffdf7c",
+          showPalmWireframe: true,
 
           sunColorTop: "#ffebac",
           sunColorBottom: "#fc3b96",
@@ -456,6 +580,47 @@
           roadWireframeMaterial.visible = jar;
         });
         roadFolder.close();
+
+        var palmFolder = gui.addFolder("Palms");
+        var palmColor = palmFolder
+          .addColor(parameters, "palmColor")
+          .name("Palm color");
+        palmColor.onChange(function (jar) {
+          if (palmModel) {
+            palmModel.traverse(function (child) {
+              if (child.isMesh) {
+                child.material.color.setHex(jar.replace("#", "0x"));
+              }
+            });
+          }
+        });
+        var showPalm = palmFolder
+          .add(parameters, "showPalm")
+          .name("Show palms");
+        showPalm.onChange(function (jar) {
+          parameters.showPalm = jar;
+          updatePalmVisibility();
+        });
+        var palmWireframeColor = palmFolder
+          .addColor(parameters, "palmWireframeColor")
+          .name("Wireframe color");
+        palmWireframeColor.onChange(function (jar) {
+          if (palmWireframeModel) {
+            palmWireframeModel.traverse(function (child) {
+              if (child.isMesh) {
+                child.material.color.setHex(jar.replace("#", "0x"));
+              }
+            });
+          }
+        });
+        var showPalmWireframe = palmFolder
+          .add(parameters, "showPalmWireframe")
+          .name("Show wireframe");
+        showPalmWireframe.onChange(function (jar) {
+          parameters.showPalmWireframe = jar;
+          updatePalmVisibility();
+        });
+        palmFolder.close();
 
         var sunFolder = gui.addFolder("Sun");
         var sunColorTop = sunFolder
