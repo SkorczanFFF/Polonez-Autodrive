@@ -35,9 +35,6 @@
         sideMaterial,
         sideWireframeMaterial;
       var mixerPolonez, mixerPolonezWireframe, mixerSide, mixerSideWireframe;
-      var boxMaterial,
-        boxGeometry,
-        boxSpeed = 0.05; // Adjust the speed as necessary
       var palmModel = null;
       var palmWireframeModel = null;
       var gui, stats, composer;
@@ -96,33 +93,88 @@
         light = new THREE.AmbientLight(white, 0.9);
         scene.add(light);
 
+        // Create the first directional light
         var sunDirLight = new THREE.DirectionalLight(white, 0.5);
         sunDirLight.position.set(0, 15, -50);
         sunDirLight.castShadow = true;
-        sunDirLight.shadow.radius = 8;
+        sunDirLight.shadow.bias = 0;
+        sunDirLight.shadow.mapSize.width = 1000; // Reduced map size
+        sunDirLight.shadow.mapSize.height = 1000; // Reduced map size
+        sunDirLight.shadow.camera.near = 1;
+        sunDirLight.shadow.camera.far = 500;
+        sunDirLight.shadow.camera.left = -50;
+        sunDirLight.shadow.camera.right = 50;
+        sunDirLight.shadow.camera.top = 50;
+        sunDirLight.shadow.camera.bottom = -50;
         scene.add(sunDirLight);
 
+        // Create the second directional light
         var sunDirLight2 = new THREE.DirectionalLight(white, 0.25);
         sunDirLight2.position.set(-5, 17, -50);
         sunDirLight2.castShadow = true;
-        sunDirLight2.shadow.radius = 8;
+        sunDirLight2.shadow.bias = 0;
+        sunDirLight2.shadow.mapSize.width = 1024; // Reduced map size
+        sunDirLight2.shadow.mapSize.height = 1024; // Reduced map size
+        sunDirLight2.shadow.camera.near = 1;
+        sunDirLight2.shadow.camera.far = 500;
+        sunDirLight2.shadow.camera.left = -50;
+        sunDirLight2.shadow.camera.right = 50;
+        sunDirLight2.shadow.camera.top = 50;
+        sunDirLight2.shadow.camera.bottom = -50;
         scene.add(sunDirLight2);
+
+        // Create the third directional light
         var sunDirLight3 = new THREE.DirectionalLight(white, 0.25);
         sunDirLight3.position.set(5, 17, -50);
         sunDirLight3.castShadow = true;
-        sunDirLight3.shadow.radius = 8;
+        sunDirLight3.shadow.bias = 0;
+        sunDirLight3.shadow.mapSize.width = 1024; // Reduced map size
+        sunDirLight3.shadow.mapSize.height = 1024; // Reduced map size
+        sunDirLight3.shadow.camera.near = 1;
+        sunDirLight3.shadow.camera.far = 500;
+        sunDirLight3.shadow.camera.left = -50;
+        sunDirLight3.shadow.camera.right = 50;
+        sunDirLight3.shadow.camera.top = 50;
+        sunDirLight3.shadow.camera.bottom = -50;
         scene.add(sunDirLight3);
 
+        // Create the fourth directional light
         var sunDirLight4 = new THREE.DirectionalLight(white, 0.15);
         sunDirLight4.position.set(-10, 20, -50);
         sunDirLight4.castShadow = true;
-        sunDirLight4.shadow.radius = 8;
+        sunDirLight4.shadow.bias = 0;
+        sunDirLight4.shadow.mapSize.width = 1024; // Reduced map size
+        sunDirLight4.shadow.mapSize.height = 1024; // Reduced map size
+        sunDirLight4.shadow.camera.near = 1;
+        sunDirLight4.shadow.camera.far = 500;
+        sunDirLight4.shadow.camera.left = -50;
+        sunDirLight4.shadow.camera.right = 50;
+        sunDirLight4.shadow.camera.top = 50;
+        sunDirLight4.shadow.camera.bottom = -50;
         scene.add(sunDirLight4);
+
+        // Create the fifth directional light
         var sunDirLight5 = new THREE.DirectionalLight(white, 0.15);
         sunDirLight5.position.set(10, 20, -50);
         sunDirLight5.castShadow = true;
-        sunDirLight5.shadow.radius = 8;
+        sunDirLight5.shadow.bias = 0;
+        sunDirLight5.shadow.mapSize.width = 1024; // Reduced map size
+        sunDirLight5.shadow.mapSize.height = 1024; // Reduced map size
+        sunDirLight5.shadow.camera.near = 1;
+        sunDirLight5.shadow.camera.far = 500;
+        sunDirLight5.shadow.camera.left = -50;
+        sunDirLight5.shadow.camera.right = 50;
+        sunDirLight5.shadow.camera.top = 50;
+        sunDirLight5.shadow.camera.bottom = -50;
         scene.add(sunDirLight5);
+
+        // Renderer shadow settings
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // Renderer shadow settings
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; // You can experiment with different shadow map types
 
         //################## M O D E L E ##################
         //słońce
