@@ -1,431 +1,541 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>Polonez Autodrive</title>
-		<link rel="stylesheet" href="style.css">
-		<script type="text/javascript" src="./js/three.js"></script>
-		<script type="text/javascript" src="./js/FBXLoader.js"></script>
-		<script type="text/javascript" src="./js/inflate.min.js"></script>
-		<script type="text/javascript" src="https://unpkg.com/three@0.115.0/examples/js/postprocessing/RenderPass.js"></script>
-		<script type="text/javascript" src="https://unpkg.com/three@0.115.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-		<script type="text/javascript" src="https://unpkg.com/three@0.115.0/examples/js/libs/stats.min.js"></script>
-		<script type="text/javascript" src="https://unpkg.com/three@0.115.0/examples/js/libs/dat.gui.min.js"></script>
-		<script src="https://unpkg.com/three@0.115.0/examples/js/controls/OrbitControls.js"></script>
-		<link rel="icon" href="http://example.com/favicon.png">
-	</head>
-	<body>
-		
-		<iframe src="music/MAREK_BILINSKI_-_Ucieczka_z_Tropiku.mp3" allow="autoplay" style="display:none" loop id="iframeAudio"></iframe> 
-		
-		<script>
-			
-		var scene, camera, renderer, canvas, controls;
-		var division, limit, grid, moveable;
-		var sun, polonez, polonezWireframe, hills, hillsWireframe, side, sideWireframe;
-		var polonezMaterial, polonezWireframeMaterial, hillsMaterial, hillsWireframeMaterial, sideMaterial, sideWireframeMaterial;
-		var mixerPolonez, mixerPolonezWireframe, mixerSide, mixerSideWireframe;
-		var gui, stats, composer;
-		var clock = new THREE.Clock();	
+  <head>
+    <title>Polonez Autodrive</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="text/javascript" src="./js/three.js"></script>
+    <script type="text/javascript" src="./js/FBXLoader.js"></script>
+    <script type="text/javascript" src="./js/inflate.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/three@0.115.0/examples/js/libs/stats.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/three@0.115.0/examples/js/libs/dat.gui.min.js"
+    ></script>
+    <script src="https://unpkg.com/three@0.115.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="icon" href="http://example.com/favicon.png" />
+  </head>
+  <body>
+    <script>
+      var scene, camera, renderer, canvas, controls;
+      var division, limit, grid, moveable;
+      var sun,
+        polonez,
+        polonezWireframe,
+        hills,
+        hillsWireframe,
+        side,
+        sideWireframe;
+      var polonezMaterial,
+        polonezWireframeMaterial,
+        hillsMaterial,
+        hillsWireframeMaterial,
+        sideMaterial,
+        sideWireframeMaterial;
+      var mixerPolonez, mixerPolonezWireframe, mixerSide, mixerSideWireframe;
+      var gui, stats, composer;
+      var clock = new THREE.Clock();
 
-		init();
-		render();
-		animate();
-			
-		function init(){
+      init();
+      render();
+      animate();
 
-			//kolory
-			var pink = "#c348dd";
-			var lightpink = "#eb94c1";
-			var violet = "#4f33d9";
-			var aqua = "#40d5db";
-			var blue = "#4790ff";
-			var white = "#ffffff";
+      function init() {
+        //kolory
+        var pink = "#c348dd";
+        var lightpink = "#eb94c1";
+        var violet = "#4f33d9";
+        var aqua = "#40d5db";
+        var blue = "#4790ff";
+        var white = "#ffffff";
 
-			var yellow = "#ffebac";
-			var red = "#fc3b96"; 
-			var white = "#ededed";
+        var yellow = "#ffebac";
+        var red = "#fc3b96";
+        var white = "#ededed";
 
-			
-			renderer = new THREE.WebGLRenderer({
-				antialias: true
-			});
-			renderer.shadowMap.enabled = true;
-			
-			renderer.shadowMapSoft = true;
-			renderer.shadowMap.type = THREE.VSMShadowMap;
+        renderer = new THREE.WebGLRenderer({
+          antialias: true,
+        });
+        renderer.shadowMap.enabled = true;
 
-			canvas = renderer.domElement;
-			document.body.appendChild(canvas); 
+        renderer.shadowMapSoft = true;
+        renderer.shadowMap.type = THREE.VSMShadowMap;
 
-			scene = new THREE.Scene();
-			camera = new THREE.PerspectiveCamera(90, 1, 0.1, 1000);
-				camera.position.set(0, 2.5, 7);
-				camera.lookAt(scene.position);
+        canvas = renderer.domElement;
+        document.body.appendChild(canvas);
 
-			//wolna kamera
-			controls = new THREE.OrbitControls(camera, canvas);
-				controls.enablePan = false;
-				controls.minDistance = 4.5;
-				controls.maxDistance = 7;
-				controls.maxPolarAngle = Math.PI * 0.55;
-				controls.minPolarAngle = Math.PI * 0.15;
-				controls.target.set(0, 1.8, 0);
-					controls.update();
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(90, 1, 0.1, 1000);
+        camera.position.set(0, 2.5, 7);
+        camera.lookAt(scene.position);
 
-			//tło
-			scene.background = new THREE.Color(lightpink);
+        //wolna kamera
+        controls = new THREE.OrbitControls(camera, canvas);
+        controls.enablePan = false;
+        controls.minDistance = 4.5;
+        controls.maxDistance = 7;
+        controls.maxPolarAngle = Math.PI * 0.55;
+        controls.minPolarAngle = Math.PI * 0.15;
+        controls.target.set(0, 1.8, 0);
+        controls.update();
 
-			//mgwah
-			scene.fog = new THREE.Fog(pink, 32.5, 200);
+        //tło
+        scene.background = new THREE.Color(lightpink);
 
-			//światła
-			light = new THREE.AmbientLight(white, 0.90);
-			scene.add(light);
+        //mgwah
+        scene.fog = new THREE.Fog(pink, 32.5, 200);
 
-			var sunDirLight = new THREE.DirectionalLight(white, 0.5);
-				sunDirLight.position.set(0, 15, -50);
-				sunDirLight.castShadow = true;
-				sunDirLight.shadow.radius = 8;
-					scene.add(sunDirLight);
-					
-			var sunDirLight2 = new THREE.DirectionalLight(white, 0.25);
-				sunDirLight2.position.set(-5, 17, -50);
-				sunDirLight2.castShadow = true;
-				sunDirLight2.shadow.radius = 8;
-					scene.add(sunDirLight2);
-			var sunDirLight3 = new THREE.DirectionalLight(white, 0.25);
-				sunDirLight3.position.set(5, 17, -50);
-				sunDirLight3.castShadow = true;
-				sunDirLight3.shadow.radius = 8;
-					scene.add(sunDirLight3);
-			
-			var sunDirLight4 = new THREE.DirectionalLight(white, 0.15);
-				sunDirLight4.position.set(-10, 20, -50);
-				sunDirLight4.castShadow = true;
-				sunDirLight4.shadow.radius = 8;
-					scene.add(sunDirLight4);
-			var sunDirLight5 = new THREE.DirectionalLight(white, 0.15);
-				sunDirLight5.position.set(10, 20, -50);
-				sunDirLight5.castShadow = true;
-				sunDirLight5.shadow.radius = 8;
-					scene.add(sunDirLight5);
+        //światła
+        light = new THREE.AmbientLight(white, 0.9);
+        scene.add(light);
 
+        var sunDirLight = new THREE.DirectionalLight(white, 0.5);
+        sunDirLight.position.set(0, 15, -50);
+        sunDirLight.castShadow = true;
+        sunDirLight.shadow.radius = 8;
+        scene.add(sunDirLight);
 
-			//################## M O D E L E ##################
-			//słońce
-			//var sunGeometry = new THREE.SphereGeometry(180, 32, 32)
-			var sunGeometry = new THREE.CircleBufferGeometry(200, 20, 0, 3.1);
-			var sunMaterial = new THREE.MeshPhongMaterial({
-				color: yellow,
-				fog: false, 
-				transparent: false,
-				shininess: 20
-			});
-		
-			sun = new THREE.Mesh(sunGeometry, sunMaterial);
-			sun.position.set(1, -20, -350);
-				scene.add(sun);
-			//slonce efekt
-			var sunEffectGeometry = new THREE.PlaneGeometry(460, 460, 1);
-			THREE.ImageUtils.crossOrigin = '';
-				sunTexture = THREE.ImageUtils.loadTexture('https://i.ibb.co/3RnxSZ7/suneffectalt.png');
-				sunTexture.anisotropy = 16;
-				sunTexture.wrapS = sunTexture.wrapT = THREE.RepeatWrapping;
-				sunTexture.repeat.set(1,1);
-			var sunEffectMaterial = new THREE.MeshPhongMaterial({
-				map: sunTexture,
-				transparent: true,
-				color: red,
-				fog: false, 
-				visible: true
-			});
-		
-			sunEffect = new THREE.Mesh(sunEffectGeometry, sunEffectMaterial);
-			sunEffect.position.set(0, -35, -349.5);
-				scene.add(sunEffect);
-			//droga
+        var sunDirLight2 = new THREE.DirectionalLight(white, 0.25);
+        sunDirLight2.position.set(-5, 17, -50);
+        sunDirLight2.castShadow = true;
+        sunDirLight2.shadow.radius = 8;
+        scene.add(sunDirLight2);
+        var sunDirLight3 = new THREE.DirectionalLight(white, 0.25);
+        sunDirLight3.position.set(5, 17, -50);
+        sunDirLight3.castShadow = true;
+        sunDirLight3.shadow.radius = 8;
+        scene.add(sunDirLight3);
 
-			road = new THREE.PlaneGeometry(200, 200, 1, 1);
-				road.rotateX(-Math.PI / 2);
-			roadMaterial = new THREE.MeshPhongMaterial({
-				color: aqua
-			});
+        var sunDirLight4 = new THREE.DirectionalLight(white, 0.15);
+        sunDirLight4.position.set(-10, 20, -50);
+        sunDirLight4.castShadow = true;
+        sunDirLight4.shadow.radius = 8;
+        scene.add(sunDirLight4);
+        var sunDirLight5 = new THREE.DirectionalLight(white, 0.15);
+        sunDirLight5.position.set(10, 20, -50);
+        sunDirLight5.castShadow = true;
+        sunDirLight5.shadow.radius = 8;
+        scene.add(sunDirLight5);
 
-			roadMesh = new THREE.Mesh(road, roadMaterial);
-			roadMesh.receiveShadow = true;
-				scene.add(roadMesh);
-				
-			roadWireframe = new THREE.PlaneGeometry(200, 200, 1, 1);
-				roadWireframe.rotateX(-Math.PI / 2);
-				THREE.ImageUtils.crossOrigin = '';
-				texture = THREE.ImageUtils.loadTexture('https://i.ibb.co/SxSMGgS/gridline.png');
-				texture.anisotropy = 16;
-				texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-				texture.repeat.set(50, 50);
-			
-			//podloze
-			roadWireframeMaterial = new THREE.MeshPhongMaterial({
-				map: texture,
-				transparent: true,
-				color: pink,
-				visible: true
-			});
-			roadWireframeMesh = new THREE.Mesh(roadWireframe, roadWireframeMaterial);
-			roadWireframe.receiveShadow = true;
-				scene.add(roadWireframeMesh);
+        //################## M O D E L E ##################
+        //słońce
+        //var sunGeometry = new THREE.SphereGeometry(180, 32, 32)
+        var sunGeometry = new THREE.CircleBufferGeometry(200, 20, 0, 3.1);
+        var sunMaterial = new THREE.MeshPhongMaterial({
+          color: yellow,
+          fog: false,
+          transparent: false,
+          shininess: 20,
+        });
 
-			//polonez
-			polonezMaterial = new THREE.MeshPhongMaterial({
-				color: lightpink,
-				visible: true
-			});
-			
-			polonez = new THREE.FBXLoader();
-			polonez.load('models/polonez.FBX', function (polonez){
-				polonez.traverse( function (child) {
-					child.material = polonezMaterial;
-					child.castShadow = true;
-					child.receiveShadow = true;
-				});
-				mixerPolonez = new THREE.AnimationMixer(polonez);
-				var action = mixerPolonez.clipAction(polonez.animations[0]);
-				
-				action.play();
-				scene.add(polonez); 
-			});
+        sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        sun.position.set(1, -20, -350);
+        scene.add(sun);
+        //slonce efekt
+        var sunEffectGeometry = new THREE.PlaneGeometry(460, 460, 1);
+        THREE.ImageUtils.crossOrigin = "";
+        var textureLoader = new THREE.TextureLoader();
+        sunTexture = textureLoader.load(
+          "https://i.ibb.co/3RnxSZ7/suneffectalt.png"
+        );
+        sunTexture.anisotropy = 16;
+        sunTexture.wrapS = sunTexture.wrapT = THREE.RepeatWrapping;
+        sunTexture.repeat.set(1, 1);
+        var sunEffectMaterial = new THREE.MeshPhongMaterial({
+          map: sunTexture,
+          transparent: true,
+          color: red,
+          fog: false,
+          visible: true,
+        });
 
-			//siatka poloneza
-			polonezWireframeMaterial = new THREE.MeshPhongMaterial({ 
-				color: violet,
-				wireframe: true,
-				fog: true,
-				visible: true		
-			});
-			polonezWireframeMaterial.receiveShadow = true;
-			polonezWireframe = new THREE.FBXLoader();
-			polonezWireframe.load('models/polonez.FBX', function (polonezWireframe) {
-				polonezWireframe.traverse( function (child) {
-					if(child.material) {
-							child.material = polonezWireframeMaterial;
-							child.castShadow = true;
-							child.receiveShadow = true;
-					}
-				});
-				mixerPolonezWireframe = new THREE.AnimationMixer(polonezWireframe);
-				var action = mixerPolonezWireframe.clipAction(polonezWireframe.animations[0]);
-				
-					action.play();
-			    	scene.add(polonezWireframe); 
-			});
+        sunEffect = new THREE.Mesh(sunEffectGeometry, sunEffectMaterial);
+        sunEffect.position.set(0, -35, -349.5);
+        scene.add(sunEffect);
+        //droga
 
-			//gory
-			hillsMaterial = new THREE.MeshPhongMaterial({ 
-				color: violet,
-				fog: true,
-				visible: true	
-			});
-			hills = new THREE.FBXLoader();
-				hills.load('models/hills.FBX', function (hills) {
-					hills.traverse( function (child) {
-						if(child.material) {
-							child.material = hillsMaterial;
-							child.castShadow = true;
-						}
-					});
-					scene.add(hills);
-				} );
+        road = new THREE.PlaneGeometry(200, 200, 1, 1);
+        road.rotateX(-Math.PI / 2);
+        roadMaterial = new THREE.MeshPhongMaterial({
+          color: aqua,
+        });
 
-			//siatka gor
-			hillsWireframeMaterial = new THREE.MeshPhongMaterial( { 
-				color: pink,
-				wireframe: true,
-				fog: true,
-				visible: true			
-			});
-			hillsWireframe = new THREE.FBXLoader();
-				hillsWireframe.load('models/hills.FBX', function (hillsWireframe) {
-					hillsWireframe.traverse( function (child) {
-						if(child.material) {
-							child.material = hillsWireframeMaterial;
-							child.castShadow = true;
-						}
-					});
-					scene.add(hillsWireframe);
-				});
+        roadMesh = new THREE.Mesh(road, roadMaterial);
+        roadMesh.receiveShadow = true;
+        scene.add(roadMesh);
 
-			//boczne tło
-			sideMaterial = new THREE.MeshPhongMaterial({
-				fog: true,
-				color: blue,
-				visible: true
-			});
-			side = new THREE.FBXLoader();
-			side.load('models/side.FBX', function (side) {
-				side.traverse( function (child) {
-					if(child.material) {
-						child.material = sideMaterial;
-						child.castShadow = true;
-					}
-				});
-				mixerSide = new THREE.AnimationMixer(side);
-				var action = mixerSide.clipAction(side.animations[0]);
-					
-					action.play();
-			    	scene.add(side); 
-			});
+        roadWireframe = new THREE.PlaneGeometry(200, 200, 1, 1);
+        roadWireframe.rotateX(-Math.PI / 2);
+        THREE.ImageUtils.crossOrigin = "";
+        var textureLoader = new THREE.TextureLoader();
+        texture = textureLoader.load("https://i.ibb.co/SxSMGgS/gridline.png");
+        texture.anisotropy = 16;
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(50, 50);
 
-			//siatka bocznego tla
-			sideWireframeMaterial = new THREE.MeshPhongMaterial({
-				fog: true,
-				wireframe: true,
-				color: violet,
-				visible: true
-			});
-			sideWireframe = new THREE.FBXLoader();
-			sideWireframe.load('models/side.FBX', function (sideWireframe) {
-				sideWireframe.traverse(function (child) {
-					if(child.material) {
-						child.material = sideWireframeMaterial;
-					}
-				} );
-				mixerSideWireframe = new THREE.AnimationMixer(sideWireframe);
-				var action = mixerSideWireframe.clipAction(sideWireframe.animations[0]);
-					
-					action.play();
-			    	scene.add(sideWireframe); 
-			} );
-			//################## M O D E L E ##################	
-			displayGUI();
-		}
+        //podloze
+        roadWireframeMaterial = new THREE.MeshPhongMaterial({
+          map: texture,
+          transparent: true,
+          color: pink,
+          visible: true,
+        });
+        roadWireframeMesh = new THREE.Mesh(
+          roadWireframe,
+          roadWireframeMaterial
+        );
+        roadWireframe.receiveShadow = true;
+        scene.add(roadWireframeMesh);
 
-			function displayGUI(){
-				var gui = new dat.GUI();
-				var jar;
+        //polonez
+        polonezMaterial = new THREE.MeshPhongMaterial({
+          color: lightpink,
+          visible: true,
+        });
 
-				parameters = {
-					polonezColor: "#eb94c1",
-					showPolonez: true,
-					polonezWireframeColor: "#4f33d9",
-					showPolonezWireframe: true,
+        polonez = new THREE.FBXLoader();
+        polonez.load("models/polonez.FBX", function (polonez) {
+          polonez.traverse(function (child) {
+            child.material = polonezMaterial;
+            child.castShadow = true;
+            child.receiveShadow = true;
+          });
+          mixerPolonez = new THREE.AnimationMixer(polonez);
+          var action = mixerPolonez.clipAction(polonez.animations[0]);
 
-					hillsColor: "#4f33d9",
-					showHills: true,
-					hillsWireframeColor: "#c348dd",
-					showHillsWireframe: true,
+          action.play();
+          scene.add(polonez);
+        });
 
-					sideColor: "#4790ff",
-					showSide: true,
-					sideWireframeColor: "#4f33d9",
-					showSideWireframe: true,
+        //siatka poloneza
+        polonezWireframeMaterial = new THREE.MeshPhongMaterial({
+          color: violet,
+          wireframe: true,
+          fog: true,
+          visible: true,
+        });
+        polonezWireframeMaterial.receiveShadow = true;
+        polonezWireframe = new THREE.FBXLoader();
+        polonezWireframe.load(
+          "models/polonez.FBX",
+          function (polonezWireframe) {
+            polonezWireframe.traverse(function (child) {
+              if (child.material) {
+                child.material = polonezWireframeMaterial;
+                child.castShadow = true;
+                child.receiveShadow = true;
+              }
+            });
+            mixerPolonezWireframe = new THREE.AnimationMixer(polonezWireframe);
+            var action = mixerPolonezWireframe.clipAction(
+              polonezWireframe.animations[0]
+            );
 
-					roadColor: "#40d5db",
-					roadWireframeColor: "#c348dd",
-					showRoadWireframe: true,
+            action.play();
+            scene.add(polonezWireframe);
+          }
+        );
 
-					sunColorTop: "#ffebac",
-					sunColorBottom: "#fc3b96",
-					showSunEffect: true,
-					
-					fogColor: "#c348dd",
-					fogNear: 32.5,
-					fogFar: 200,
+        //gory
+        hillsMaterial = new THREE.MeshPhongMaterial({
+          color: violet,
+          fog: true,
+          visible: true,
+        });
+        hills = new THREE.FBXLoader();
+        hills.load("models/hills.FBX", function (hills) {
+          hills.traverse(function (child) {
+            if (child.material) {
+              child.material = hillsMaterial;
+              child.castShadow = true;
+            }
+          });
+          scene.add(hills);
+        });
 
-					backgroundColor: "#eb94c1",
+        //siatka gor
+        hillsWireframeMaterial = new THREE.MeshPhongMaterial({
+          color: pink,
+          wireframe: true,
+          fog: true,
+          visible: true,
+        });
+        hillsWireframe = new THREE.FBXLoader();
+        hillsWireframe.load("models/hills.FBX", function (hillsWireframe) {
+          hillsWireframe.traverse(function (child) {
+            if (child.material) {
+              child.material = hillsWireframeMaterial;
+              child.castShadow = true;
+            }
+          });
+          scene.add(hillsWireframe);
+        });
 
-				}
+        //boczne tło
+        sideMaterial = new THREE.MeshPhongMaterial({
+          fog: true,
+          color: blue,
+          visible: true,
+        });
+        side = new THREE.FBXLoader();
+        side.load("models/side.FBX", function (side) {
+          side.traverse(function (child) {
+            if (child.material) {
+              child.material = sideMaterial;
+              child.castShadow = true;
+            }
+          });
+          mixerSide = new THREE.AnimationMixer(side);
+          var action = mixerSide.clipAction(side.animations[0]);
 
-				var polonezFolder = gui.addFolder('Polonez');
-					var polonezColor = polonezFolder.addColor(parameters, 'polonezColor').name('Color');
-						polonezColor.onChange(function(jar){polonezMaterial.color.setHex(jar.replace("#", "0x"));});
-					var showPolonez = polonezFolder.add(parameters, 'showPolonez').name('Show model');
-						showPolonez.onChange(function(jar){polonezMaterial.visible = jar;});
-					var polonezWireframeColor = polonezFolder.addColor(parameters, 'polonezWireframeColor').name('Wireframe color');
-						polonezWireframeColor.onChange(function(jar){polonezWireframeMaterial.color.setHex(jar.replace("#", "0x"));});
-					var showPolonezWireframe = polonezFolder.add(parameters, 'showPolonezWireframe').name('Show wireframe');
-						showPolonezWireframe.onChange(function(jar){polonezWireframeMaterial.visible = jar;});
-				polonezFolder.close();
-				
-				var hillsFolder = gui.addFolder('Hills');
-					var hillsColor = hillsFolder.addColor(parameters, 'hillsColor').name('Color');
-						hillsColor.onChange(function(jar){hillsMaterial.color.setHex(jar.replace("#", "0x"));});
-					var showHills = hillsFolder.add(parameters, 'showHills').name('Show hills');
-						showHills.onChange(function(jar){hillsMaterial.visible = jar;});
-					var hillsWireframeColor = hillsFolder.addColor(parameters, 'hillsWireframeColor').name('Wireframe color');
-						hillsWireframeColor.onChange(function(jar){hillsWireframeMaterial.color.setHex(jar.replace("#", "0x"));});
-					var showHillsWireframe = hillsFolder.add(parameters, 'showHillsWireframe').name('Show wireframe');
-					showHillsWireframe.onChange(function(jar){hillsWireframeMaterial.visible = jar;});
-				hillsFolder.close();
+          action.play();
+          scene.add(side);
+        });
 
-				var sideFolder = gui.addFolder('Side hills');
-					var sideColor = sideFolder.addColor(parameters, 'sideColor').name('Color');
-						sideColor.onChange(function(jar){sideMaterial.color.setHex(jar.replace("#", "0x"));});
-					var showSide = sideFolder.add(parameters, 'showSide').name('Show side hills');
-						showSide.onChange(function(jar){sideMaterial.visible = jar;});
-					var sideWireframeColor = sideFolder.addColor(parameters, 'sideWireframeColor').name('Wireframe color');
-						sideWireframeColor.onChange(function(jar){sideWireframeMaterial.color.setHex(jar.replace("#", "0x"));});
-					var showSideWireframe = sideFolder.add(parameters, 'showSideWireframe').name('Show wireframe');
-						showSideWireframe.onChange(function(jar){sideWireframeMaterial.visible = jar;});
-				sideFolder.close();
+        //siatka bocznego tla
+        sideWireframeMaterial = new THREE.MeshPhongMaterial({
+          fog: true,
+          wireframe: true,
+          color: violet,
+          visible: true,
+        });
+        sideWireframe = new THREE.FBXLoader();
+        sideWireframe.load("models/side.FBX", function (sideWireframe) {
+          sideWireframe.traverse(function (child) {
+            if (child.material) {
+              child.material = sideWireframeMaterial;
+            }
+          });
+          mixerSideWireframe = new THREE.AnimationMixer(sideWireframe);
+          var action = mixerSideWireframe.clipAction(
+            sideWireframe.animations[0]
+          );
 
-				var roadFolder = gui.addFolder('Road');
-					var roadColor = roadFolder.addColor(parameters, 'roadColor').name('Road color');
-						roadColor.onChange(function(jar){roadMaterial.color.setHex(jar.replace("#", "0x"));});
-					var roadWireframeColor = roadFolder.addColor(parameters, 'roadWireframeColor').name('Wireframe color');
-						roadWireframeColor.onChange(function(jar){roadWireframeMaterial.color.setHex(jar.replace("#", "0x"));});
-					var showRoadWireframe = roadFolder.add(parameters, 'showRoadWireframe').name('Show wireframe');
-						showRoadWireframe.onChange(function(jar){roadWireframeMaterial.visible = jar;});
-				roadFolder.close();
-						
-				var sunFolder = gui.addFolder('Sun');
-					var sunColorTop = sunFolder.addColor(parameters, 'sunColorTop').name('Sun color top');
-						sunColorTop.onChange(function(jar){sun.material.color.setHex(jar.replace("#", "0x"));});
-					var sunColorBottom = sunFolder.addColor(parameters, 'sunColorBottom').name('Sun color bott');
-						sunColorBottom.onChange(function(jar){sunEffect.material.color.setHex(jar.replace("#", "0x"));});
-					var showSunEffect = sunFolder.add(parameters, 'showSunEffect').name('Show effect');
-						showSunEffect.onChange(function(jar){sunEffect.material.visible = jar;});
-				sunFolder.close();
+          action.play();
+          scene.add(sideWireframe);
+        });
+        //################## M O D E L E ##################
+        displayGUI();
+      }
 
-					var backgroundColor = gui.addColor(parameters, 'backgroundColor').name('Sky color');
-						backgroundColor.onChange(function(jar){scene.background.setHex(jar.replace("#", "0x"));});
+      function displayGUI() {
+        var gui = new dat.GUI();
+        var jar;
 
-					var fogColor = gui.addColor(parameters, 'fogColor').name('Fog color');
-						fogColor.onChange(function(jar){scene.fog.color.setHex(jar.replace("#", "0x"));});
-					var fogNear = gui.add(parameters, 'fogNear').min(1).max(200).name('Fog near');
-						fogNear.onChange(function(jar){scene.fog.near = jar});
-					var fogFar = gui.add(parameters, 'fogFar').min(50).max(400).name('Fog far');
-						fogFar.onChange(function(jar){scene.fog.far = jar});
-				}			
+        parameters = {
+          polonezColor: "#eb94c1",
+          showPolonez: true,
+          polonezWireframeColor: "#4f33d9",
+          showPolonezWireframe: true,
 
-			function animate() {
-				requestAnimationFrame(animate);
-					var delta = clock.getDelta();
-					mixerPolonez.update(delta);
-					mixerPolonezWireframe.update(delta);
-					mixerSide.update(delta);
-					mixerSideWireframe.update(delta);
-			}
+          hillsColor: "#4f33d9",
+          showHills: true,
+          hillsWireframeColor: "#c348dd",
+          showHillsWireframe: true,
 
-			function render() {
-	 			if (resize(renderer)) {
-					camera.aspect = canvas.clientWidth / canvas.clientHeight;
-					camera.updateProjectionMatrix();
-				}
-				texture.offset.y += .06;
-				renderer.render(scene, camera);
-				requestAnimationFrame(render);
-			}
+          sideColor: "#4790ff",
+          showSide: true,
+          sideWireframeColor: "#4f33d9",
+          showSideWireframe: true,
 
-				function resize(renderer) {
-					const canvas = renderer.domElement;
-					const width = canvas.clientWidth / 2; //zmniejszenie rozdzielczosci dla klimatu lat 80 + poprawa wydajności
-					const height = canvas.clientHeight / 2;
-					const resize = canvas.width !== width || canvas.height !== height;
-						if (resize) {
-							renderer.setSize(width, height, false);
-						}
-					return resize;
-				}
+          roadColor: "#40d5db",
+          roadWireframeColor: "#c348dd",
+          showRoadWireframe: true,
 
-		</script>
-	</body>
+          sunColorTop: "#ffebac",
+          sunColorBottom: "#fc3b96",
+          showSunEffect: true,
+
+          fogColor: "#c348dd",
+          fogNear: 32.5,
+          fogFar: 200,
+
+          backgroundColor: "#eb94c1",
+        };
+
+        var polonezFolder = gui.addFolder("Polonez");
+        var polonezColor = polonezFolder
+          .addColor(parameters, "polonezColor")
+          .name("Color");
+        polonezColor.onChange(function (jar) {
+          polonezMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        var showPolonez = polonezFolder
+          .add(parameters, "showPolonez")
+          .name("Show model");
+        showPolonez.onChange(function (jar) {
+          polonezMaterial.visible = jar;
+        });
+        var polonezWireframeColor = polonezFolder
+          .addColor(parameters, "polonezWireframeColor")
+          .name("Wireframe color");
+        polonezWireframeColor.onChange(function (jar) {
+          polonezWireframeMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        var showPolonezWireframe = polonezFolder
+          .add(parameters, "showPolonezWireframe")
+          .name("Show wireframe");
+        showPolonezWireframe.onChange(function (jar) {
+          polonezWireframeMaterial.visible = jar;
+        });
+        polonezFolder.close();
+
+        var hillsFolder = gui.addFolder("Hills");
+        var hillsColor = hillsFolder
+          .addColor(parameters, "hillsColor")
+          .name("Color");
+        hillsColor.onChange(function (jar) {
+          hillsMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        var showHills = hillsFolder
+          .add(parameters, "showHills")
+          .name("Show hills");
+        showHills.onChange(function (jar) {
+          hillsMaterial.visible = jar;
+        });
+        var hillsWireframeColor = hillsFolder
+          .addColor(parameters, "hillsWireframeColor")
+          .name("Wireframe color");
+        hillsWireframeColor.onChange(function (jar) {
+          hillsWireframeMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        var showHillsWireframe = hillsFolder
+          .add(parameters, "showHillsWireframe")
+          .name("Show wireframe");
+        showHillsWireframe.onChange(function (jar) {
+          hillsWireframeMaterial.visible = jar;
+        });
+        hillsFolder.close();
+
+        var sideFolder = gui.addFolder("Side hills");
+        var sideColor = sideFolder
+          .addColor(parameters, "sideColor")
+          .name("Color");
+        sideColor.onChange(function (jar) {
+          sideMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        var showSide = sideFolder
+          .add(parameters, "showSide")
+          .name("Show side hills");
+        showSide.onChange(function (jar) {
+          sideMaterial.visible = jar;
+        });
+        var sideWireframeColor = sideFolder
+          .addColor(parameters, "sideWireframeColor")
+          .name("Wireframe color");
+        sideWireframeColor.onChange(function (jar) {
+          sideWireframeMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        var showSideWireframe = sideFolder
+          .add(parameters, "showSideWireframe")
+          .name("Show wireframe");
+        showSideWireframe.onChange(function (jar) {
+          sideWireframeMaterial.visible = jar;
+        });
+        sideFolder.close();
+
+        var roadFolder = gui.addFolder("Road");
+        var roadColor = roadFolder
+          .addColor(parameters, "roadColor")
+          .name("Road color");
+        roadColor.onChange(function (jar) {
+          roadMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        var roadWireframeColor = roadFolder
+          .addColor(parameters, "roadWireframeColor")
+          .name("Wireframe color");
+        roadWireframeColor.onChange(function (jar) {
+          roadWireframeMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        var showRoadWireframe = roadFolder
+          .add(parameters, "showRoadWireframe")
+          .name("Show wireframe");
+        showRoadWireframe.onChange(function (jar) {
+          roadWireframeMaterial.visible = jar;
+        });
+        roadFolder.close();
+
+        var sunFolder = gui.addFolder("Sun");
+        var sunColorTop = sunFolder
+          .addColor(parameters, "sunColorTop")
+          .name("Sun color top");
+        sunColorTop.onChange(function (jar) {
+          sun.material.color.setHex(jar.replace("#", "0x"));
+        });
+        var sunColorBottom = sunFolder
+          .addColor(parameters, "sunColorBottom")
+          .name("Sun color bott");
+        sunColorBottom.onChange(function (jar) {
+          sunEffect.material.color.setHex(jar.replace("#", "0x"));
+        });
+        var showSunEffect = sunFolder
+          .add(parameters, "showSunEffect")
+          .name("Show effect");
+        showSunEffect.onChange(function (jar) {
+          sunEffect.material.visible = jar;
+        });
+        sunFolder.close();
+
+        var backgroundColor = gui
+          .addColor(parameters, "backgroundColor")
+          .name("Sky color");
+        backgroundColor.onChange(function (jar) {
+          scene.background.setHex(jar.replace("#", "0x"));
+        });
+
+        var fogColor = gui.addColor(parameters, "fogColor").name("Fog color");
+        fogColor.onChange(function (jar) {
+          scene.fog.color.setHex(jar.replace("#", "0x"));
+        });
+        var fogNear = gui
+          .add(parameters, "fogNear")
+          .min(1)
+          .max(200)
+          .name("Fog near");
+        fogNear.onChange(function (jar) {
+          scene.fog.near = jar;
+        });
+        var fogFar = gui
+          .add(parameters, "fogFar")
+          .min(50)
+          .max(400)
+          .name("Fog far");
+        fogFar.onChange(function (jar) {
+          scene.fog.far = jar;
+        });
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        var delta = clock.getDelta();
+        if (mixerPolonez) mixerPolonez.update(delta);
+        if (mixerPolonezWireframe) mixerPolonezWireframe.update(delta);
+        if (mixerSide) mixerSide.update(delta);
+        if (mixerSideWireframe) mixerSideWireframe.update(delta);
+      }
+
+      function render() {
+        if (resize(renderer)) {
+          camera.aspect = canvas.clientWidth / canvas.clientHeight;
+          camera.updateProjectionMatrix();
+        }
+        texture.offset.y += 0.06;
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+      }
+
+      function resize(renderer) {
+        const canvas = renderer.domElement;
+        const width = canvas.clientWidth / 2; //zmniejszenie rozdzielczosci dla klimatu lat 80 + poprawa wydajności
+        const height = canvas.clientHeight / 2;
+        const resize = canvas.width !== width || canvas.height !== height;
+        if (resize) {
+          renderer.setSize(width, height, false);
+        }
+        return resize;
+      }
+    </script>
+  </body>
 </html>
