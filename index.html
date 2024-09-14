@@ -54,6 +54,8 @@
         let yellow = "#ffebac";
         let red = "#fc3b96";
         let white = "#ededed";
+        let tweety = "#ffdf7c";
+        let laguna = "#3b8ceb";
 
         renderer = new THREE.WebGLRenderer({
           antialias: true,
@@ -88,7 +90,7 @@
         scene.fog = new THREE.Fog(pink, 32.5, 200);
 
         //światła
-        light = new THREE.AmbientLight(white, 0.9);
+        light = new THREE.AmbientLight(white, 0.95);
         scene.add(light);
 
         // Create the first directional light
@@ -188,9 +190,7 @@
         let sunEffectGeometry = new THREE.PlaneGeometry(460, 460, 1);
         THREE.ImageUtils.crossOrigin = "";
         let sunTextureLoader = new THREE.TextureLoader();
-        sunTexture = sunTextureLoader.load(
-          "https://i.ibb.co/3RnxSZ7/suneffectalt.png"
-        );
+        sunTexture = sunTextureLoader.load("models/materials/suneffectalt.png");
         sunTexture.anisotropy = 16;
         sunTexture.wrapS = sunTexture.wrapT = THREE.RepeatWrapping;
         sunTexture.repeat.set(1, 1);
@@ -232,7 +232,7 @@
         roadWireframeMaterial = new THREE.MeshPhongMaterial({
           map: texture2,
           transparent: true,
-          color: yellow,
+          color: aqua,
           visible: true,
         });
         roadWireframeMesh = new THREE.Mesh(
@@ -278,7 +278,7 @@
 
         //polonez
         polonezMaterial = new THREE.MeshPhongMaterial({
-          color: lightpink,
+          color: laguna,
           visible: true,
         });
 
@@ -299,7 +299,7 @@
 
         //siatka poloneza
         polonezWireframeMaterial = new THREE.MeshPhongMaterial({
-          color: violet,
+          color: tweety,
           wireframe: true,
           fog: true,
           visible: true,
@@ -585,9 +585,9 @@
         let jar;
 
         parameters = {
-          polonezColor: "#eb94c1",
+          polonezColor: "#3b8ceb",
           showPolonez: true,
-          polonezWireframeColor: "#4f33d9",
+          polonezWireframeColor: "#fff6ba",
           showPolonezWireframe: true,
 
           hillsColor: "#4f33d9",
@@ -600,9 +600,13 @@
           sideWireframeColor: "#4f33d9",
           showSideWireframe: true,
 
-          roadColor: "#40d5db",
-          roadWireframeColor: "#c348dd",
+          roadColor: "#c348dd",
+          roadWireframeColor: "#40d5db",
           showRoadWireframe: true,
+
+          terrainColor: "#40d5db",
+          terrainWireframeColor: "#c348dd",
+          showTerrainWireframe: true,
 
           palmColor: "#56a0ff",
           showPalm: true,
@@ -721,6 +725,27 @@
           roadWireframeMaterial.visible = jar;
         });
         roadFolder.close();
+
+        let terrainFolder = gui.addFolder("Terrain");
+        let terrainColor = terrainFolder
+          .addColor(parameters, "terrainColor")
+          .name("Terrain color");
+        terrainColor.onChange(function (jar) {
+          terrainMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        let terrainWireframeColor = terrainFolder
+          .addColor(parameters, "terrainWireframeColor")
+          .name("Wireframe color");
+        terrainWireframeColor.onChange(function (jar) {
+          terrainWireframeMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        let showTerrainWireframe = terrainFolder
+          .add(parameters, "showTerrainWireframe")
+          .name("Show wireframe");
+        showTerrainWireframe.onChange(function (jar) {
+          terrainWireframeMaterial.visible = jar;
+        });
+        terrainFolder.close();
 
         let palmFolder = gui.addFolder("Palms");
         let palmColor = palmFolder
