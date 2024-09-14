@@ -19,26 +19,26 @@
   </head>
   <body>
     <script>
-      var scene, camera, renderer, canvas, controls;
-      var division, limit, grid, moveable;
-      var sun,
+      let scene, camera, renderer, canvas, controls;
+      let division, limit, grid, moveable;
+      let sun,
         polonez,
         polonezWireframe,
         hills,
         hillsWireframe,
         side,
         sideWireframe;
-      var polonezMaterial,
+      let polonezMaterial,
         polonezWireframeMaterial,
         hillsMaterial,
         hillsWireframeMaterial,
         sideMaterial,
         sideWireframeMaterial;
-      var mixerPolonez, mixerPolonezWireframe, mixerSide, mixerSideWireframe;
-      var palmModel = null;
-      var palmWireframeModel = null;
-      var gui, stats, composer;
-      var clock = new THREE.Clock();
+      let mixerPolonez, mixerPolonezWireframe, mixerSide, mixerSideWireframe;
+      let palmModel = null;
+      let palmWireframeModel = null;
+      let gui, stats, composer;
+      let clock = new THREE.Clock();
 
       init();
       render();
@@ -46,16 +46,16 @@
 
       function init() {
         //kolory
-        var pink = "#c348dd";
-        var lightpink = "#eb94c1";
-        var violet = "#4f33d9";
-        var aqua = "#40d5db";
-        var blue = "#4790ff";
-        var white = "#ffffff";
-
-        var yellow = "#ffebac";
-        var red = "#fc3b96";
-        var white = "#ededed";
+        let pink = "#c348dd";
+        let lightpink = "#eb94c1";
+        let violet = "#4f33d9";
+        let aqua = "#40d5db";
+        let blue = "#4790ff";
+        let yellow = "#ffebac";
+        let red = "#fc3b96";
+        let white = "#ededed";
+        let tweety = "#ffdf7c";
+        let laguna = "#3b8ceb";
 
         renderer = new THREE.WebGLRenderer({
           antialias: true,
@@ -69,8 +69,8 @@
         document.body.appendChild(canvas);
 
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(90, 1, 0.1, 1000);
-        camera.position.set(0, 2.5, 7);
+        camera = new THREE.PerspectiveCamera(90, 0.8, 0.1, 1000);
+        camera.position.set(0, 1.975, 7);
         camera.lookAt(scene.position);
 
         //wolna kamera
@@ -90,11 +90,11 @@
         scene.fog = new THREE.Fog(pink, 32.5, 200);
 
         //światła
-        light = new THREE.AmbientLight(white, 0.9);
+        light = new THREE.AmbientLight(white, 0.95);
         scene.add(light);
 
         // Create the first directional light
-        var sunDirLight = new THREE.DirectionalLight(white, 0.5);
+        let sunDirLight = new THREE.DirectionalLight(white, 0.5);
         sunDirLight.position.set(0, 15, -50);
         sunDirLight.castShadow = true;
         sunDirLight.shadow.bias = 0;
@@ -109,7 +109,7 @@
         scene.add(sunDirLight);
 
         // Create the second directional light
-        var sunDirLight2 = new THREE.DirectionalLight(white, 0.25);
+        let sunDirLight2 = new THREE.DirectionalLight(white, 0.25);
         sunDirLight2.position.set(-5, 17, -50);
         sunDirLight2.castShadow = true;
         sunDirLight2.shadow.bias = 0;
@@ -124,7 +124,7 @@
         scene.add(sunDirLight2);
 
         // Create the third directional light
-        var sunDirLight3 = new THREE.DirectionalLight(white, 0.25);
+        let sunDirLight3 = new THREE.DirectionalLight(white, 0.25);
         sunDirLight3.position.set(5, 17, -50);
         sunDirLight3.castShadow = true;
         sunDirLight3.shadow.bias = 0;
@@ -139,7 +139,7 @@
         scene.add(sunDirLight3);
 
         // Create the fourth directional light
-        var sunDirLight4 = new THREE.DirectionalLight(white, 0.15);
+        let sunDirLight4 = new THREE.DirectionalLight(white, 0.15);
         sunDirLight4.position.set(-10, 20, -50);
         sunDirLight4.castShadow = true;
         sunDirLight4.shadow.bias = 0;
@@ -154,7 +154,7 @@
         scene.add(sunDirLight4);
 
         // Create the fifth directional light
-        var sunDirLight5 = new THREE.DirectionalLight(white, 0.15);
+        let sunDirLight5 = new THREE.DirectionalLight(white, 0.15);
         sunDirLight5.position.set(10, 20, -50);
         sunDirLight5.castShadow = true;
         sunDirLight5.shadow.bias = 0;
@@ -172,15 +172,11 @@
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        // Renderer shadow settings
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap; // You can experiment with different shadow map types
-
         //################## M O D E L E ##################
         //słońce
-        //var sunGeometry = new THREE.SphereGeometry(180, 32, 32)
-        var sunGeometry = new THREE.CircleBufferGeometry(200, 20, 0, 3.1);
-        var sunMaterial = new THREE.MeshPhongMaterial({
+        //let sunGeometry = new THREE.SphereGeometry(180, 32, 32)
+        let sunGeometry = new THREE.CircleBufferGeometry(200, 20, 0, 3.1);
+        let sunMaterial = new THREE.MeshPhongMaterial({
           color: yellow,
           fog: false,
           transparent: false,
@@ -191,16 +187,14 @@
         sun.position.set(1, -20, -350);
         scene.add(sun);
         //slonce efekt
-        var sunEffectGeometry = new THREE.PlaneGeometry(460, 460, 1);
+        let sunEffectGeometry = new THREE.PlaneGeometry(460, 460, 1);
         THREE.ImageUtils.crossOrigin = "";
-        var textureLoader = new THREE.TextureLoader();
-        sunTexture = textureLoader.load(
-          "https://i.ibb.co/3RnxSZ7/suneffectalt.png"
-        );
+        let sunTextureLoader = new THREE.TextureLoader();
+        sunTexture = sunTextureLoader.load("models/materials/suneffectalt.png");
         sunTexture.anisotropy = 16;
         sunTexture.wrapS = sunTexture.wrapT = THREE.RepeatWrapping;
         sunTexture.repeat.set(1, 1);
-        var sunEffectMaterial = new THREE.MeshPhongMaterial({
+        let sunEffectMaterial = new THREE.MeshPhongMaterial({
           map: sunTexture,
           transparent: true,
           color: red,
@@ -211,44 +205,80 @@
         sunEffect = new THREE.Mesh(sunEffectGeometry, sunEffectMaterial);
         sunEffect.position.set(0, -35, -349.5);
         scene.add(sunEffect);
-        //droga
 
-        road = new THREE.PlaneGeometry(200, 200, 1, 1);
+        // Road
+        road = new THREE.BoxGeometry(15.95, 200, 0.02);
         road.rotateX(-Math.PI / 2);
         roadMaterial = new THREE.MeshPhongMaterial({
-          color: aqua,
+          color: pink,
         });
 
         roadMesh = new THREE.Mesh(road, roadMaterial);
         roadMesh.receiveShadow = true;
         scene.add(roadMesh);
 
-        roadWireframe = new THREE.PlaneGeometry(200, 200, 1, 1);
+        roadWireframe = new THREE.PlaneGeometry(15.8, 200, 1, 1);
         roadWireframe.rotateX(-Math.PI / 2);
         THREE.ImageUtils.crossOrigin = "";
-        var textureLoader = new THREE.TextureLoader();
-        texture = textureLoader.load("https://i.ibb.co/SxSMGgS/gridline.png");
-        texture.anisotropy = 16;
-        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(50, 50);
+        let textureLoader2 = new THREE.TextureLoader();
+        texture2 = textureLoader2.load("models/materials/roadline.png");
+        texture2.anisotropy = 16;
 
-        //podloze
+        // Change wrapS and wrapT to MirroredRepeatWrapping
+        texture2.wrapS = texture2.wrapT = THREE.MirroredRepeatWrapping;
+
+        texture2.repeat.set(2, 50);
+
         roadWireframeMaterial = new THREE.MeshPhongMaterial({
-          map: texture,
+          map: texture2,
           transparent: true,
-          color: pink,
+          color: aqua,
           visible: true,
         });
         roadWireframeMesh = new THREE.Mesh(
           roadWireframe,
           roadWireframeMaterial
         );
+        roadWireframeMesh.position.y = 0.06;
         roadWireframe.receiveShadow = true;
         scene.add(roadWireframeMesh);
 
+        // Terrain
+        terrain = new THREE.PlaneGeometry(200, 200, 1, 1);
+        terrain.rotateX(-Math.PI / 2);
+        terrainMaterial = new THREE.MeshPhongMaterial({
+          color: aqua,
+        });
+
+        terrainMesh = new THREE.Mesh(terrain, terrainMaterial);
+        terrainMesh.receiveShadow = true;
+        scene.add(terrainMesh);
+
+        terrainWireframe = new THREE.PlaneGeometry(200, 200, 1, 1);
+        terrainWireframe.rotateX(-Math.PI / 2);
+        THREE.ImageUtils.crossOrigin = "";
+        let textureLoader = new THREE.TextureLoader();
+        texture = textureLoader.load("models/materials/gridline2.png");
+        texture.anisotropy = 16;
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(50, 50);
+
+        terrainWireframeMaterial = new THREE.MeshPhongMaterial({
+          map: texture,
+          transparent: true,
+          color: pink,
+          visible: true,
+        });
+        terrainWireframeMesh = new THREE.Mesh(
+          terrainWireframe,
+          terrainWireframeMaterial
+        );
+        terrainWireframe.receiveShadow = true;
+        scene.add(terrainWireframeMesh);
+
         //polonez
         polonezMaterial = new THREE.MeshPhongMaterial({
-          color: lightpink,
+          color: laguna,
           visible: true,
         });
 
@@ -260,15 +290,16 @@
             child.receiveShadow = true;
           });
           mixerPolonez = new THREE.AnimationMixer(polonez);
-          var action = mixerPolonez.clipAction(polonez.animations[0]);
+          let action = mixerPolonez.clipAction(polonez.animations[0]);
 
           action.play();
           scene.add(polonez);
+          polonez.position.x = -0.013;
         });
 
         //siatka poloneza
         polonezWireframeMaterial = new THREE.MeshPhongMaterial({
-          color: violet,
+          color: tweety,
           wireframe: true,
           fog: true,
           visible: true,
@@ -286,12 +317,13 @@
               }
             });
             mixerPolonezWireframe = new THREE.AnimationMixer(polonezWireframe);
-            var action = mixerPolonezWireframe.clipAction(
+            let action = mixerPolonezWireframe.clipAction(
               polonezWireframe.animations[0]
             );
 
             action.play();
             scene.add(polonezWireframe);
+            polonezWireframe.position.x = -0.013;
           }
         );
 
@@ -345,7 +377,7 @@
             }
           });
           mixerSide = new THREE.AnimationMixer(side);
-          var action = mixerSide.clipAction(side.animations[0]);
+          let action = mixerSide.clipAction(side.animations[0]);
 
           action.play();
           scene.add(side);
@@ -366,7 +398,7 @@
             }
           });
           mixerSideWireframe = new THREE.AnimationMixer(sideWireframe);
-          var action = mixerSideWireframe.clipAction(
+          let action = mixerSideWireframe.clipAction(
             sideWireframe.animations[0]
           );
 
@@ -378,20 +410,20 @@
         setInterval(spawnPalm, 1500);
       }
 
-      var palmLoader = new THREE.FBXLoader();
+      let palmLoader = new THREE.FBXLoader();
       palmLoader.load(
         "models/palm.FBX",
         function (loadedPalmModel) {
           palmModel = loadedPalmModel;
           palmWireframeModel = loadedPalmModel.clone();
 
-          var palmMaterial = new THREE.MeshPhongMaterial({
+          let palmMaterial = new THREE.MeshPhongMaterial({
             color: 0x56a0ff,
             fog: true,
             visible: true,
           });
 
-          var palmWireframeMaterial = new THREE.MeshBasicMaterial({
+          let palmWireframeMaterial = new THREE.MeshBasicMaterial({
             color: 0xffdf7c,
             wireframe: true,
             fog: true,
@@ -429,14 +461,14 @@
           console.error("Palm models not loaded yet.");
           return;
         }
-        var palmNormal = palmModel.clone();
+        let palmNormal = palmModel.clone();
         palmNormal.position.set(xPosition, 0, -100);
         palmNormal.castShadow = true;
         palmNormal.receiveShadow = true;
         palmNormal.rotation.y = rotationY;
         palmNormal.userData.isPalm = true;
 
-        var palmWireframe = palmWireframeModel.clone();
+        let palmWireframe = palmWireframeModel.clone();
         palmWireframe.position.set(xPosition, 0, -100);
         palmWireframe.castShadow = true;
         palmWireframe.receiveShadow = false;
@@ -462,11 +494,11 @@
       }
 
       function spawnPalm() {
-        var rotationLeft = Math.random() * 2 * Math.PI;
-        var rotationRight = Math.random() * 2 * Math.PI;
+        let rotationLeft = Math.random() * 2 * Math.PI;
+        let rotationRight = Math.random() * 2 * Math.PI;
 
-        var palm1 = createPalm(-9, rotationLeft);
-        var palm2 = createPalm(9, rotationRight);
+        let palm1 = createPalm(-11, rotationLeft);
+        let palm2 = createPalm(11, rotationRight);
 
         animatePalm(palm1.normal);
         animatePalm(palm1.wireframe);
@@ -475,12 +507,12 @@
       }
 
       function animatePalm(palm) {
-        var startTime = Date.now();
-        var duration = 14000; // Time in milliseconds for the palm to move across the road
+        let startTime = Date.now();
+        let duration = 14000; // Time in milliseconds for the palm to move across the road
 
         function update() {
-          var elapsedTime = Date.now() - startTime;
-          var progress = Math.min(elapsedTime / duration, 1);
+          let elapsedTime = Date.now() - startTime;
+          let progress = Math.min(elapsedTime / duration, 1);
           palm.position.z = -100 + progress * 200; // Move from -100 to +100 along z-axis
           if (progress < 1) {
             requestAnimationFrame(update);
@@ -491,14 +523,71 @@
         update();
       }
 
+      let rockLoader = new THREE.FBXLoader();
+      let rockModel;
+
+      rockLoader.load(
+        "models/rockmd.FBX",
+        function (loadedRockModel) {
+          rockModel = loadedRockModel;
+          let rockMaterial = new THREE.MeshPhongMaterial({
+            color: 0x8b8b8b,
+            fog: true,
+            visible: true,
+          });
+
+          rockModel.traverse(function (child) {
+            if (child.isMesh) {
+              child.material = rockMaterial;
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          });
+        },
+        undefined,
+        function (error) {
+          console.error(
+            "An error happened while loading the rock model:",
+            error
+          );
+        }
+      );
+
+      function createRock(xPosition) {
+        if (!rockModel) {
+          console.error("Rock model not loaded yet.");
+          return;
+        }
+
+        let rock = rockModel.clone();
+        rock.position.set(xPosition, 0, -100); // Adjust Z position if needed
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+
+        scene.add(rock);
+
+        return rock;
+      }
+
+      function spawnRock() {
+        let xPosition;
+        if (Math.random() > 0.5) {
+          xPosition = Math.random() * (25 - 13) + 13; // Random x between 13 and 25
+        } else {
+          xPosition = Math.random() * (25 - 13) - 25; // Random x between -13 and -25
+        }
+
+        createRock(xPosition);
+      }
+
       function displayGUI() {
-        var gui = new dat.GUI();
-        var jar;
+        let gui = new dat.GUI();
+        let jar;
 
         parameters = {
-          polonezColor: "#eb94c1",
+          polonezColor: "#3b8ceb",
           showPolonez: true,
-          polonezWireframeColor: "#4f33d9",
+          polonezWireframeColor: "#fff6ba",
           showPolonezWireframe: true,
 
           hillsColor: "#4f33d9",
@@ -511,9 +600,13 @@
           sideWireframeColor: "#4f33d9",
           showSideWireframe: true,
 
-          roadColor: "#40d5db",
-          roadWireframeColor: "#c348dd",
+          roadColor: "#c348dd",
+          roadWireframeColor: "#40d5db",
           showRoadWireframe: true,
+
+          terrainColor: "#40d5db",
+          terrainWireframeColor: "#c348dd",
+          showTerrainWireframe: true,
 
           palmColor: "#56a0ff",
           showPalm: true,
@@ -531,26 +624,26 @@
           backgroundColor: "#eb94c1",
         };
 
-        var polonezFolder = gui.addFolder("Polonez");
-        var polonezColor = polonezFolder
+        let polonezFolder = gui.addFolder("Polonez");
+        let polonezColor = polonezFolder
           .addColor(parameters, "polonezColor")
           .name("Color");
         polonezColor.onChange(function (jar) {
           polonezMaterial.color.setHex(jar.replace("#", "0x"));
         });
-        var showPolonez = polonezFolder
+        let showPolonez = polonezFolder
           .add(parameters, "showPolonez")
           .name("Show model");
         showPolonez.onChange(function (jar) {
           polonezMaterial.visible = jar;
         });
-        var polonezWireframeColor = polonezFolder
+        let polonezWireframeColor = polonezFolder
           .addColor(parameters, "polonezWireframeColor")
           .name("Wireframe color");
         polonezWireframeColor.onChange(function (jar) {
           polonezWireframeMaterial.color.setHex(jar.replace("#", "0x"));
         });
-        var showPolonezWireframe = polonezFolder
+        let showPolonezWireframe = polonezFolder
           .add(parameters, "showPolonezWireframe")
           .name("Show wireframe");
         showPolonezWireframe.onChange(function (jar) {
@@ -558,26 +651,26 @@
         });
         polonezFolder.close();
 
-        var hillsFolder = gui.addFolder("Hills");
-        var hillsColor = hillsFolder
+        let hillsFolder = gui.addFolder("Hills");
+        let hillsColor = hillsFolder
           .addColor(parameters, "hillsColor")
           .name("Color");
         hillsColor.onChange(function (jar) {
           hillsMaterial.color.setHex(jar.replace("#", "0x"));
         });
-        var showHills = hillsFolder
+        let showHills = hillsFolder
           .add(parameters, "showHills")
           .name("Show hills");
         showHills.onChange(function (jar) {
           hillsMaterial.visible = jar;
         });
-        var hillsWireframeColor = hillsFolder
+        let hillsWireframeColor = hillsFolder
           .addColor(parameters, "hillsWireframeColor")
           .name("Wireframe color");
         hillsWireframeColor.onChange(function (jar) {
           hillsWireframeMaterial.color.setHex(jar.replace("#", "0x"));
         });
-        var showHillsWireframe = hillsFolder
+        let showHillsWireframe = hillsFolder
           .add(parameters, "showHillsWireframe")
           .name("Show wireframe");
         showHillsWireframe.onChange(function (jar) {
@@ -585,26 +678,26 @@
         });
         hillsFolder.close();
 
-        var sideFolder = gui.addFolder("Side hills");
-        var sideColor = sideFolder
+        let sideFolder = gui.addFolder("Side hills");
+        let sideColor = sideFolder
           .addColor(parameters, "sideColor")
           .name("Color");
         sideColor.onChange(function (jar) {
           sideMaterial.color.setHex(jar.replace("#", "0x"));
         });
-        var showSide = sideFolder
+        let showSide = sideFolder
           .add(parameters, "showSide")
           .name("Show side hills");
         showSide.onChange(function (jar) {
           sideMaterial.visible = jar;
         });
-        var sideWireframeColor = sideFolder
+        let sideWireframeColor = sideFolder
           .addColor(parameters, "sideWireframeColor")
           .name("Wireframe color");
         sideWireframeColor.onChange(function (jar) {
           sideWireframeMaterial.color.setHex(jar.replace("#", "0x"));
         });
-        var showSideWireframe = sideFolder
+        let showSideWireframe = sideFolder
           .add(parameters, "showSideWireframe")
           .name("Show wireframe");
         showSideWireframe.onChange(function (jar) {
@@ -612,20 +705,20 @@
         });
         sideFolder.close();
 
-        var roadFolder = gui.addFolder("Road");
-        var roadColor = roadFolder
+        let roadFolder = gui.addFolder("Road");
+        let roadColor = roadFolder
           .addColor(parameters, "roadColor")
           .name("Road color");
         roadColor.onChange(function (jar) {
           roadMaterial.color.setHex(jar.replace("#", "0x"));
         });
-        var roadWireframeColor = roadFolder
+        let roadWireframeColor = roadFolder
           .addColor(parameters, "roadWireframeColor")
           .name("Wireframe color");
         roadWireframeColor.onChange(function (jar) {
           roadWireframeMaterial.color.setHex(jar.replace("#", "0x"));
         });
-        var showRoadWireframe = roadFolder
+        let showRoadWireframe = roadFolder
           .add(parameters, "showRoadWireframe")
           .name("Show wireframe");
         showRoadWireframe.onChange(function (jar) {
@@ -633,8 +726,29 @@
         });
         roadFolder.close();
 
-        var palmFolder = gui.addFolder("Palms");
-        var palmColor = palmFolder
+        let terrainFolder = gui.addFolder("Terrain");
+        let terrainColor = terrainFolder
+          .addColor(parameters, "terrainColor")
+          .name("Terrain color");
+        terrainColor.onChange(function (jar) {
+          terrainMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        let terrainWireframeColor = terrainFolder
+          .addColor(parameters, "terrainWireframeColor")
+          .name("Wireframe color");
+        terrainWireframeColor.onChange(function (jar) {
+          terrainWireframeMaterial.color.setHex(jar.replace("#", "0x"));
+        });
+        let showTerrainWireframe = terrainFolder
+          .add(parameters, "showTerrainWireframe")
+          .name("Show wireframe");
+        showTerrainWireframe.onChange(function (jar) {
+          terrainWireframeMaterial.visible = jar;
+        });
+        terrainFolder.close();
+
+        let palmFolder = gui.addFolder("Palms");
+        let palmColor = palmFolder
           .addColor(parameters, "palmColor")
           .name("Palm color");
         palmColor.onChange(function (jar) {
@@ -646,14 +760,14 @@
             });
           }
         });
-        var showPalm = palmFolder
+        let showPalm = palmFolder
           .add(parameters, "showPalm")
           .name("Show palms");
         showPalm.onChange(function (jar) {
           parameters.showPalm = jar;
           updatePalmVisibility();
         });
-        var palmWireframeColor = palmFolder
+        let palmWireframeColor = palmFolder
           .addColor(parameters, "palmWireframeColor")
           .name("Wireframe color");
         palmWireframeColor.onChange(function (jar) {
@@ -665,7 +779,7 @@
             });
           }
         });
-        var showPalmWireframe = palmFolder
+        let showPalmWireframe = palmFolder
           .add(parameters, "showPalmWireframe")
           .name("Show wireframe");
         showPalmWireframe.onChange(function (jar) {
@@ -674,20 +788,20 @@
         });
         palmFolder.close();
 
-        var sunFolder = gui.addFolder("Sun");
-        var sunColorTop = sunFolder
+        let sunFolder = gui.addFolder("Sun");
+        let sunColorTop = sunFolder
           .addColor(parameters, "sunColorTop")
           .name("Sun color top");
         sunColorTop.onChange(function (jar) {
           sun.material.color.setHex(jar.replace("#", "0x"));
         });
-        var sunColorBottom = sunFolder
+        let sunColorBottom = sunFolder
           .addColor(parameters, "sunColorBottom")
           .name("Sun color bott");
         sunColorBottom.onChange(function (jar) {
           sunEffect.material.color.setHex(jar.replace("#", "0x"));
         });
-        var showSunEffect = sunFolder
+        let showSunEffect = sunFolder
           .add(parameters, "showSunEffect")
           .name("Show effect");
         showSunEffect.onChange(function (jar) {
@@ -695,18 +809,18 @@
         });
         sunFolder.close();
 
-        var backgroundColor = gui
+        let backgroundColor = gui
           .addColor(parameters, "backgroundColor")
           .name("Sky color");
         backgroundColor.onChange(function (jar) {
           scene.background.setHex(jar.replace("#", "0x"));
         });
 
-        var fogColor = gui.addColor(parameters, "fogColor").name("Fog color");
+        let fogColor = gui.addColor(parameters, "fogColor").name("Fog color");
         fogColor.onChange(function (jar) {
           scene.fog.color.setHex(jar.replace("#", "0x"));
         });
-        var fogNear = gui
+        let fogNear = gui
           .add(parameters, "fogNear")
           .min(1)
           .max(200)
@@ -714,7 +828,7 @@
         fogNear.onChange(function (jar) {
           scene.fog.near = jar;
         });
-        var fogFar = gui
+        let fogFar = gui
           .add(parameters, "fogFar")
           .min(50)
           .max(400)
@@ -726,7 +840,7 @@
 
       function animate() {
         requestAnimationFrame(animate);
-        var delta = clock.getDelta();
+        let delta = clock.getDelta();
         if (mixerPolonez) mixerPolonez.update(delta);
         if (mixerPolonezWireframe) mixerPolonezWireframe.update(delta);
         if (mixerSide) mixerSide.update(delta);
@@ -739,6 +853,7 @@
           camera.updateProjectionMatrix();
         }
         texture.offset.y += 0.06;
+        texture2.offset.y += 0.06;
         renderer.render(scene, camera);
         requestAnimationFrame(render);
       }

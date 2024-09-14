@@ -3,7 +3,7 @@
 Created by: Maciej Skorus
 
 Synthwave styled Three.js "coloring book" like animation. Built-in GUI allows user to play with scene models and colors.
-All models were created with 3Ds Max 2018 and exported to .fbx files with animations. Some newest changes
+All models were created with 3Ds Max 2018 and exported to .fbx files with animations.
 
 # # LIVE DEMO
 
@@ -13,7 +13,7 @@ https://skorczanfff.github.io/Polonez-Autodrive/
 # # INFO
 
 - resolution half reduced to get better 80's experience
-- user can play with scene colors and models with built in GUI
+- user can play with scene colors and models with built-in GUI
 
 # # BUGS
 
