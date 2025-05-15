@@ -1,9 +1,11 @@
-@import url('https://fonts.googleapis.com/css?family=Pacifico&display=swap');
-html, body {
+@import url("https://fonts.googleapis.com/css?family=Pacifico&display=swap");
+html,
+body {
   height: 100%;
   margin: 0;
   overflow: hidden;
   color: yellow;
+  position: relative;
 }
 canvas {
   width: 100%;
@@ -15,3 +17,326 @@ audio {
   display: none;
 }
 
+/* Loading Screen Styles - 80s Computer Terminal */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #004671;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  font-family: "Courier New", monospace;
+  --flicker-opacity: 1;
+  --flicker-intensity: 1;
+  animation: crtFlicker 8s linear infinite;
+}
+
+/* CRT screen effect for loading screen - always visible */
+.loader-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: var(--flicker-opacity);
+}
+
+/* CRT Overlay for main animation - can be toggled */
+.crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    var(--scan-line-color) 50%
+  );
+  background-size: 100% 4px;
+  --flicker-intensity: 1;
+  animation: flicker 0.15s infinite;
+}
+
+/* CRT scan lines - Static effect without animation, color can be changed */
+.crt-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--scan-line-gradient);
+  background-size: 100% 4px;
+  z-index: 2;
+  pointer-events: none;
+  animation: inherit;
+}
+
+/* CRT vignette effect */
+.crt-overlay::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(18, 16, 16, 0.1);
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  animation: inherit;
+}
+
+/* Terminal container */
+.terminal-container {
+  width: 80%;
+  max-width: 650px;
+  background-color: #004671;
+  border: 2px solid #40d5db;
+  box-shadow: 0 0 20px #40d5db, inset 0 0 10px rgba(64, 213, 219, 0.5);
+  color: #40d5db;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Terminal header */
+.terminal-header {
+  background-color: #40d5db;
+  color: #004671;
+  padding: 8px 15px;
+  font-weight: bold;
+  border-bottom: 2px solid #40d5db;
+  text-align: center;
+}
+
+/* Terminal content */
+.terminal-content {
+  padding: 20px;
+  min-height: 200px;
+  position: relative;
+}
+
+/* Terminal text */
+.terminal-text {
+  margin-bottom: 10px;
+  text-shadow: 0 0 5px #40d5db;
+  line-height: 1.5;
+}
+
+/* Terminal progress line */
+.terminal-progress {
+  margin: 15px 0;
+  font-weight: bold;
+  color: #fc3b96;
+  text-shadow: 0 0 5px #fc3b96;
+}
+
+/* Blinking cursor */
+.cursor {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 1.2em;
+  color: #40d5db;
+  animation: blink 1s step-end infinite;
+  position: absolute;
+  bottom: 20px;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* CRT turn off effect */
+.crt-off {
+  animation: turnoff 0.8s ease-out forwards;
+}
+
+@keyframes turnoff {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(1.05);
+    opacity: 0.6;
+  }
+  60% {
+    transform: scale(0.01);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0.4;
+  }
+}
+
+/* CRT power/light flicker effect */
+@keyframes crtFlicker {
+  0% {
+    --flicker-opacity: 1;
+  }
+  1% {
+    --flicker-opacity: calc(1 - (0.2 * var(--flicker-intensity)));
+  }
+  2% {
+    --flicker-opacity: 1;
+  }
+  8% {
+    --flicker-opacity: 1;
+  }
+  9% {
+    --flicker-opacity: calc(1 - (0.1 * var(--flicker-intensity)));
+  }
+  10% {
+    --flicker-opacity: 1;
+  }
+  20% {
+    --flicker-opacity: 1;
+  }
+  21% {
+    --flicker-opacity: calc(1 - (0.4 * var(--flicker-intensity)));
+  }
+  22% {
+    --flicker-opacity: 1;
+  }
+  53% {
+    --flicker-opacity: 1;
+  }
+  54% {
+    --flicker-opacity: calc(1 - (0.5 * var(--flicker-intensity)));
+  }
+  55% {
+    --flicker-opacity: calc(1 - (0.2 * var(--flicker-intensity)));
+  }
+  56% {
+    --flicker-opacity: 1;
+  }
+  77% {
+    --flicker-opacity: 1;
+  }
+  78% {
+    --flicker-opacity: calc(1 - (0.3 * var(--flicker-intensity)));
+  }
+  79% {
+    --flicker-opacity: 1;
+  }
+  92% {
+    --flicker-opacity: 1;
+  }
+  93% {
+    --flicker-opacity: calc(1 - (0.15 * var(--flicker-intensity)));
+  }
+  94% {
+    --flicker-opacity: 1;
+  }
+  100% {
+    --flicker-opacity: 1;
+  }
+}
+
+/* Old phosphor glow effect */
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 5px #40d5db;
+  }
+  50% {
+    text-shadow: 0 0 10px #40d5db, 0 0 15px #40d5db;
+  }
+  100% {
+    text-shadow: 0 0 5px #40d5db;
+  }
+}
+
+.terminal-text,
+.terminal-progress {
+  animation: glow 2s infinite;
+}
+
+/* Remove moving scan line effect from the main animation */
+/* .crt-overlay::before {
+  animation: scanline 10s linear infinite;
+} */
+
+@keyframes flicker {
+  0% {
+    opacity: calc(0.27861 * var(--flicker-intensity));
+  }
+  5% {
+    opacity: calc(0.34769 * var(--flicker-intensity));
+  }
+  10% {
+    opacity: calc(0.23604 * var(--flicker-intensity));
+  }
+  15% {
+    opacity: calc(0.90626 * var(--flicker-intensity));
+  }
+  20% {
+    opacity: calc(0.18128 * var(--flicker-intensity));
+  }
+  25% {
+    opacity: calc(0.83891 * var(--flicker-intensity));
+  }
+  30% {
+    opacity: calc(0.65583 * var(--flicker-intensity));
+  }
+  35% {
+    opacity: calc(0.67807 * var(--flicker-intensity));
+  }
+  40% {
+    opacity: calc(0.26559 * var(--flicker-intensity));
+  }
+  45% {
+    opacity: calc(0.84693 * var(--flicker-intensity));
+  }
+  50% {
+    opacity: calc(0.96019 * var(--flicker-intensity));
+  }
+  55% {
+    opacity: calc(0.08594 * var(--flicker-intensity));
+  }
+  60% {
+    opacity: calc(0.20313 * var(--flicker-intensity));
+  }
+  65% {
+    opacity: calc(0.71988 * var(--flicker-intensity));
+  }
+  70% {
+    opacity: calc(0.53455 * var(--flicker-intensity));
+  }
+  75% {
+    opacity: calc(0.37288 * var(--flicker-intensity));
+  }
+  80% {
+    opacity: calc(0.71428 * var(--flicker-intensity));
+  }
+  85% {
+    opacity: calc(0.70419 * var(--flicker-intensity));
+  }
+  90% {
+    opacity: calc(0.7003 * var(--flicker-intensity));
+  }
+  95% {
+    opacity: calc(0.36108 * var(--flicker-intensity));
+  }
+  100% {
+    opacity: calc(0.24387 * var(--flicker-intensity));
+  }
+}

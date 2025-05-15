@@ -1,0 +1,143 @@
+class PalmManager {
+  constructor(scene, modelLoader) {
+    this.scene = scene;
+    this.modelLoader = modelLoader;
+    this.palms = [];
+    this.showPalm = true;
+    this.showPalmWireframe = true;
+
+    // Preload palm model
+    this.modelLoader
+      .preloadModel("palm", "models/palm.FBX", "palm", "palmWireframe")
+      .then(() => {
+        // Start spawning palms periodically once models are loaded
+        setInterval(() => this.spawnPalms(), 1500);
+      });
+  }
+
+  spawnPalms() {
+    const rotationLeft = Math.random() * 2 * Math.PI;
+    const rotationRight = Math.random() * 2 * Math.PI;
+
+    // Create left and right palms
+    this.createPalm(-11, rotationLeft);
+    this.createPalm(11, rotationRight);
+  }
+
+  createPalm(xPosition, rotationY) {
+    // Create normal palm
+    const palmNormal = this.modelLoader.createModelInstance(
+      "palm",
+      { x: xPosition, y: 0, z: -100 },
+      { y: rotationY }
+    );
+
+    if (!palmNormal) return;
+
+    palmNormal.userData.isPalm = true;
+    palmNormal.visible = this.showPalm;
+
+    // Create wireframe palm
+    const palmWireframe = this.modelLoader.createModelInstance(
+      "palmWireframe",
+      { x: xPosition, y: 0, z: -100 },
+      { y: rotationY }
+    );
+
+    if (!palmWireframe) return;
+
+    palmWireframe.userData.isPalmWireframe = true;
+    palmWireframe.visible = this.showPalmWireframe;
+
+    // Ensure perfect alignment
+    this.syncModels(palmNormal, palmWireframe);
+
+    // Store reference to both models
+    const palm = { normal: palmNormal, wireframe: palmWireframe };
+    this.palms.push(palm);
+
+    // Animate the palm pair together
+    this.animatePalmPair(palm, () => {
+      // Remove both models from scene and from our array when animation is complete
+      this.scene.remove(palmNormal);
+      this.scene.remove(palmWireframe);
+
+      const index = this.palms.findIndex((p) => p.normal === palmNormal);
+      if (index !== -1) {
+        this.palms.splice(index, 1);
+      }
+    });
+
+    return palm;
+  }
+
+  // New method to synchronize the positions of two models
+  syncModels(modelA, modelB) {
+    // Ensure identical position, rotation, and scale
+    modelB.position.copy(modelA.position);
+    modelB.rotation.copy(modelA.rotation);
+    modelB.scale.copy(modelA.scale);
+  }
+
+  // Animate both normal and wireframe models together
+  animatePalmPair(palm, onComplete) {
+    const startTime = Date.now();
+    const duration = 14000; // Time in milliseconds for the palm to move across the road
+
+    const update = () => {
+      const elapsedTime = Date.now() - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+
+      // Move from -100 to +100 along z-axis - update normal model
+      palm.normal.position.z = -100 + progress * 200;
+
+      // Sync wireframe position to match normal model
+      this.syncModels(palm.normal, palm.wireframe);
+
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        if (onComplete) onComplete();
+      }
+    };
+
+    update();
+  }
+
+  // Keep this for backward compatibility but route to the new method
+  animatePalm(palm, onComplete) {
+    console.warn("animatePalm is deprecated, use animatePalmPair instead");
+
+    const startTime = Date.now();
+    const duration = 14000; // Time in milliseconds for the palm to move across the road
+
+    const update = () => {
+      const elapsedTime = Date.now() - startTime;
+      const progress = Math.min(elapsedTime / duration, 1);
+
+      // Move from -100 to +100 along z-axis
+      palm.position.z = -100 + progress * 200;
+
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        if (onComplete) onComplete();
+      }
+    };
+
+    update();
+  }
+
+  updateVisibility(showPalm, showPalmWireframe) {
+    this.showPalm = showPalm;
+    this.showPalmWireframe = showPalmWireframe;
+
+    // Update visibility for all existing palms
+    this.palms.forEach((palm) => {
+      palm.normal.visible = showPalm;
+      palm.wireframe.visible = showPalmWireframe;
+    });
+  }
+}
+
+export default PalmManager;
