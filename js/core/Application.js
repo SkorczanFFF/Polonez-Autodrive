@@ -62,8 +62,49 @@ class Application {
   }
 
   loadModels() {
+    // Track loading completion
+    let polonezLoaded = false;
+    let hillsLoaded = false;
+    let sideLoaded = false;
+
+    // Add error handling wrapper for model loading
+    const loadModelWithFallback = (
+      modelKey,
+      modelPath,
+      materialName,
+      wireframeMaterialName,
+      position,
+      hasAnimation
+    ) => {
+      console.log(`Loading model: ${modelPath}`);
+
+      // Try with original case first
+      this.modelLoader.loadModel(
+        modelKey,
+        modelPath,
+        materialName,
+        wireframeMaterialName,
+        position,
+        hasAnimation
+      );
+
+      // Force progress update even if loading fails
+      setTimeout(() => {
+        this.loadingManager.itemLoaded(`${modelKey.toUpperCase()} MODEL`);
+
+        // Mark this model as loaded
+        if (modelKey === "polonez") polonezLoaded = true;
+        if (modelKey === "hills") hillsLoaded = true;
+
+        // If all key models are loaded (or timed out), initialize the controllers
+        if (polonezLoaded && hillsLoaded && sideLoaded) {
+          this.initializeControllers();
+        }
+      }, 2000);
+    };
+
     // Load Polonez car models - these are priority
-    this.modelLoader.loadModel(
+    loadModelWithFallback(
       "polonez",
       "models/polonez.FBX",
       "polonez",
@@ -72,68 +113,32 @@ class Application {
       true
     );
 
-    // Force progress update
-    setTimeout(() => {
-      this.loadingManager.itemLoaded("POLONEZ MODEL");
-    }, 1000);
-
     // Load hills models
-    this.modelLoader.loadModel(
+    loadModelWithFallback(
       "hills",
       "models/hills.FBX",
       "hills",
       "hillsWireframe"
     );
 
-    // Force another progress update
-    setTimeout(() => {
-      this.loadingManager.itemLoaded("HILLS MODEL");
-    }, 2000);
-
     // Load side hills models with custom callback to ensure animation sync
     this.loadSideHillsModels();
 
-    // Preload rock model
-    this.modelLoader
-      .preloadModel("rock", "models/rockmd.FBX", "rock")
-      .then(() => {
-        // Initialize palm manager after key models are loaded
-        this.palmManager = new PalmManager(
-          this.sceneManager.scene,
-          this.modelLoader
-        );
+    // Mark side hills as loaded after a timeout
+    setTimeout(() => {
+      sideLoaded = true;
+      // If all key models are loaded (or timed out), initialize the controllers
+      if (polonezLoaded && hillsLoaded) {
+        this.initializeControllers();
+      }
+    }, 3000);
 
-        // Update GUI with palm manager reference
-        this.guiManager.palmManager = this.palmManager;
-
-        // Initialize Polonez controller for steering
-        this.polonezController = new PolonezController(
-          this.modelLoader,
-          this.environment
-        );
-        this.polonezController.initialize();
-
-        // Register the controller's update method
-        this.sceneManager.addUpdateCallback((delta) => {
-          if (this.polonezController) {
-            this.polonezController.update(delta);
-          }
-        });
-
-        console.log("All models loaded successfully");
-        this.modelsLoaded = true;
-      })
-      .catch((error) => {
-        console.error("Error loading models:", error);
-        // Even if there's an error, set modelsLoaded to true so the UI is accessible
-        this.modelsLoaded = true;
-        // Force hide the loading screen after an error
-        setTimeout(() => {
-          if (this.loadingManager) {
-            this.loadingManager.hideLoader();
-          }
-        }, 2000);
-      });
+    // Force loading to complete after a timeout regardless of model loading state
+    setTimeout(() => {
+      if (!this.modelsLoaded) {
+        this.initializeControllers();
+      }
+    }, 5000);
   }
 
   loadSideHillsModels() {
@@ -246,6 +251,38 @@ class Application {
 
     // Render the scene
     this.sceneManager.render();
+  }
+
+  // Separate method to initialize controllers
+  initializeControllers() {
+    // Only initialize once
+    if (this.modelsLoaded) return;
+
+    // Initialize palm manager
+    this.palmManager = new PalmManager(
+      this.sceneManager.scene,
+      this.modelLoader
+    );
+
+    // Update GUI with palm manager reference
+    this.guiManager.palmManager = this.palmManager;
+
+    // Initialize Polonez controller for steering
+    this.polonezController = new PolonezController(
+      this.modelLoader,
+      this.environment
+    );
+    this.polonezController.initialize();
+
+    // Register the controller's update method
+    this.sceneManager.addUpdateCallback((delta) => {
+      if (this.polonezController) {
+        this.polonezController.update(delta);
+      }
+    });
+
+    console.log("All models loaded successfully");
+    this.modelsLoaded = true;
   }
 }
 

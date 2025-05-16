@@ -115,16 +115,32 @@ class ModelLoader {
               this.sceneManager.addMixer(mixer);
             }
           } else {
-            // Original slower loading approach for non-speed priority
-            this.loadWireframeModel(
-              `${modelKey}Wireframe`,
-              modelPath,
-              wireframeMaterialName,
-              model.position.clone(),
-              hasAnimation,
-              model.rotation.clone(),
-              model.scale.clone()
-            );
+            // Fast path always used with prioritizeSpeed=true
+            console.warn("Slow path requested but ignored - using fast path");
+            const wireframeModel = model.clone();
+            this.applyMaterialToModel(wireframeModel, wireframeMaterial);
+
+            // Ensure identical position, rotation, and scale
+            wireframeModel.position.copy(model.position);
+            wireframeModel.rotation.copy(model.rotation);
+            wireframeModel.scale.copy(model.scale);
+
+            this.scene.add(wireframeModel);
+            this.models[`${modelKey}Wireframe`] = wireframeModel;
+
+            // Setup animation mixer if needed
+            if (
+              hasAnimation &&
+              model.animations &&
+              model.animations.length > 0
+            ) {
+              const mixer = new THREE.AnimationMixer(wireframeModel);
+              const action = mixer.clipAction(model.animations[0]);
+              action.play();
+
+              this.mixers[`${modelKey}Wireframe`] = mixer;
+              this.sceneManager.addMixer(mixer);
+            }
           }
         }
       },
@@ -146,74 +162,7 @@ class ModelLoader {
     );
   }
 
-  // This method is kept for backward compatibility but not used with prioritizeSpeed
-  loadWireframeModel(
-    modelKey,
-    modelPath,
-    materialName,
-    position = null,
-    hasAnimation = false,
-    rotation = null,
-    scale = null
-  ) {
-    const wireframeMaterial = this.materialManager.getMaterial(materialName);
-
-    this.fbxLoader.load(
-      modelPath,
-      (model) => {
-        this.applyMaterialToModel(model, wireframeMaterial);
-
-        // Apply exact position
-        if (position) {
-          model.position.copy(position);
-        }
-
-        // Apply exact rotation if provided
-        if (rotation) {
-          model.rotation.copy(rotation);
-        }
-
-        // Apply exact scale if provided
-        if (scale) {
-          model.scale.copy(scale);
-        }
-
-        this.scene.add(model);
-        this.models[modelKey] = model;
-
-        // Setup animation mixer if model has animations
-        if (hasAnimation && model.animations && model.animations.length > 0) {
-          const mixer = new THREE.AnimationMixer(model);
-          const action = mixer.clipAction(model.animations[0]);
-          action.play();
-
-          this.mixers[modelKey] = mixer;
-          this.sceneManager.addMixer(mixer);
-        }
-
-        // Report loading complete for this model
-        if (this.loadingManager) {
-          this.loadingManager.itemLoaded(`${modelKey.toUpperCase()}`);
-          this.activeLoads--;
-        }
-      },
-      // Progress callback
-      (xhr) => {
-        if (this.loadingManager && this.loadingManager.statusText) {
-          const progress = Math.round((xhr.loaded / xhr.total) * 100);
-          this.loadingManager.statusText.textContent = `LOADING: ${modelKey.toUpperCase()} ${progress}%`;
-        }
-      },
-      // Error callback
-      (error) => {
-        console.error(`Error loading wireframe model ${modelKey}:`, error);
-        if (this.loadingManager) {
-          this.loadingManager.itemLoaded(`${modelKey.toUpperCase()} (ERROR)`);
-          this.activeLoads--;
-        }
-      }
-    );
-  }
+  // Removed unused loadWireframeModel method
 
   applyMaterialToModel(model, material) {
     model.traverse((child) => {
@@ -244,9 +193,12 @@ class ModelLoader {
     }
 
     return new Promise((resolve, reject) => {
+      console.log(`Attempting to load model: ${modelPath}`);
+
       this.fbxLoader.load(
         modelPath,
         (model) => {
+          console.log(`Successfully loaded model: ${modelPath}`);
           this.applyMaterialToModel(model, material);
           this.models[modelKey] = model;
 
@@ -334,7 +286,12 @@ class ModelLoader {
         },
         // Error callback
         (error) => {
-          console.error(`Error loading model ${modelKey}:`, error);
+          console.error(
+            `Error loading model ${modelKey} from ${modelPath}:`,
+            error
+          );
+          console.error(`Browser: ${navigator.userAgent}`);
+          console.error(`Host: ${window.location.hostname}`);
           if (this.loadingManager) {
             this.loadingManager.itemLoaded(`${modelKey.toUpperCase()} (ERROR)`);
             this.activeLoads--;

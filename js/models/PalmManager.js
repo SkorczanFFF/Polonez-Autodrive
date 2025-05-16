@@ -6,13 +6,36 @@ class PalmManager {
     this.showPalm = true;
     this.showPalmWireframe = true;
 
-    // Preload palm model
+    // Preload palm model - ensure correct case sensitivity
     this.modelLoader
       .preloadModel("palm", "models/palm.FBX", "palm", "palmWireframe")
       .then(() => {
         // Start spawning palms periodically once models are loaded
-        setInterval(() => this.spawnPalms(), 1500);
+        this.startSpawning();
+      })
+      .catch((error) => {
+        console.error("Error loading palm model:", error);
+        // Try a fallback with lowercase extension
+        this.modelLoader
+          .preloadModel("palm", "models/palm.fbx", "palm", "palmWireframe")
+          .then(() => {
+            // Start spawning palms periodically once models are loaded
+            this.startSpawning();
+          })
+          .catch((error) => {
+            console.error("Failed to load palm model with both cases:", error);
+          });
       });
+  }
+
+  startSpawning() {
+    // Only start spawning if we successfully loaded the palm model
+    if (this.modelLoader.getModel("palm")) {
+      console.log("Starting palm spawning");
+      setInterval(() => this.spawnPalms(), 1500);
+    } else {
+      console.error("Cannot start palm spawning - model not loaded");
+    }
   }
 
   spawnPalms() {
@@ -104,29 +127,7 @@ class PalmManager {
     update();
   }
 
-  // Keep this for backward compatibility but route to the new method
-  animatePalm(palm, onComplete) {
-    console.warn("animatePalm is deprecated, use animatePalmPair instead");
-
-    const startTime = Date.now();
-    const duration = 14000; // Time in milliseconds for the palm to move across the road
-
-    const update = () => {
-      const elapsedTime = Date.now() - startTime;
-      const progress = Math.min(elapsedTime / duration, 1);
-
-      // Move from -100 to +100 along z-axis
-      palm.position.z = -100 + progress * 200;
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      } else {
-        if (onComplete) onComplete();
-      }
-    };
-
-    update();
-  }
+  // Removed deprecated animatePalm method
 
   updateVisibility(showPalm, showPalmWireframe) {
     this.showPalm = showPalm;
