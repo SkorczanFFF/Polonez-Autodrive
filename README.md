@@ -1,32 +1,53 @@
-# P O L O N E Z - A U T O D R I V E
+# P O L O N E Z – A U T O D R I V E
 
-Created by: Maciej Skorus
+**Created by:** Maciej Skorus
 
-Synthwave styled Three.js "coloring book" like animation. Built-in GUI allows user to play with scene models and colors.
-All models were created with 3Ds Max 2018 and exported to .fbx files with animations.
+A synthwave-styled Three.js "coloring book"-like animation. A built-in GUI allows the user to experiment with scene models and colors.
 
-# # LIVE DEMO
+All models were created in 3Ds Max 2018, updated in 3Ds Max 2023, and exported as `.fbx` files (some include animations).
 
-https://polonez-autodrive.vercel.app/
-https://skorczanfff.github.io/Polonez-Autodrive/
+**Press ENTER** to activate steering with the left and right arrow keys.  
+**Press ESC** to exit.
 
-# # INFO
+---
 
-- resolution half reduced to get better 80's experience
-- user can play with scene colors and models with built-in GUI
+## 🔗 Live Demo
 
-# # BUGS
+- [https://polonez-autodrive.vercel.app/](https://polonez-autodrive.vercel.app/)  
+- [https://skorczanfff.github.io/Polonez-Autodrive/](https://skorczanfff.github.io/Polonez-Autodrive/)
 
-- sometimes model of side hills gets through front hills
+---
 
-# # FUTURE IDEAS
+## ℹ️ Info
 
-- add neon glow effect to wireframes
+- Resolution is intentionally halved to enhance the 80s aesthetic
+- The user can adjust scene colors and models via the built-in GUI
 
-# CHANGELOG
+---
 
-September 2024
+## 🐞 Known Bugs
 
-- added palms spawn and road
-- updated color palette
-- added vercel deploy
+- Occasionally, the side hills clip through the front hills
+
+---
+
+## 🌟 Future Ideas
+
+- Add neon glow effects to wireframes
+- Include a minigame
+- Generate hills dynamically, with random rocks/objects spawning on the roadside
+
+---
+
+## 📝 Changelog
+
+### May 2025
+- Fixed Polonez 3D model; wheels are now separate from the body
+- Added steering functionality (left/right) after pressing ENTER
+- Introduced retro loading screen
+- CRT effect now adjustable via GUI
+
+### September 2024
+- Added palm trees and road elements
+- Updated color palette
+- Deployed to Vercel
