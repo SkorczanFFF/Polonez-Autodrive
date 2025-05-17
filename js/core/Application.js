@@ -3,6 +3,8 @@ import MaterialManager from "./MaterialManager.js";
 import ModelLoader from "../models/ModelLoader.js";
 import Environment from "../models/Environment.js";
 import PalmManager from "../models/PalmManager.js";
+import RockManager from "../models/RockManager.js";
+import MinigameManager from "../models/MinigameManager.js";
 import GUIManager from "../utils/GUIManager.js";
 import LoadingManager from "../utils/LoadingManager.js";
 import PolonezController from "../models/PolonezController.js";
@@ -241,7 +243,8 @@ class Application {
   }
 
   animate() {
-    requestAnimationFrame(() => this.animate());
+    // Store animation frame ID for potential cleanup
+    this.animationFrameId = requestAnimationFrame(() => this.animate());
 
     // Update animations
     this.sceneManager.update();
@@ -264,8 +267,11 @@ class Application {
       this.modelLoader
     );
 
-    // Update GUI with palm manager reference
-    this.guiManager.palmManager = this.palmManager;
+    // Initialize rock manager
+    this.rockManager = new RockManager(
+      this.sceneManager.scene,
+      this.modelLoader
+    );
 
     // Initialize Polonez controller for steering
     this.polonezController = new PolonezController(
@@ -274,15 +280,62 @@ class Application {
     );
     this.polonezController.initialize();
 
+    // Initialize Minigame manager after polonez controller is ready
+    this.minigameManager = new MinigameManager(
+      this.sceneManager.scene,
+      this.modelLoader,
+      this.polonezController
+    );
+
+    // Set additional references for the minigame manager
+    this.minigameManager.setEnvironment(this.environment);
+    this.minigameManager.setMaterialManager(this.materialManager);
+    this.minigameManager.setGUI(this.guiManager.gui);
+    this.minigameManager.setSceneManager(this.sceneManager);
+
+    // Connect PalmManager and RockManager to speed control system
+    this.minigameManager.setPalmManager(this.palmManager);
+    this.minigameManager.setRockManager(this.rockManager);
+
+    // Update GUI with manager references
+    this.guiManager.palmManager = this.palmManager;
+    this.guiManager.rockManager = this.rockManager;
+
     // Register the controller's update method
     this.sceneManager.addUpdateCallback((delta) => {
       if (this.polonezController) {
         this.polonezController.update(delta);
       }
+
+      if (this.minigameManager) {
+        this.minigameManager.update(delta);
+      }
     });
 
     console.log("All models loaded successfully");
     this.modelsLoaded = true;
+  }
+
+  /**
+   * Cleanup and dispose resources when the application is destroyed
+   */
+  cleanup() {
+    // Cleanup controllers
+    if (this.polonezController) {
+      this.polonezController.cleanup();
+    }
+
+    if (this.minigameManager) {
+      this.minigameManager.cleanup();
+    }
+
+    // Stop animation loop
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+
+    // Other cleanup as needed
+    console.log("Application cleanup complete");
   }
 }
 

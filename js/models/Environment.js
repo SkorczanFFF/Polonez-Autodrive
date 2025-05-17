@@ -4,6 +4,7 @@ class Environment {
     this.materialManager = materialManager;
     this.elements = {};
     this.wheelRotationSpeed = -0.22;
+    this.speedMultiplier = 1.0;
     this.wheels = {
       models: [],
       wireframes: [],
@@ -23,7 +24,22 @@ class Environment {
     this.createTerrain();
     this.createRoad();
     this.createWheels();
+    // this.createBox();
   }
+
+  // createBox() {
+  //   // 1. Create geometry
+  //   const geometry = new THREE.BoxGeometry(1, 1, 1); // width, height, depth
+
+  //   // 2. Create material
+  //   const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+
+  //   // 3. Combine into mesh
+  //   const cube = new THREE.Mesh(geometry, material);
+  //   cube.position.set(16, 0, 0);
+  //   // 4. Add to scene
+  //   this.scene.add(cube);
+  // }
 
   createSun() {
     // Create sun
@@ -234,6 +250,13 @@ class Environment {
       this.wheels.wireframes[i].position.x = wheelX;
       this.wheels.wireframes[i].position.y = wheelY;
     }
+  }
+
+  // Set the speed multiplier for animations
+  setSpeed(multiplier) {
+    this.speedMultiplier = multiplier;
+    // Update wheel rotation speed
+    this.wheelRotationSpeed = -0.22 * this.speedMultiplier;
   }
 
   update(deltaTime) {

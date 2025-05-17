@@ -4,6 +4,7 @@ class GUIManager {
     this.materialManager = materialManager;
     this._palmManager = palmManager; // Use private property with setter
     this._environment = environment; // Use private property with setter
+    this._rockManager = null; // Add rockManager property
     this.gui = new dat.GUI();
     this.parameters = {
       // Polonez parameters
@@ -11,12 +12,6 @@ class GUIManager {
       showPolonez: true,
       polonezWireframeColor: "#fff6ba",
       showPolonezWireframe: true,
-
-      // Wheels parameters
-      wheelsColor: "#3b8ceb",
-      showWheels: true,
-      wheelsWireframeColor: "#fff6ba",
-      showWheelsWireframe: true,
 
       // Hills parameters
       hillsColor: "#4f33d9",
@@ -46,6 +41,12 @@ class GUIManager {
       palmWireframeColor: "#ffdf7c",
       showPalmWireframe: true,
 
+      // Rock parameters
+      rockColor: "#8b8b8b",
+      showRock: true,
+      rockWireframeColor: "#ff5a5a",
+      showRockWireframe: true,
+
       // Sun parameters
       sunColorTop: "#ffebac",
       sunColorBottom: "#fc3b96",
@@ -71,6 +72,13 @@ class GUIManager {
       folder: null,
       showPalm: null,
       showPalmWireframe: null,
+    };
+
+    // Rock controls that need to be updated when rockManager is set
+    this.rockControls = {
+      folder: null,
+      showRock: null,
+      showRockWireframe: null,
     };
 
     // Initialize CRT effect settings
@@ -148,12 +156,43 @@ class GUIManager {
     this._environment = env;
   }
 
+  // Getter and setter for rockManager
+  get rockManager() {
+    return this._rockManager;
+  }
+
+  set rockManager(manager) {
+    this._rockManager = manager;
+
+    // Update rock controls if they exist
+    if (manager && this.rockControls.folder) {
+      this.updateRockControls();
+    }
+  }
+
+  updateRockControls() {
+    // Update the onChange handlers for rock visibility controls
+    if (this.rockControls.showRock) {
+      this.rockControls.showRock.onChange((value) => {
+        this.parameters.showRock = value;
+        this._rockManager.updateVisibility(
+          value,
+          this.parameters.showRockWireframe
+        );
+      });
+    }
+
+    if (this.rockControls.showRockWireframe) {
+      this.rockControls.showRockWireframe.onChange((value) => {
+        this.parameters.showRockWireframe = value;
+        this._rockManager.updateVisibility(this.parameters.showRock, value);
+      });
+    }
+  }
+
   setupGUI() {
     // Polonez folder
     this.setupPolonezFolder();
-
-    // Wheels folder
-    this.setupWheelsFolder();
 
     // Hills folder
     this.setupHillsFolder();
@@ -169,6 +208,9 @@ class GUIManager {
 
     // Palm folder
     this.setupPalmFolder();
+
+    // Rock folder
+    this.setupRockFolder();
 
     // Sun folder
     this.setupSunFolder();
@@ -189,6 +231,12 @@ class GUIManager {
       .onChange((color) => {
         const material = this.materialManager.getMaterial("polonez");
         material.color.setHex(color.replace("#", "0x"));
+
+        // Also update wheels color when polonez color changes (linked to polonez)
+        if (this._environment) {
+          const wheelsMaterial = material.clone();
+          this._environment.setWheelsColor(wheelsMaterial);
+        }
       });
 
     folder
@@ -197,6 +245,11 @@ class GUIManager {
       .onChange((value) => {
         const material = this.materialManager.getMaterial("polonez");
         material.visible = value;
+
+        // Also update wheels visibility (linked to polonez)
+        if (this._environment) {
+          this._environment.setWheelsVisibility(value);
+        }
       });
 
     folder
@@ -205,6 +258,12 @@ class GUIManager {
       .onChange((color) => {
         const material = this.materialManager.getMaterial("polonezWireframe");
         material.color.setHex(color.replace("#", "0x"));
+
+        // Also update wheels wireframe color (linked to polonez)
+        if (this._environment) {
+          const wheelsWireframeMaterial = material.clone();
+          this._environment.setWheelsWireframeColor(wheelsWireframeMaterial);
+        }
       });
 
     folder
@@ -213,51 +272,8 @@ class GUIManager {
       .onChange((value) => {
         const material = this.materialManager.getMaterial("polonezWireframe");
         material.visible = value;
-      });
 
-    folder.close();
-  }
-
-  setupWheelsFolder() {
-    const folder = this.gui.addFolder("Wheels");
-
-    folder
-      .addColor(this.parameters, "wheelsColor")
-      .name("Color")
-      .onChange((color) => {
-        if (this._environment) {
-          const material = this.materialManager.getMaterial("polonez").clone();
-          material.color.setHex(color.replace("#", "0x"));
-          this._environment.setWheelsColor(material);
-        }
-      });
-
-    folder
-      .add(this.parameters, "showWheels")
-      .name("Show wheels")
-      .onChange((value) => {
-        if (this._environment) {
-          this._environment.setWheelsVisibility(value);
-        }
-      });
-
-    folder
-      .addColor(this.parameters, "wheelsWireframeColor")
-      .name("Wireframe color")
-      .onChange((color) => {
-        if (this._environment) {
-          const material = this.materialManager
-            .getMaterial("polonezWireframe")
-            .clone();
-          material.color.setHex(color.replace("#", "0x"));
-          this._environment.setWheelsWireframeColor(material);
-        }
-      });
-
-    folder
-      .add(this.parameters, "showWheelsWireframe")
-      .name("Show wireframe")
-      .onChange((value) => {
+        // Also update wheels wireframe visibility (linked to polonez)
         if (this._environment) {
           this._environment.setWheelsWireframeVisibility(value);
         }
@@ -461,6 +477,46 @@ class GUIManager {
         this.parameters.showPalmWireframe = value;
         console.log("Palm manager not available yet");
       });
+    }
+
+    folder.close();
+  }
+
+  setupRockFolder() {
+    const folder = this.gui.addFolder("Rocks");
+
+    folder
+      .addColor(this.parameters, "rockColor")
+      .name("Color")
+      .onChange((color) => {
+        const material = this.materialManager.getMaterial("rock");
+        material.color.setHex(color.replace("#", "0x"));
+      });
+
+    // Store reference to controller for later use
+    this.rockControls.showRock = folder
+      .add(this.parameters, "showRock")
+      .name("Show model");
+
+    folder
+      .addColor(this.parameters, "rockWireframeColor")
+      .name("Wireframe color")
+      .onChange((color) => {
+        const material = this.materialManager.getMaterial("rockWireframe");
+        material.color.setHex(color.replace("#", "0x"));
+      });
+
+    // Store reference to controller for later use
+    this.rockControls.showRockWireframe = folder
+      .add(this.parameters, "showRockWireframe")
+      .name("Show wireframe");
+
+    // Store reference to folder for later use
+    this.rockControls.folder = folder;
+
+    // Update controls if rockManager is already set
+    if (this._rockManager) {
+      this.updateRockControls();
     }
 
     folder.close();

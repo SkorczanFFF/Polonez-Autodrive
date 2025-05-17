@@ -14,6 +14,9 @@ class MaterialManager {
       laguna: "#3b8ceb",
     };
 
+    // Texture speed multiplier
+    this.textureSpeedMultiplier = 1.0;
+
     // Materials for models
     this.materials = {
       // Polonez materials
@@ -60,8 +63,12 @@ class MaterialManager {
         wireframe: true,
       }),
 
-      // Rock material
-      rock: this.createMeshPhongMaterial({ color: "#8b8b8b" }),
+      // Rock materials
+      rock: this.createMeshPhongMaterial({ color: "#9047c3" }),
+      rockWireframe: this.createMeshBasicMaterial({
+        color: "#66b6cf",
+        wireframe: true,
+      }),
     };
 
     // Setup materials that require textures
@@ -145,14 +152,21 @@ class MaterialManager {
     return this.materials[name];
   }
 
+  setTextureSpeed(multiplier) {
+    this.textureSpeedMultiplier = multiplier;
+  }
+
   updateTextures() {
-    // Update texture offsets for animation
+    // Update texture offsets for animation - apply speed multiplier
+    const baseSpeed = 0.06;
+    const speed = baseSpeed * this.textureSpeedMultiplier;
+
     if (this.textures.terrainGrid) {
-      this.textures.terrainGrid.offset.y += 0.06;
+      this.textures.terrainGrid.offset.y += speed;
     }
 
     if (this.textures.roadGrid) {
-      this.textures.roadGrid.offset.y += 0.06;
+      this.textures.roadGrid.offset.y += speed;
     }
   }
 }

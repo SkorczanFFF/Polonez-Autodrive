@@ -5,6 +5,7 @@ class PalmManager {
     this.palms = [];
     this.showPalm = true;
     this.showPalmWireframe = true;
+    this.speedMultiplier = 1.0;
 
     // Preload palm model - ensure correct case sensitivity
     this.modelLoader
@@ -105,7 +106,8 @@ class PalmManager {
   // Animate both normal and wireframe models together
   animatePalmPair(palm, onComplete) {
     const startTime = Date.now();
-    const duration = 14000; // Time in milliseconds for the palm to move across the road
+    // Apply speed multiplier to make palms move faster
+    const duration = 14000 / this.speedMultiplier; // Time in milliseconds for the palm to move across the road
 
     const update = () => {
       const elapsedTime = Date.now() - startTime;
@@ -127,7 +129,10 @@ class PalmManager {
     update();
   }
 
-  // Removed deprecated animatePalm method
+  // Set speed multiplier
+  setSpeed(multiplier) {
+    this.speedMultiplier = multiplier;
+  }
 
   updateVisibility(showPalm, showPalmWireframe) {
     this.showPalm = showPalm;

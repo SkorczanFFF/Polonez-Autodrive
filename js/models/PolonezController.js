@@ -21,6 +21,9 @@ class PolonezController {
     this.isRightPressed = false;
     this.lastKeyPressTime = 0;
 
+    // Listeners for Enter key for minigame
+    this.enterKeyListeners = [];
+
     // Bind event handlers
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
@@ -45,11 +48,38 @@ class PolonezController {
     document.addEventListener("keyup", this.onKeyUp);
   }
 
+  /**
+   * Allow other components to register for Enter key press events
+   * Used by MinigameManager to start minigame when Enter is pressed
+   */
+  addEnterKeyListener(listener) {
+    this.enterKeyListeners.push(listener);
+  }
+
+  /**
+   * Remove Enter key listener
+   */
+  removeEnterKeyListener(listener) {
+    const index = this.enterKeyListeners.indexOf(listener);
+    if (index !== -1) {
+      this.enterKeyListeners.splice(index, 1);
+    }
+  }
+
   onKeyDown(event) {
     // Enter key - enable steering mode
-    if (event.key === "Enter" && !this.isSteeringEnabled) {
-      this.isSteeringEnabled = true;
-      console.log("Steering mode enabled");
+    if (event.key === "Enter") {
+      if (!this.isSteeringEnabled) {
+        this.isSteeringEnabled = true;
+        console.log("Steering mode enabled");
+      }
+
+      // Notify all enter key listeners
+      this.enterKeyListeners.forEach((listener) => {
+        if (typeof listener === "function") {
+          listener(event);
+        }
+      });
     }
 
     // Escape key - disable steering mode and reset position
@@ -299,6 +329,9 @@ class PolonezController {
     // Remove event listeners
     document.removeEventListener("keydown", this.onKeyDown);
     document.removeEventListener("keyup", this.onKeyUp);
+
+    // Clear references
+    this.enterKeyListeners = [];
   }
 }
 
