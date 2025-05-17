@@ -357,12 +357,11 @@ audio {
 }
 
 .minigame-countdown {
-  background-color: #004671;
-  border: 2px solid #40d5db;
-  box-shadow: 0 0 20px #40d5db, inset 0 0 10px rgba(64, 213, 219, 0.5);
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
   color: #40d5db;
   padding: 40px 80px;
-  border-radius: 8px;
   text-align: center;
   font-size: 120px;
   text-shadow: 0 0 10px #c348dd, 0 0 20px #c348dd, 0 0 30px #c348dd;

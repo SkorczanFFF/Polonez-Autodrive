@@ -9,11 +9,14 @@ class MinigameManager {
     this.countdown = 3;
     this.showMinigameInstructions = true;
     this.speedMultiplier = 1.0;
+    this.baseSpawnInterval = 2000; // Base interval for box spawning
     this.gui = null; // Reference to the GUI to hide/show it
     this.sceneManager = null; // Reference to the scene manager for camera control
     this.defaultCameraPosition = { x: 0, y: 1.975, z: 7 }; // Default camera position
     this.gameCameraPosition = { x: 0, y: 4, z: 7 }; // Game camera position
     this.boxSpawningActive = false; // Track if box spawning is active
+    this.boxSpawningInterval = null; // Reference to the interval
+    this.debugMode = false; // For debugging the speed issue
 
     // Create overlay for minigame UI
     this.createMinigameUI();
@@ -140,14 +143,16 @@ class MinigameManager {
     this.overlay.style.display = "flex";
     this.updateCountdown();
 
-    // Start spawning boxes during countdown
-    this.startSpawningBoxes();
-
     // Start countdown
     const countdownInterval = setInterval(() => {
       this.countdown--;
+
       if (this.countdown > 0) {
         this.updateCountdown();
+
+        if (this.countdown === 2) {
+          this.startSpawningBoxes();
+        }
       } else if (this.countdown === 0) {
         this.countdownElement.textContent = "START!";
       } else {
@@ -207,29 +212,66 @@ class MinigameManager {
   updateGameSpeed() {
     // Calculate speed multiplier based on score
     const tier = Math.floor(this.score / 20);
-    if (tier > 0) {
-      this.speedMultiplier = 1.0 + tier * 0.15; // +15% speed per tier
+
+    // Ensure minimum speed is 1.0
+    const newSpeedMultiplier = tier > 0 ? 1.0 + tier * 0.15 : 1.0; // +15% speed per tier
+
+    if (this.debugMode) {
+      console.log(
+        `Speed update - Score: ${this.score}, Tier: ${tier}, New multiplier: ${newSpeedMultiplier}, Old multiplier: ${this.speedMultiplier}`
+      );
     }
 
-    // Apply speed changes to environment elements
-    if (this.environment) {
-      this.environment.setSpeed(this.speedMultiplier);
+    // Only update if the speed has changed
+    if (newSpeedMultiplier !== this.speedMultiplier) {
+      this.speedMultiplier = newSpeedMultiplier;
+
+      // Apply speed changes to environment elements
+      if (this.environment) {
+        this.environment.setSpeed(this.speedMultiplier);
+      }
+
+      // Update textures speed
+      if (this.materialManager) {
+        this.materialManager.setTextureSpeed(this.speedMultiplier);
+      }
+
+      // Update palm speed
+      if (this._palmManager) {
+        this._palmManager.setSpeed(this.speedMultiplier);
+      }
+
+      // Update rock speed
+      if (this._rockManager) {
+        this._rockManager.setSpeed(this.speedMultiplier);
+      }
+
+      // Update box spawning rate if active
+      if (this.boxSpawningActive && this.boxSpawningInterval) {
+        this.updateBoxSpawningRate();
+      }
+
+      if (this.debugMode) {
+        console.log(`Speed updated to ${this.speedMultiplier}`);
+      }
+    }
+  }
+
+  updateBoxSpawningRate() {
+    // Clear existing interval and start a new one with updated speed
+    if (this.boxSpawningInterval) {
+      clearInterval(this.boxSpawningInterval);
     }
 
-    // Update textures speed
-    if (this.materialManager) {
-      this.materialManager.setTextureSpeed(this.speedMultiplier);
+    const interval = this.baseSpawnInterval / this.speedMultiplier;
+
+    if (this.debugMode) {
+      console.log(
+        `Updating box spawn interval to ${interval}ms (base: ${this.baseSpawnInterval}, multiplier: ${this.speedMultiplier})`
+      );
     }
 
-    // Update palm speed
-    if (this._palmManager) {
-      this._palmManager.setSpeed(this.speedMultiplier);
-    }
-
-    // Update rock speed
-    if (this._rockManager) {
-      this._rockManager.setSpeed(this.speedMultiplier);
-    }
+    this.boxSpawningInterval = setInterval(() => this.spawnBox(), interval);
   }
 
   startSpawningBoxes() {
@@ -237,11 +279,12 @@ class MinigameManager {
 
     this.boxSpawningActive = true;
 
-    // Start spawning boxes
-    this.boxSpawningInterval = setInterval(
-      () => this.spawnBox(),
-      2000 / this.speedMultiplier
-    );
+    // Start spawning boxes with current speed multiplier
+    this.updateBoxSpawningRate();
+
+    if (this.debugMode) {
+      console.log("Box spawning started");
+    }
   }
 
   spawnBox() {
@@ -334,10 +377,6 @@ class MinigameManager {
         // Check if we need to update game speed (every 20 points)
         if (this.score % 20 === 0) {
           this.updateGameSpeed();
-
-          // Update box spawning rate
-          clearInterval(this.boxSpawningInterval);
-          this.startSpawningBoxes();
         }
       }
 
@@ -373,6 +412,7 @@ class MinigameManager {
     // Stop spawning boxes
     if (this.boxSpawningInterval) {
       clearInterval(this.boxSpawningInterval);
+      this.boxSpawningInterval = null;
     }
 
     // Remove all boxes
