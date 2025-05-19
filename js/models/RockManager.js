@@ -6,33 +6,67 @@ class RockManager {
     this.showRock = true;
     this.showRockWireframe = true;
     this.speedMultiplier = 1.0;
+    this.spawnInterval = 1500; // Base spawn interval in ms
+    this.spawnIntervalIds = []; // Store interval IDs for updating
+    this.modelsLoaded = 0;
+    this.rockModels = ["rockmd", "rocksm"]; // Both rock model types
 
-    // Preload rock model
+    // Preload rock models
     this.modelLoader
-      .preloadModel("rock", "models/rockmd.fbx", "rock", "rockWireframe")
+      .preloadModel("rockmd", "models/rockmd.fbx", "rock", "rockWireframe")
       .then(() => {
-        // Start spawning rocks periodically once models are loaded
-        this.startSpawning();
+        this.modelsLoaded++;
+        this.checkAndStartSpawning();
       })
       .catch((error) => {
-        console.error("Error loading rock model:", error);
+        console.error("Error loading rockmd model:", error);
+      });
+
+    // Preload small rock model
+    this.modelLoader
+      .preloadModel("rocksm", "models/rocksm.fbx", "rock", "rockWireframe")
+      .then(() => {
+        this.modelsLoaded++;
+        this.checkAndStartSpawning();
+      })
+      .catch((error) => {
+        console.error("Error loading rocksm model:", error);
       });
   }
 
-  startSpawning() {
-    // Only start spawning if we successfully loaded the rock model
-    if (this.modelLoader.getModel("rock")) {
-      console.log("Starting rock spawning");
-      // Increase spawn density - spawn every 1.5 seconds (reduced from 3 seconds)
-      setInterval(() => this.spawnRocks(), 1500);
-
-      // For even more density, spawn multiple rocks at different time intervals
-      setTimeout(() => {
-        setInterval(() => this.spawnRocks(), 1500);
-      }, 750);
-    } else {
-      console.error("Cannot start rock spawning - model not loaded");
+  checkAndStartSpawning() {
+    // Start spawning once at least one model is loaded
+    if (this.modelsLoaded > 0 && this.spawnIntervalIds.length === 0) {
+      this.startSpawning();
     }
+  }
+
+  startSpawning() {
+    // Clear any existing intervals
+    this.spawnIntervalIds.forEach((id) => clearInterval(id));
+    this.spawnIntervalIds = [];
+
+    console.log("Starting rock spawning");
+
+    // Calculate intervals based on speed multiplier
+    const adjustedInterval = Math.max(
+      500,
+      this.spawnInterval / this.speedMultiplier
+    );
+
+    // First interval
+    this.spawnIntervalIds.push(
+      setInterval(() => this.spawnRocks(), adjustedInterval)
+    );
+
+    // Second interval with offset for more density
+    this.spawnIntervalIds.push(
+      setTimeout(() => {
+        this.spawnIntervalIds.push(
+          setInterval(() => this.spawnRocks(), adjustedInterval)
+        );
+      }, adjustedInterval / 2)
+    );
   }
 
   spawnRocks() {
@@ -49,13 +83,28 @@ class RockManager {
     const rotationY = Math.random() * 2 * Math.PI;
     // Random scale between 1 and 4
     const scale = 1 + Math.random() * 3;
-    this.createRock(xPosition, rotationY, scale);
+
+    // Randomly choose between rock models
+    const rockModel =
+      this.rockModels[Math.floor(Math.random() * this.rockModels.length)];
+
+    this.createRock(xPosition, rotationY, scale, rockModel);
   }
 
-  createRock(xPosition, rotationY, scale) {
+  createRock(xPosition, rotationY, scale, modelKey = "rockmd") {
+    // Use the specified model, fallback to rockmd if not available
+    if (!this.modelLoader.getModel(modelKey)) {
+      modelKey = "rockmd"; // Fallback
+
+      // If even the fallback is not available, return
+      if (!this.modelLoader.getModel(modelKey)) {
+        return;
+      }
+    }
+
     // Create normal rock
     const rockNormal = this.modelLoader.createModelInstance(
-      "rock",
+      modelKey,
       { x: xPosition, y: 0, z: -100 },
       { y: rotationY }
     );
@@ -68,9 +117,9 @@ class RockManager {
     rockNormal.userData.isRock = true;
     rockNormal.visible = this.showRock;
 
-    // Create wireframe rock
+    // Create wireframe rock with same model
     const rockWireframe = this.modelLoader.createModelInstance(
-      "rockWireframe",
+      `${modelKey}Wireframe`,
       { x: xPosition, y: 0, z: -100 },
       { y: rotationY }
     );
@@ -142,6 +191,9 @@ class RockManager {
   // Set speed multiplier
   setSpeed(multiplier) {
     this.speedMultiplier = multiplier;
+
+    // Update spawning rate when speed changes
+    this.startSpawning();
   }
 
   updateVisibility(showRock, showRockWireframe) {

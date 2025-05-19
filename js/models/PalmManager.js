@@ -6,6 +6,8 @@ class PalmManager {
     this.showPalm = true;
     this.showPalmWireframe = true;
     this.speedMultiplier = 1.0;
+    this.spawnInterval = 1500; // Base spawn interval in ms
+    this.spawnIntervalId = null; // Store the interval ID for updating
 
     // Preload palm model - ensure correct case sensitivity
     this.modelLoader
@@ -33,7 +35,23 @@ class PalmManager {
     // Only start spawning if we successfully loaded the palm model
     if (this.modelLoader.getModel("palm")) {
       console.log("Starting palm spawning");
-      setInterval(() => this.spawnPalms(), 1500);
+
+      // Clear any existing interval
+      if (this.spawnIntervalId) {
+        clearInterval(this.spawnIntervalId);
+      }
+
+      // Calculate interval based on speed multiplier
+      const adjustedInterval = Math.max(
+        500,
+        this.spawnInterval / this.speedMultiplier
+      );
+
+      // Start spawning with updated interval
+      this.spawnIntervalId = setInterval(
+        () => this.spawnPalms(),
+        adjustedInterval
+      );
     } else {
       console.error("Cannot start palm spawning - model not loaded");
     }
@@ -132,6 +150,9 @@ class PalmManager {
   // Set speed multiplier
   setSpeed(multiplier) {
     this.speedMultiplier = multiplier;
+
+    // Update spawning rate when speed changes
+    this.startSpawning();
   }
 
   updateVisibility(showPalm, showPalmWireframe) {

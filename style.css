@@ -4,17 +4,18 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  color: yellow;
+  color: #40d5db;
   position: relative;
 }
 canvas {
   width: 100%;
   height: 100%;
   display: block;
+  outline: none !important;
 }
 
-audio {
-  display: none;
+canvas:focus {
+  outline: none !important;
 }
 
 /* Loading Screen Styles - 80s Computer Terminal */
@@ -24,7 +25,7 @@ audio {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #004671;
+  background-color: #215a7e;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -341,7 +342,20 @@ audio {
   }
 }
 
-/* Minigame UI Styles */
+/* Common classes for minigame UI elements */
+.minigame-terminal-style {
+  background-color: #004671d5;
+  border: 2px solid #40d5db;
+  box-shadow: 0 0 20px #40d5db, inset 0 0 10px rgba(64, 213, 219, 0.5);
+  color: #40d5db;
+  font-family: "Courier New", monospace;
+}
+
+.minigame-text-glow {
+  text-shadow: 0 0 10px #c348dd, 0 0 20px #c348dd, 0 0 30px #c348dd;
+}
+
+/* Updated existing classes using common styles */
 .minigame-overlay {
   position: fixed;
   top: 0;
@@ -353,7 +367,7 @@ audio {
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  font-family: "Pacifico", cursive;
+  font-family: "Courier New", monospace;
 }
 
 .minigame-countdown {
@@ -364,81 +378,68 @@ audio {
   padding: 40px 80px;
   text-align: center;
   font-size: 120px;
-  text-shadow: 0 0 10px #c348dd, 0 0 20px #c348dd, 0 0 30px #c348dd;
   letter-spacing: 2px;
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Pacifico", cursive;
 }
 
 .minigame-score {
   position: fixed;
-  top: 20px;
+  top: 0px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  font-size: 48px;
+  min-width: 200px;
+  font-size: 32px;
+  font-weight: bold;
   display: none;
-  font-family: "Pacifico", cursive;
   letter-spacing: 2px;
-  text-shadow: 0 0 10px #c348dd, 0 0 20px #c348dd, 0 0 30px #c348dd;
-  background-color: #004671;
-  border: 2px solid #40d5db;
-  box-shadow: 0 0 20px #40d5db, inset 0 0 10px rgba(64, 213, 219, 0.5);
-  color: #40d5db;
   padding: 5px 20px;
-  border-radius: 4px;
 }
 
 .minigame-gameover {
   position: fixed;
-  top: 50%;
+  top: 12%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
   font-size: 60px;
-  font-family: "Pacifico", cursive;
-  letter-spacing: 2px;
-  text-shadow: 0 0 10px #c348dd, 0 0 20px #c348dd, 0 0 30px #c348dd;
-  background-color: #004671;
-  border: 2px solid #40d5db;
-  box-shadow: 0 0 20px #40d5db, inset 0 0 10px rgba(64, 213, 219, 0.5);
-  color: #40d5db;
+  font-weight: bold;
+  color: #37d4da;
   padding: 40px 80px;
-  border-radius: 8px;
   display: none;
 }
 
 .minigame-instructions {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  padding: 15px;
-  background-color: #004671;
-  border: 2px solid #40d5db;
-  box-shadow: 0 0 20px #40d5db, inset 0 0 10px rgba(64, 213, 219, 0.5);
-  color: #40d5db;
-  border-radius: 5px;
-  font-family: "Pacifico", cursive;
-  font-size: 24px;
-  text-shadow: 0 0 5px #c348dd, 0 0 10px #c348dd;
+  top: 15px;
+  left: 15px;
+  padding: 4px 12px;
+  font-size: 16px;
   z-index: 1000;
   pointer-events: none;
-  letter-spacing: 1px;
 }
 
 .minigame-escape {
   position: fixed;
   top: 20px;
   left: 20px;
-  padding: 15px;
-  background-color: #004671;
-  border: 2px solid #40d5db;
-  box-shadow: 0 0 20px #40d5db, inset 0 0 10px rgba(64, 213, 219, 0.5);
-  color: #40d5db;
-  border-radius: 5px;
-  font-family: "Pacifico", cursive;
-  font-size: 24px;
-  text-shadow: 0 0 5px #c348dd, 0 0 10px #c348dd;
+  padding: 4px 12px;
+  font-size: 16px;
   z-index: 1000;
   pointer-events: none;
-  letter-spacing: 1px;
   display: none;
+}
+
+.dg.main .close-button {
+  background-color: #004671bb !important;
+}
+.dg li.title {
+  background-color: #004671bb !important;
+}
+.dg li:not(.folder) {
+  background-color: #004671bb !important;
 }

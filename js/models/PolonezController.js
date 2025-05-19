@@ -69,6 +69,9 @@ class PolonezController {
   onKeyDown(event) {
     // Enter key - enable steering mode
     if (event.key === "Enter") {
+      // Reset the position when Enter is pressed
+      this.resetPosition();
+
       if (!this.isSteeringEnabled) {
         this.isSteeringEnabled = true;
         console.log("Steering mode enabled");

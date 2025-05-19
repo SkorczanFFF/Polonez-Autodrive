@@ -10,12 +10,16 @@ class MinigameManager {
     this.showMinigameInstructions = true;
     this.speedMultiplier = 1.0;
     this.baseSpawnInterval = 2000; // Base interval for box spawning
+    this.minSpawnInterval = 750; // Minimum spawn interval
+    this.maxSpawnInterval = 2000; // Maximum spawn interval
+    this.safeZone = { min: -3.6, max: 3.6 }; // Safe zone where boxes shouldn't spawn
     this.gui = null; // Reference to the GUI to hide/show it
     this.sceneManager = null; // Reference to the scene manager for camera control
     this.defaultCameraPosition = { x: 0, y: 1.975, z: 7 }; // Default camera position
     this.gameCameraPosition = { x: 0, y: 4, z: 7 }; // Game camera position
     this.boxSpawningActive = false; // Track if box spawning is active
     this.boxSpawningInterval = null; // Reference to the interval
+    this.nextSpawnTimeout = null; // Timeout for the next spawn
     this.debugMode = false; // For debugging the speed issue
 
     // Create overlay for minigame UI
@@ -59,30 +63,34 @@ class MinigameManager {
 
     // Create countdown element styled like loader
     this.countdownElement = document.createElement("div");
-    this.countdownElement.className = "minigame-countdown";
+    this.countdownElement.className = "minigame-countdown minigame-text-glow";
     this.overlay.appendChild(this.countdownElement);
 
     // Create score element
     this.scoreElement = document.createElement("div");
-    this.scoreElement.className = "minigame-score";
+    this.scoreElement.className =
+      "minigame-score minigame-terminal-style minigame-text-glow";
     this.scoreElement.textContent = "SCORE: 0";
     this.overlay.appendChild(this.scoreElement);
 
     // Create game over display
     this.gameOverElement = document.createElement("div");
-    this.gameOverElement.className = "minigame-gameover";
-    this.gameOverElement.innerHTML = "GAME OVER<br><span>SCORE: 0</span>";
+    this.gameOverElement.className = "minigame-gameover minigame-text-glow";
+    this.gameOverElement.innerHTML =
+      "GAME OVER<br><span style=\"font-family: 'Courier New', monospace;\">SCORE: 0</span>";
     this.overlay.appendChild(this.gameOverElement);
 
     // Create instructions popup in top left corner
     this.instructionsElement = document.createElement("div");
-    this.instructionsElement.className = "minigame-instructions";
-    this.instructionsElement.innerHTML = "Press ENTER to start minigame";
+    this.instructionsElement.className =
+      "minigame-instructions minigame-terminal-style minigame-text-glow";
+    this.instructionsElement.innerHTML = "Press <b>ENTER</b> to start minigame";
 
     // Create escape info - shown during game
     this.escapeInfoElement = document.createElement("div");
-    this.escapeInfoElement.className = "minigame-escape";
-    this.escapeInfoElement.innerHTML = "ESC to exit";
+    this.escapeInfoElement.className =
+      "minigame-escape minigame-terminal-style minigame-text-glow";
+    this.escapeInfoElement.innerHTML = "Press <b>ESC</b> to exit";
 
     // Add to document
     document.body.appendChild(this.overlay);
@@ -111,13 +119,31 @@ class MinigameManager {
     this.countdown = 3;
     this.speedMultiplier = 1.0;
 
-    // Change camera position to game view
-    if (this.sceneManager && this.sceneManager.camera) {
-      // Store transition values for smooth camera movement
+    // First reset camera to default position, then change to game view
+    if (
+      this.sceneManager &&
+      this.sceneManager.camera &&
+      this.sceneManager.controls
+    ) {
+      // Disable orbit controls first
+      this.sceneManager.controls.enabled = false;
+
+      // Reset camera to default position immediately
+      this.sceneManager.camera.position.set(
+        this.defaultCameraPosition.x,
+        this.defaultCameraPosition.y,
+        this.defaultCameraPosition.z
+      );
+
+      // Reset controls target to default
+      this.sceneManager.controls.target.set(0, 1.8, 0);
+      this.sceneManager.controls.update();
+
+      // Now animate to game position
       const startPos = {
-        x: this.sceneManager.camera.position.x,
-        y: this.sceneManager.camera.position.y,
-        z: this.sceneManager.camera.position.z,
+        x: this.defaultCameraPosition.x,
+        y: this.defaultCameraPosition.y,
+        z: this.defaultCameraPosition.z,
       };
       const endPos = this.gameCameraPosition;
 
@@ -139,14 +165,14 @@ class MinigameManager {
     // Hide game over display if visible
     this.gameOverElement.style.display = "none";
 
-    // Show overlay
+    // Reset and show elements
+    this.countdownElement.style.display = "block";
     this.overlay.style.display = "flex";
     this.updateCountdown();
 
     // Start countdown
     const countdownInterval = setInterval(() => {
       this.countdown--;
-
       if (this.countdown > 0) {
         this.updateCountdown();
 
@@ -258,20 +284,41 @@ class MinigameManager {
   }
 
   updateBoxSpawningRate() {
-    // Clear existing interval and start a new one with updated speed
+    // Clear existing interval and timeout
     if (this.boxSpawningInterval) {
       clearInterval(this.boxSpawningInterval);
+      this.boxSpawningInterval = null;
     }
 
-    const interval = this.baseSpawnInterval / this.speedMultiplier;
+    if (this.nextSpawnTimeout) {
+      clearTimeout(this.nextSpawnTimeout);
+      this.nextSpawnTimeout = null;
+    }
+
+    // Schedule the next spawn with randomized timing
+    this.scheduleNextBoxSpawn();
+  }
+
+  // New method to schedule spawns with random intervals
+  scheduleNextBoxSpawn() {
+    if (!this.isMinigameActive || !this.boxSpawningActive) return;
+
+    // Calculate random interval within range, adjusted by speed multiplier
+    const minInterval = this.minSpawnInterval / this.speedMultiplier;
+    const maxInterval = this.maxSpawnInterval / this.speedMultiplier;
+    const randomInterval =
+      minInterval + Math.random() * (maxInterval - minInterval);
 
     if (this.debugMode) {
-      console.log(
-        `Updating box spawn interval to ${interval}ms (base: ${this.baseSpawnInterval}, multiplier: ${this.speedMultiplier})`
-      );
+      console.log(`Scheduling next box spawn in ${randomInterval}ms`);
     }
 
-    this.boxSpawningInterval = setInterval(() => this.spawnBox(), interval);
+    // Schedule next spawn
+    this.nextSpawnTimeout = setTimeout(() => {
+      this.spawnBox();
+      // Schedule the next spawn after this one
+      this.scheduleNextBoxSpawn();
+    }, randomInterval);
   }
 
   startSpawningBoxes() {
@@ -279,11 +326,11 @@ class MinigameManager {
 
     this.boxSpawningActive = true;
 
-    // Start spawning boxes with current speed multiplier
-    this.updateBoxSpawningRate();
+    // Start spawning boxes with randomized timing
+    this.scheduleNextBoxSpawn();
 
     if (this.debugMode) {
-      console.log("Box spawning started");
+      console.log("Box spawning started with randomized intervals");
     }
   }
 
@@ -293,18 +340,33 @@ class MinigameManager {
     const maxSteeringRange = this.polonezController.maxDisplacement;
 
     // Generate random position within polonez steering range
-    const xPosition =
-      polonezPosition + (Math.random() * 2 - 1) * maxSteeringRange;
+    // But avoid the middle zone (safeZone) where the player usually is
+    let xPosition;
+    const safeZoneWidth = this.safeZone.max - this.safeZone.min;
+
+    if (Math.random() < 0.5) {
+      // Left side - between the left edge of steering range and the left safe zone boundary
+      xPosition =
+        polonezPosition -
+        maxSteeringRange +
+        Math.random() * (maxSteeringRange - Math.abs(this.safeZone.min));
+    } else {
+      // Right side - between the right safe zone boundary and the right edge of steering range
+      xPosition =
+        polonezPosition +
+        this.safeZone.max +
+        Math.random() * (maxSteeringRange - this.safeZone.max);
+    }
 
     // Create a box geometry
-    const boxGeometry = new THREE.BoxGeometry(2, 2, 2);
+    const boxGeometry = new THREE.BoxGeometry(4.5, 4, 8);
     const boxMaterial = new THREE.MeshPhongMaterial({ color: 0xffff00 });
     const box = new THREE.Mesh(boxGeometry, boxMaterial);
 
-    box.position.set(xPosition, 0, -100);
+    box.position.set(xPosition, 0, -80);
 
-    // Add collision box for detection
-    const boxSize = new THREE.Vector3(2, 2, 2);
+    // Add collision box for detection - use the actual box dimensions
+    const boxSize = new THREE.Vector3(4.5, 4, 8);
     box.userData.collisionBox = new THREE.Box3().setFromCenterAndSize(
       box.position,
       boxSize
@@ -350,12 +412,11 @@ class MinigameManager {
       // Move from -100 to +100 along z-axis
       box.position.z = -100 + progress * 200;
 
-      // Update collision box position
+      // Update collision box position to match the actual box geometry
       if (box.userData.collisionBox) {
-        box.userData.collisionBox.setFromCenterAndSize(
-          box.position,
-          new THREE.Vector3(2, 2, 2)
-        );
+        // Get the actual box size from the geometry to create accurate collision box
+        const boxSize = new THREE.Vector3(4.5, 4, 8);
+        box.userData.collisionBox.setFromCenterAndSize(box.position, boxSize);
       }
 
       // Check for collision with polonez
@@ -415,6 +476,12 @@ class MinigameManager {
       this.boxSpawningInterval = null;
     }
 
+    // Clear any pending spawn timeout
+    if (this.nextSpawnTimeout) {
+      clearTimeout(this.nextSpawnTimeout);
+      this.nextSpawnTimeout = null;
+    }
+
     // Remove all boxes
     this.boxes.forEach((box) => {
       this.scene.remove(box);
@@ -446,6 +513,13 @@ class MinigameManager {
 
       // Animate camera back to default position
       this.animateCameraPosition(startPos, this.defaultCameraPosition, 1000);
+
+      // Re-enable orbit controls after animation completes
+      setTimeout(() => {
+        if (this.sceneManager && this.sceneManager.controls) {
+          this.sceneManager.controls.enabled = true;
+        }
+      }, 1000);
     }
 
     // Show GUI again
@@ -473,7 +547,7 @@ class MinigameManager {
     } else {
       // Normal end, just hide overlay
       this.overlay.style.display = "none";
-      this.countdownElement.style.display = "block";
+      this.countdownElement.style.display = "block"; // Reset countdown visibility for next game
       this.scoreElement.style.display = "none";
       this.instructionsElement.style.display = "block";
     }
@@ -506,6 +580,15 @@ class MinigameManager {
   }
 
   cleanup() {
+    // Clear all intervals and timeouts
+    if (this.boxSpawningInterval) {
+      clearInterval(this.boxSpawningInterval);
+    }
+
+    if (this.nextSpawnTimeout) {
+      clearTimeout(this.nextSpawnTimeout);
+    }
+
     // Remove event listeners
     if (this.polonezController) {
       this.polonezController.removeEnterKeyListener(this.onEnterKeyPress);
