@@ -1,3 +1,5 @@
+import DevStats from "../utils/DevStats.js";
+
 class SceneManager {
   constructor() {
     this.scene = new THREE.Scene();
@@ -8,8 +10,15 @@ class SceneManager {
     this.clock = new THREE.Clock();
     this.mixers = [];
     this.updateCallbacks = [];
+    this.devStats = null;
 
     this.init();
+
+    // Initialize dev stats after renderer is created
+    this.devStats = new DevStats(this.renderer, this.scene);
+
+    // Start animation loop
+    this.animate();
   }
 
   init() {
@@ -30,10 +39,12 @@ class SceneManager {
     // Setup controls
     this.controls = new THREE.OrbitControls(this.camera, this.canvas);
     this.controls.enablePan = false;
+    this.controls.enableDamping = true;
     this.controls.minDistance = 4.5;
     this.controls.maxDistance = 7;
     this.controls.maxPolarAngle = Math.PI * 0.55;
     this.controls.minPolarAngle = Math.PI * 0.15;
+    this.controls.dampingFactor = 0.07;
     this.controls.target.set(0, 1.8, 0);
     this.controls.update();
 
@@ -91,6 +102,28 @@ class SceneManager {
     }
   }
 
+  animate() {
+    requestAnimationFrame(() => this.animate());
+
+    // Update dev stats
+    this.devStats.update();
+
+    // Update all mixers
+    const delta = this.clock.getDelta();
+    this.mixers.forEach((mixer) => mixer.update(delta));
+
+    // Update all callbacks
+    this.updateCallbacks.forEach((callback) => callback(delta));
+
+    // Check if we need to resize
+    if (this.resize()) {
+      this.updateCameraAspect();
+    }
+
+    // Render the scene
+    this.renderer.render(this.scene, this.camera);
+  }
+
   update() {
     // Update all animation mixers
     const delta = this.clock.getDelta();
@@ -117,6 +150,11 @@ class SceneManager {
       this.renderer.setSize(width, height, false);
     }
     return resize;
+  }
+
+  updateCameraAspect() {
+    this.camera.aspect = this.canvas.clientWidth / this.canvas.clientHeight;
+    this.camera.updateProjectionMatrix();
   }
 }
 
