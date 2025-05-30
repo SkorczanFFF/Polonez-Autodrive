@@ -40,12 +40,14 @@ class GUIManager {
       showPalm: true,
       palmWireframeColor: "#ffdf7c",
       showPalmWireframe: true,
+      palmDensity: 1.0,
 
       // Rock parameters
       rockColor: "#8b8b8b",
       showRock: true,
       rockWireframeColor: "#ff5a5a",
       showRockWireframe: true,
+      rockDensity: 1.0,
 
       // Sun parameters
       sunColorTop: "#ffebac",
@@ -435,6 +437,17 @@ class GUIManager {
       .add(this.parameters, "showPalm")
       .name("Show palms");
 
+    // Add density slider for palms
+    folder
+      .add(this.parameters, "palmDensity", 0.1, 2.0)
+      .name("Palm density")
+      .step(0.1)
+      .onChange((value) => {
+        if (this._palmManager) {
+          this._palmManager.setDensity(value);
+        }
+      });
+
     // Add initial onChange handler
     if (this._palmManager) {
       this.palmControls.showPalm.onChange((value) => {
@@ -484,19 +497,31 @@ class GUIManager {
 
   setupRockFolder() {
     const folder = this.gui.addFolder("Rocks");
+    this.rockControls.folder = folder;
 
     folder
       .addColor(this.parameters, "rockColor")
-      .name("Color")
+      .name("Rock color")
       .onChange((color) => {
         const material = this.materialManager.getMaterial("rock");
         material.color.setHex(color.replace("#", "0x"));
       });
 
-    // Store reference to controller for later use
+    // Store the control for later updates when rockManager is set
     this.rockControls.showRock = folder
       .add(this.parameters, "showRock")
-      .name("Show model");
+      .name("Show rocks");
+
+    // Add density slider for rocks
+    folder
+      .add(this.parameters, "rockDensity", 0.1, 2.0)
+      .name("Rock density")
+      .step(0.1)
+      .onChange((value) => {
+        if (this._rockManager) {
+          this._rockManager.setDensity(value);
+        }
+      });
 
     folder
       .addColor(this.parameters, "rockWireframeColor")
@@ -510,9 +535,6 @@ class GUIManager {
     this.rockControls.showRockWireframe = folder
       .add(this.parameters, "showRockWireframe")
       .name("Show wireframe");
-
-    // Store reference to folder for later use
-    this.rockControls.folder = folder;
 
     // Update controls if rockManager is already set
     if (this._rockManager) {

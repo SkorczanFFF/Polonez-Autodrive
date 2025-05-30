@@ -6,6 +6,7 @@ class PalmManager {
     this.showPalm = true;
     this.showPalmWireframe = true;
     this.speedMultiplier = 1.0;
+    this.densityMultiplier = 1.0; // Add density multiplier
     this.spawnInterval = 1500; // Base spawn interval in ms
     this.spawnIntervalId = null; // Store the interval ID for updating
 
@@ -41,10 +42,10 @@ class PalmManager {
         clearInterval(this.spawnIntervalId);
       }
 
-      // Calculate interval based on speed multiplier
+      // Calculate interval based on speed and density multipliers
       const adjustedInterval = Math.max(
         500,
-        this.spawnInterval / this.speedMultiplier
+        this.spawnInterval / (this.speedMultiplier * this.densityMultiplier)
       );
 
       // Start spawning with updated interval
@@ -153,6 +154,12 @@ class PalmManager {
 
     // Update spawning rate when speed changes
     this.startSpawning();
+  }
+
+  // Add density control method
+  setDensity(multiplier) {
+    this.densityMultiplier = multiplier;
+    this.startSpawning(); // Restart spawning with new density
   }
 
   updateVisibility(showPalm, showPalmWireframe) {

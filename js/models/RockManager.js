@@ -6,6 +6,7 @@ class RockManager {
     this.showRock = true;
     this.showRockWireframe = true;
     this.speedMultiplier = 1.0;
+    this.densityMultiplier = 1.0; // Add density multiplier
     this.spawnInterval = 1500; // Base spawn interval in ms
     this.spawnIntervalIds = []; // Store interval IDs for updating
     this.modelsLoaded = 0;
@@ -48,10 +49,10 @@ class RockManager {
 
     console.log("Starting rock spawning");
 
-    // Calculate intervals based on speed multiplier
+    // Calculate intervals based on speed and density multipliers
     const adjustedInterval = Math.max(
       500,
-      this.spawnInterval / this.speedMultiplier
+      this.spawnInterval / (this.speedMultiplier * this.densityMultiplier)
     );
 
     // First interval
@@ -194,6 +195,12 @@ class RockManager {
 
     // Update spawning rate when speed changes
     this.startSpawning();
+  }
+
+  // Add density control method
+  setDensity(multiplier) {
+    this.densityMultiplier = multiplier;
+    this.startSpawning(); // Restart spawning with new density
   }
 
   updateVisibility(showRock, showRockWireframe) {
