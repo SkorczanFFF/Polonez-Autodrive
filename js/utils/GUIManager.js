@@ -10,7 +10,7 @@ class GUIManager {
       // Polonez parameters
       polonezColor: "#3b8ceb",
       showPolonez: true,
-      polonezWireframeColor: "#fff6ba",
+      polonezWireframeColor: "#ffdf7c",
       showPolonezWireframe: true,
 
       // Hills parameters
@@ -43,9 +43,9 @@ class GUIManager {
       palmDensity: 1.0,
 
       // Rock parameters
-      rockColor: "#8b8b8b",
+      rockColor: "#9047c3",
       showRock: true,
-      rockWireframeColor: "#ff5a5a",
+      rockWireframeColor: "#66b6cf",
       showRockWireframe: true,
       rockDensity: 1.0,
 

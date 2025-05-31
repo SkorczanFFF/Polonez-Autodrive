@@ -12,7 +12,7 @@ class MinigameManager {
     this.baseSpawnInterval = 2000; // Base interval for box spawning
     this.minSpawnInterval = 750; // Minimum spawn interval
     this.maxSpawnInterval = 2000; // Maximum spawn interval
-    this.safeZone = { min: -3.6, max: 3.6 }; // Safe zone where boxes shouldn't spawn
+    this.safeZone = { min: -0.8, max: 0.8 }; // Safe zone where boxes shouldn't spawn
     this.gui = null; // Reference to the GUI to hide/show it
     this.sceneManager = null; // Reference to the scene manager for camera control
     this.defaultCameraPosition = { x: 0, y: 1.975, z: 7 }; // Default camera position
@@ -128,26 +128,27 @@ class MinigameManager {
       // Disable orbit controls first
       this.sceneManager.controls.enabled = false;
 
-      // Reset camera to default position immediately
-      this.sceneManager.camera.position.set(
-        this.defaultCameraPosition.x,
-        this.defaultCameraPosition.y,
-        this.defaultCameraPosition.z
-      );
-
-      // Reset controls target to default
-      this.sceneManager.controls.target.set(0, 1.8, 0);
-      this.sceneManager.controls.update();
-
-      // Now animate to game position
+      // Get current camera position and rotation
       const startPos = {
-        x: this.defaultCameraPosition.x,
-        y: this.defaultCameraPosition.y,
-        z: this.defaultCameraPosition.z,
+        x: this.sceneManager.camera.position.x,
+        y: this.sceneManager.camera.position.y,
+        z: this.sceneManager.camera.position.z,
+        rotationX: this.sceneManager.camera.rotation.x,
+        rotationY: this.sceneManager.camera.rotation.y,
+        rotationZ: this.sceneManager.camera.rotation.z,
       };
-      const endPos = this.gameCameraPosition;
 
-      // Animate camera position change
+      // Define end position with current X-Z rotation preserved
+      const endPos = {
+        x: this.gameCameraPosition.x,
+        y: this.gameCameraPosition.y,
+        z: this.gameCameraPosition.z,
+        rotationX: this.sceneManager.camera.rotation.x,
+        rotationY: 0, // Reset Y rotation to look straight
+        rotationZ: this.sceneManager.camera.rotation.z,
+      };
+
+      // Animate camera position and rotation change
       this.animateCameraPosition(startPos, endPos, 1000);
     }
 
@@ -201,6 +202,10 @@ class MinigameManager {
 
     const camera = this.sceneManager.camera;
     const startTime = Date.now();
+    const controls = this.sceneManager.controls;
+
+    // Store initial lookAt target
+    const targetPos = new THREE.Vector3(0, 1.8, 0);
 
     const updateCamera = () => {
       const elapsed = Date.now() - startTime;
@@ -214,8 +219,41 @@ class MinigameManager {
       camera.position.y = startPos.y + (endPos.y - startPos.y) * easedProgress;
       camera.position.z = startPos.z + (endPos.z - startPos.z) * easedProgress;
 
+      // Interpolate rotation
+      camera.rotation.x =
+        startPos.rotationX +
+        (endPos.rotationX - startPos.rotationX) * easedProgress;
+      camera.rotation.y =
+        startPos.rotationY +
+        (endPos.rotationY - startPos.rotationY) * easedProgress;
+      camera.rotation.z =
+        startPos.rotationZ +
+        (endPos.rotationZ - startPos.rotationZ) * easedProgress;
+
+      // Update camera target
+      camera.lookAt(targetPos);
+
+      // Update controls target
+      if (controls) {
+        controls.target.copy(targetPos);
+        controls.update();
+      }
+
       if (progress < 1) {
         requestAnimationFrame(updateCamera);
+      } else {
+        // Ensure final position is set exactly
+        camera.position.copy(new THREE.Vector3(endPos.x, endPos.y, endPos.z));
+        camera.rotation.set(
+          endPos.rotationX,
+          endPos.rotationY,
+          endPos.rotationZ
+        );
+        camera.lookAt(targetPos);
+        if (controls) {
+          controls.target.copy(targetPos);
+          controls.update();
+        }
       }
     };
 
@@ -339,24 +377,26 @@ class MinigameManager {
     const polonezPosition = this.polonezController.polonezModel.position.x;
     const maxSteeringRange = this.polonezController.maxDisplacement;
 
-    // Generate random position within polonez steering range
-    // But avoid the middle zone (safeZone) where the player usually is
+    // Calculate spawn position to be outside the safe zone
     let xPosition;
-    const safeZoneWidth = this.safeZone.max - this.safeZone.min;
 
     if (Math.random() < 0.5) {
-      // Left side - between the left edge of steering range and the left safe zone boundary
+      // Left side - spawn between -maxSteeringRange and safeZone.min
+      const availableSpace = Math.abs(this.safeZone.min);
       xPosition =
-        polonezPosition -
-        maxSteeringRange +
-        Math.random() * (maxSteeringRange - Math.abs(this.safeZone.min));
+        polonezPosition - (this.safeZone.min + Math.random() * availableSpace);
     } else {
-      // Right side - between the right safe zone boundary and the right edge of steering range
+      // Right side - spawn between safeZone.max and maxSteeringRange
+      const availableSpace = maxSteeringRange - this.safeZone.max;
       xPosition =
-        polonezPosition +
-        this.safeZone.max +
-        Math.random() * (maxSteeringRange - this.safeZone.max);
+        polonezPosition + this.safeZone.max + Math.random() * availableSpace;
     }
+
+    // Ensure position is within steering range
+    xPosition = Math.max(
+      polonezPosition - maxSteeringRange,
+      Math.min(polonezPosition + maxSteeringRange, xPosition)
+    );
 
     // Create a box geometry
     const boxGeometry = new THREE.BoxGeometry(4.5, 4, 8);
@@ -482,11 +522,13 @@ class MinigameManager {
       this.nextSpawnTimeout = null;
     }
 
-    // Remove all boxes
-    this.boxes.forEach((box) => {
-      this.scene.remove(box);
-    });
-    this.boxes = [];
+    // Only remove boxes if there was a collision
+    if (collision) {
+      this.boxes.forEach((box) => {
+        this.scene.remove(box);
+      });
+      this.boxes = [];
+    }
 
     // Reset speed multiplier
     this.speedMultiplier = 1.0;
@@ -509,10 +551,23 @@ class MinigameManager {
         x: this.sceneManager.camera.position.x,
         y: this.sceneManager.camera.position.y,
         z: this.sceneManager.camera.position.z,
+        rotationX: this.sceneManager.camera.rotation.x,
+        rotationY: this.sceneManager.camera.rotation.y,
+        rotationZ: this.sceneManager.camera.rotation.z,
+      };
+
+      // Define end position with current X-Z rotation preserved
+      const endPos = {
+        x: this.defaultCameraPosition.x,
+        y: this.defaultCameraPosition.y,
+        z: this.defaultCameraPosition.z,
+        rotationX: this.sceneManager.camera.rotation.x,
+        rotationY: 0, // Reset Y rotation
+        rotationZ: this.sceneManager.camera.rotation.z,
       };
 
       // Animate camera back to default position
-      this.animateCameraPosition(startPos, this.defaultCameraPosition, 1000);
+      this.animateCameraPosition(startPos, endPos, 1000);
 
       // Re-enable orbit controls after animation completes
       setTimeout(() => {
