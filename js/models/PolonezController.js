@@ -14,6 +14,7 @@ class PolonezController {
     this.maxDisplacement = 6.0;
     this.polonezModel = null;
     this.polonezWireframeModel = null;
+    this.disableKeyboardInputs = false;
 
     // Current state
     this.currentSteeringAngle = 0;
@@ -74,6 +75,9 @@ class PolonezController {
   }
 
   onKeyDown(event) {
+    // Skip if keyboard inputs are disabled
+    if (this.disableKeyboardInputs) return;
+
     // Enter key - enable steering mode
     if (event.key === "Enter") {
       // Reset the position when Enter is pressed
@@ -113,6 +117,9 @@ class PolonezController {
   }
 
   onKeyUp(event) {
+    // Skip if keyboard inputs are disabled
+    if (this.disableKeyboardInputs) return;
+
     // Clear steering flags when keys are released
     if (event.key === "ArrowLeft") {
       this.isLeftPressed = false;

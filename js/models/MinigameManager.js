@@ -10,9 +10,9 @@ class MinigameManager {
     this.showMinigameInstructions = true;
     this.speedMultiplier = 1.0;
     this.baseSpawnInterval = 2000; // Base interval for box spawning
-    this.minSpawnInterval = 750; // Minimum spawn interval
-    this.maxSpawnInterval = 2000; // Maximum spawn interval
-    this.safeZone = { min: -3.6, max: 3.6 }; // Safe zone where boxes shouldn't spawn
+    this.minSpawnInterval = 600; // Minimum spawn interval
+    this.maxSpawnInterval = 1500; // Maximum spawn interval
+    this.safeZone = { min: -0.1, max: 0.1 }; // Safe zone where boxes shouldn't spawn
     this.gui = null; // Reference to the GUI to hide/show it
     this.sceneManager = null; // Reference to the scene manager for camera control
     this.defaultCameraPosition = { x: 0, y: 1.975, z: 7 }; // Default camera position
@@ -21,6 +21,9 @@ class MinigameManager {
     this.boxSpawningInterval = null; // Reference to the interval
     this.nextSpawnTimeout = null; // Timeout for the next spawn
     this.debugMode = false; // For debugging the speed issue
+    this.currentLane = "left"; // Which lane is active
+    this.laneBoxCount = 0; // How many spawned so far in this batch
+    this.boxesThisBatch = Math.floor(Math.random() * 3) + 1; // Random 1-3
 
     // Create overlay for minigame UI
     this.createMinigameUI();
@@ -36,11 +39,6 @@ class MinigameManager {
 
     // Add escape key listener to end minigame
     document.addEventListener("keydown", this.onEscKeyPress);
-
-    // Lock steering initially when game starts
-    if (this.polonezController) {
-      this.polonezController.setSteeringLock(true);
-    }
   }
 
   // Set GUI reference to handle visibility
@@ -111,8 +109,12 @@ class MinigameManager {
   }
 
   onEscKeyPress(event) {
-    // End minigame on Escape key
-    if (event.key === "Escape" && this.isMinigameActive) {
+    // End minigame on Escape key, but only if countdown is finished
+    if (
+      event.key === "Escape" &&
+      this.isMinigameActive &&
+      this.countdown <= 0
+    ) {
       this.endMinigame(false);
     }
   }
@@ -124,17 +126,14 @@ class MinigameManager {
     this.countdown = 3;
     this.speedMultiplier = 1.0;
 
-    // Set cursor to default during minigame
-    if (this.sceneManager && this.sceneManager.canvas) {
-      this.sceneManager.canvas.style.cursor = "default";
-    }
-
-    // Lock steering at the start
+    // Disable steering until START is displayed
     if (this.polonezController) {
-      this.polonezController.setSteeringLock(true);
+      // Disable both steering and keyboard inputs
+      this.polonezController.steeringEnabled = false;
+      this.polonezController.disableKeyboardInputs = true;
     }
 
-    // First reset camera and Polonez to default positions
+    // First reset camera to default position, then change to game view
     if (
       this.sceneManager &&
       this.sceneManager.camera &&
@@ -143,24 +142,28 @@ class MinigameManager {
       // Disable orbit controls first
       this.sceneManager.controls.enabled = false;
 
-      // Reset camera to default position with smooth transition
-      this.sceneManager.resetCameraWithTransition(1000);
+      // Get current camera position and rotation
+      const startPos = {
+        x: this.sceneManager.camera.position.x,
+        y: this.sceneManager.camera.position.y,
+        z: this.sceneManager.camera.position.z,
+        rotationX: this.sceneManager.camera.rotation.x,
+        rotationY: this.sceneManager.camera.rotation.y,
+        rotationZ: this.sceneManager.camera.rotation.z,
+      };
 
-      // Reset Polonez position with smooth transition
-      if (this.polonezController) {
-        this.polonezController.resetPositionWithTransition(1000, () => {
-          // After both camera and Polonez are reset, animate to game position
-          const startPos = {
-            x: this.defaultCameraPosition.x,
-            y: this.defaultCameraPosition.y,
-            z: this.defaultCameraPosition.z,
-          };
-          const endPos = this.gameCameraPosition;
+      // Define end position with current X-Z rotation preserved
+      const endPos = {
+        x: this.gameCameraPosition.x,
+        y: this.gameCameraPosition.y,
+        z: this.gameCameraPosition.z,
+        rotationX: this.sceneManager.camera.rotation.x,
+        rotationY: 0, // Reset Y rotation to look straight
+        rotationZ: this.sceneManager.camera.rotation.z,
+      };
 
-          // Animate camera position change
-          this.animateCameraPosition(startPos, endPos, 1000);
-        });
-      }
+      // Animate camera position and rotation change
+      this.animateCameraPosition(startPos, endPos, 1000);
     }
 
     // Hide GUI during game
@@ -194,9 +197,10 @@ class MinigameManager {
       } else if (this.countdown === 0) {
         this.countdownElement.textContent = "START!";
 
-        // Unlock steering when "START!" is displayed
+        // Re-enable steering and keyboard inputs when START is displayed
         if (this.polonezController) {
-          this.polonezController.setSteeringLock(false);
+          this.polonezController.steeringEnabled = true;
+          this.polonezController.disableKeyboardInputs = false;
         }
       } else {
         // Clear countdown interval
@@ -218,6 +222,10 @@ class MinigameManager {
 
     const camera = this.sceneManager.camera;
     const startTime = Date.now();
+    const controls = this.sceneManager.controls;
+
+    // Store initial lookAt target
+    const targetPos = new THREE.Vector3(0, 1.8, 0);
 
     const updateCamera = () => {
       const elapsed = Date.now() - startTime;
@@ -231,8 +239,41 @@ class MinigameManager {
       camera.position.y = startPos.y + (endPos.y - startPos.y) * easedProgress;
       camera.position.z = startPos.z + (endPos.z - startPos.z) * easedProgress;
 
+      // Interpolate rotation
+      camera.rotation.x =
+        startPos.rotationX +
+        (endPos.rotationX - startPos.rotationX) * easedProgress;
+      camera.rotation.y =
+        startPos.rotationY +
+        (endPos.rotationY - startPos.rotationY) * easedProgress;
+      camera.rotation.z =
+        startPos.rotationZ +
+        (endPos.rotationZ - startPos.rotationZ) * easedProgress;
+
+      // Update camera target
+      camera.lookAt(targetPos);
+
+      // Update controls target
+      if (controls) {
+        controls.target.copy(targetPos);
+        controls.update();
+      }
+
       if (progress < 1) {
         requestAnimationFrame(updateCamera);
+      } else {
+        // Ensure final position is set exactly
+        camera.position.copy(new THREE.Vector3(endPos.x, endPos.y, endPos.z));
+        camera.rotation.set(
+          endPos.rotationX,
+          endPos.rotationY,
+          endPos.rotationZ
+        );
+        camera.lookAt(targetPos);
+        if (controls) {
+          controls.target.copy(targetPos);
+          controls.update();
+        }
       }
     };
 
@@ -352,38 +393,50 @@ class MinigameManager {
   }
 
   spawnBox() {
-    // Get polonez position to determine spawn location within steering range
-    const polonezPosition = this.polonezController.polonezModel.position.x;
     const maxSteeringRange = this.polonezController.maxDisplacement;
+    const boxWidth = 4.25;
 
-    // Generate random position within polonez steering range
-    // But avoid the middle zone (safeZone) where the player usually is
-    let xPosition;
-    const safeZoneWidth = this.safeZone.max - this.safeZone.min;
+    const safeMin = this.safeZone.min;
+    const safeMax = this.safeZone.max;
 
-    if (Math.random() < 0.5) {
-      // Left side - between the left edge of steering range and the left safe zone boundary
-      xPosition =
-        polonezPosition -
-        maxSteeringRange +
-        Math.random() * (maxSteeringRange - Math.abs(this.safeZone.min));
-    } else {
-      // Right side - between the right safe zone boundary and the right edge of steering range
-      xPosition =
-        polonezPosition +
-        this.safeZone.max +
-        Math.random() * (maxSteeringRange - this.safeZone.max);
+    // Define spawn ranges
+    const leftSpawnMin = -maxSteeringRange - 1;
+    const leftSpawnMax = safeMin - boxWidth - 1;
+
+    const rightSpawnMin = safeMax + boxWidth - 1;
+    const rightSpawnMax = maxSteeringRange - 1;
+
+    // Decide current lane
+    const spawnInLane = this.currentLane;
+
+    // Count this box
+    this.laneBoxCount++;
+
+    // If we reached the batch limit, prepare to switch lane
+    if (this.laneBoxCount >= this.boxesThisBatch) {
+      this.currentLane = this.currentLane === "left" ? "right" : "left";
+      this.laneBoxCount = 0;
+      this.boxesThisBatch = Math.floor(Math.random() * 3) + 1; // Random 1-3 for next batch
     }
 
-    // Create a box geometry
-    const boxGeometry = new THREE.BoxGeometry(4.5, 4, 8);
+    // Get X position in the current lane
+    let xPosition;
+    if (spawnInLane === "left") {
+      const laneWidth = leftSpawnMax - leftSpawnMin;
+      xPosition = leftSpawnMin + Math.random() * laneWidth;
+    } else {
+      const laneWidth = rightSpawnMax - rightSpawnMin;
+      xPosition = rightSpawnMin + Math.random() * laneWidth;
+    }
+
+    // Create the box
+    const boxGeometry = new THREE.BoxGeometry(boxWidth, 4, 6);
     const boxMaterial = new THREE.MeshPhongMaterial({ color: 0xffff00 });
     const box = new THREE.Mesh(boxGeometry, boxMaterial);
+    box.position.set(xPosition, 0, -90);
 
-    box.position.set(xPosition, 0, -80);
-
-    // Add collision box for detection - use the actual box dimensions
-    const boxSize = new THREE.Vector3(4.5, 4, 8);
+    // Collision box
+    const boxSize = new THREE.Vector3(boxWidth, 4, 6);
     box.userData.collisionBox = new THREE.Box3().setFromCenterAndSize(
       box.position,
       boxSize
@@ -392,13 +445,10 @@ class MinigameManager {
     box.userData.scored = false;
 
     this.scene.add(box);
-
-    // Add to boxes array
     this.boxes.push(box);
 
-    // Animate the box with current speed multiplier
+    // Animate and clean up
     this.animateBox(box, () => {
-      // Remove box from scene and array when animation is complete
       this.scene.remove(box);
       const index = this.boxes.findIndex((b) => b === box);
       if (index !== -1) {
@@ -478,14 +528,7 @@ class MinigameManager {
     const polonezBox = new THREE.Box3().setFromObject(polonezModel);
 
     // Check intersection with box
-    const hasCollision = polonezBox.intersectsBox(box.userData.collisionBox);
-
-    // If collision detected, immediately reset rotation to prevent lag
-    if (hasCollision && this.polonezController.polonezModel) {
-      this.polonezController.polonezModel.rotation.set(0, 0, 0);
-    }
-
-    return hasCollision;
+    return polonezBox.intersectsBox(box.userData.collisionBox);
   }
 
   endMinigame(collision) {
@@ -494,9 +537,10 @@ class MinigameManager {
     this.isMinigameActive = false;
     this.boxSpawningActive = false;
 
-    // Reset cursor style back to grab
-    if (this.sceneManager && this.sceneManager.canvas) {
-      this.sceneManager.canvas.style.cursor = "grab";
+    // Re-enable steering and keyboard inputs
+    if (this.polonezController) {
+      this.polonezController.steeringEnabled = true;
+      this.polonezController.disableKeyboardInputs = false;
     }
 
     // Stop spawning boxes
@@ -511,11 +555,13 @@ class MinigameManager {
       this.nextSpawnTimeout = null;
     }
 
-    // Remove all boxes immediately to reduce lag
-    this.boxes.forEach((box) => {
-      this.scene.remove(box);
-    });
-    this.boxes = [];
+    // Only remove boxes if there was a collision
+    if (collision) {
+      this.boxes.forEach((box) => {
+        this.scene.remove(box);
+      });
+      this.boxes = [];
+    }
 
     // Reset speed multiplier
     this.speedMultiplier = 1.0;
@@ -532,26 +578,44 @@ class MinigameManager {
       this._rockManager.setSpeed(1.0);
     }
 
-    // Reset camera and handle Polonez based on end condition
+    // Reset camera position to default
     if (this.sceneManager && this.sceneManager.camera) {
       const startPos = {
         x: this.sceneManager.camera.position.x,
         y: this.sceneManager.camera.position.y,
         z: this.sceneManager.camera.position.z,
+        rotationX: this.sceneManager.camera.rotation.x,
+        rotationY: this.sceneManager.camera.rotation.y,
+        rotationZ: this.sceneManager.camera.rotation.z,
       };
 
-      // Handle Polonez differently for collision vs ESC
-      if (this.polonezController && this.polonezController.polonezModel) {
-        if (!collision) {
-          // On ESC: Reset both position and rotation
-          this.polonezController.resetPositionWithTransition(1000);
-          this.polonezController.polonezModel.rotation.set(0, 0, 0);
+      // Define end position with current X-Z rotation preserved
+      const endPos = {
+        x: this.defaultCameraPosition.x,
+        y: this.defaultCameraPosition.y,
+        z: this.defaultCameraPosition.z,
+        rotationX: this.sceneManager.camera.rotation.x,
+        rotationY: 0, // Reset Y rotation
+        rotationZ: this.sceneManager.camera.rotation.z,
+      };
+
+      // Reset Polonez rotation when ESC is pressed
+      if (
+        !collision &&
+        this.polonezController &&
+        this.polonezController.polonezModel
+      ) {
+        this.polonezController.polonezModel.rotation.set(0, 0, 0);
+        this.polonezController.polonezModel.updateMatrix();
+
+        if (this.polonezController.polonezWireframeModel) {
+          this.polonezController.polonezWireframeModel.rotation.set(0, 0, 0);
+          this.polonezController.polonezWireframeModel.updateMatrix();
         }
-        // For collision: rotation is already reset in checkCollision
       }
 
       // Animate camera back to default position
-      this.animateCameraPosition(startPos, this.defaultCameraPosition, 1000);
+      this.animateCameraPosition(startPos, endPos, 1000);
 
       // Re-enable orbit controls after animation completes
       setTimeout(() => {
@@ -562,7 +626,7 @@ class MinigameManager {
     }
 
     // Show GUI again
-    if (this.gui && !collision) {
+    if (this.gui) {
       this.gui.domElement.style.display = "block";
     }
 
