@@ -39,12 +39,10 @@ class SceneManager {
     // Setup controls
     this.controls = new THREE.OrbitControls(this.camera, this.canvas);
     this.controls.enablePan = false;
-    this.controls.enableDamping = true;
     this.controls.minDistance = 4.5;
     this.controls.maxDistance = 7;
     this.controls.maxPolarAngle = Math.PI * 0.55;
     this.controls.minPolarAngle = Math.PI * 0.15;
-    this.controls.dampingFactor = 0.07;
     this.controls.target.set(0, 1.8, 0);
     this.controls.update();
 
