@@ -128,27 +128,21 @@ class MinigameManager {
       // Disable orbit controls first
       this.sceneManager.controls.enabled = false;
 
-      // Reset camera to default position immediately
-      this.sceneManager.camera.position.set(
-        this.defaultCameraPosition.x,
-        this.defaultCameraPosition.y,
-        this.defaultCameraPosition.z
-      );
+      // Reset camera to default position with smooth transition
+      this.sceneManager.resetCameraWithTransition(1000);
 
-      // Reset controls target to default
-      this.sceneManager.controls.target.set(0, 1.8, 0);
-      this.sceneManager.controls.update();
+      // After the reset transition, animate to game position
+      setTimeout(() => {
+        const startPos = {
+          x: this.defaultCameraPosition.x,
+          y: this.defaultCameraPosition.y,
+          z: this.defaultCameraPosition.z,
+        };
+        const endPos = this.gameCameraPosition;
 
-      // Now animate to game position
-      const startPos = {
-        x: this.defaultCameraPosition.x,
-        y: this.defaultCameraPosition.y,
-        z: this.defaultCameraPosition.z,
-      };
-      const endPos = this.gameCameraPosition;
-
-      // Animate camera position change
-      this.animateCameraPosition(startPos, endPos, 1000);
+        // Animate camera position change
+        this.animateCameraPosition(startPos, endPos, 1000);
+      }, 1000); // Wait for the reset transition to complete
     }
 
     // Hide GUI during game
