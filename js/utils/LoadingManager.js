@@ -2,218 +2,120 @@ class LoadingManager {
   constructor() {
     this.totalItems = 0;
     this.loadedItems = 0;
-    this.loaderElement = null;
-    this.progressElement = null;
-    this.loadingText = null;
     this.statusText = null;
-    this.isLoaded = false;
-    this.loadingTimeout = null;
-
-    // Flag to force completion after timeout
-    this.forceCompleteTimeout = null;
+    this.loadingScreen = null;
+    this.loadingBar = null;
+    this.loadingBarFill = null;
+    this.loadingText = null;
+    this.timeoutDuration = 10000; // 10 seconds timeout
 
     this.createLoader();
   }
 
   createLoader() {
-    // Create loading overlay
-    this.loaderElement = document.createElement("div");
-    this.loaderElement.className = "loader-overlay";
+    // Create loading screen container
+    this.loadingScreen = document.createElement("div");
+    this.loadingScreen.style.position = "fixed";
+    this.loadingScreen.style.top = "0";
+    this.loadingScreen.style.left = "0";
+    this.loadingScreen.style.width = "100%";
+    this.loadingScreen.style.height = "100%";
+    this.loadingScreen.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+    this.loadingScreen.style.display = "flex";
+    this.loadingScreen.style.flexDirection = "column";
+    this.loadingScreen.style.justifyContent = "center";
+    this.loadingScreen.style.alignItems = "center";
+    this.loadingScreen.style.zIndex = "1000";
 
-    // Terminal-style container
-    const terminalContainer = document.createElement("div");
-    terminalContainer.className = "terminal-container";
+    // Create loading bar container
+    this.loadingBar = document.createElement("div");
+    this.loadingBar.style.width = "50%";
+    this.loadingBar.style.height = "20px";
+    this.loadingBar.style.backgroundColor = "#333";
+    this.loadingBar.style.borderRadius = "10px";
+    this.loadingBar.style.overflow = "hidden";
 
-    // Create header
-    const header = document.createElement("div");
-    header.className = "terminal-header";
-    header.textContent = "AUTODRIVE.SYS";
+    // Create loading bar fill
+    this.loadingBarFill = document.createElement("div");
+    this.loadingBarFill.style.width = "0%";
+    this.loadingBarFill.style.height = "100%";
+    this.loadingBarFill.style.backgroundColor = "#eb94c1";
+    this.loadingBarFill.style.transition = "width 0.3s ease-out";
 
-    // Create terminal content area
-    const terminalContent = document.createElement("div");
-    terminalContent.className = "terminal-content";
-
-    // Create blinking cursor
-    const cursor = document.createElement("span");
-    cursor.className = "cursor";
-    cursor.textContent = "█";
-
-    // Create loading text with retro computer style
+    // Create loading text
     this.loadingText = document.createElement("div");
-    this.loadingText.className = "terminal-text";
-    this.loadingText.textContent = "INITIALIZING POLONEZ AUTODRIVE SYSTEM...";
+    this.loadingText.style.color = "#fff";
+    this.loadingText.style.marginTop = "20px";
+    this.loadingText.style.fontFamily = "monospace";
+    this.loadingText.textContent = "LOADING...";
 
     // Create status text
     this.statusText = document.createElement("div");
-    this.statusText.className = "terminal-text";
+    this.statusText.style.color = "#eb94c1";
     this.statusText.style.marginTop = "10px";
+    this.statusText.style.fontFamily = "monospace";
+    this.statusText.style.fontSize = "12px";
 
-    // Create textual progress indicator
-    this.progressElement = document.createElement("div");
-    this.progressElement.className = "terminal-progress";
-    this.progressElement.textContent = "LOADING: [                    ] 0%";
+    // Assemble loading screen
+    this.loadingBar.appendChild(this.loadingBarFill);
+    this.loadingScreen.appendChild(this.loadingBar);
+    this.loadingScreen.appendChild(this.loadingText);
+    this.loadingScreen.appendChild(this.statusText);
+    document.body.appendChild(this.loadingScreen);
 
-    // Assemble terminal
-    terminalContent.appendChild(this.loadingText);
-    terminalContent.appendChild(this.progressElement);
-    terminalContent.appendChild(this.statusText);
-    terminalContent.appendChild(cursor);
-
-    terminalContainer.appendChild(header);
-    terminalContainer.appendChild(terminalContent);
-    this.loaderElement.appendChild(terminalContainer);
-
-    // Add loader to document
-    document.body.appendChild(this.loaderElement);
-
-    // Simulate typing effect
-    this.typeLoadingText();
-
-    // Set a fallback timeout to hide the loader after 8 seconds instead of 20
-    // This ensures the loader doesn't get stuck too long
-    this.forceCompleteTimeout = setTimeout(() => {
-      console.warn("Loading timeout reached, forcing completion");
-      this.hideLoader();
-    }, 8000);
-  }
-
-  typeLoadingText() {
-    const messages = [
-      "BOOTING SYSTEM...",
-      "INITIALIZING GRAPHICS...",
-      "LOADING VECTOR DATA...",
-      "CHECKING SYSTEM...",
-      "LOADING ASSETS...",
-    ];
-
-    let messageIndex = 0;
-    let charIndex = 0;
-
-    const typeNextChar = () => {
-      if (this.isLoaded) return;
-
-      if (messageIndex < messages.length) {
-        const currentMessage = messages[messageIndex];
-
-        if (charIndex < currentMessage.length) {
-          this.loadingText.textContent = currentMessage.substring(
-            0,
-            charIndex + 1
-          );
-          charIndex++;
-          // Faster typing - reduce delay
-          this.loadingTimeout = setTimeout(
-            typeNextChar,
-            30 + Math.random() * 30
-          );
-        } else {
-          messageIndex++;
-          charIndex = 0;
-          // Faster message change
-          this.loadingTimeout = setTimeout(typeNextChar, 500);
-        }
-      } else {
-        messageIndex = 0;
-        this.loadingTimeout = setTimeout(typeNextChar, 500);
+    // Set up timeout with progress check
+    setTimeout(() => {
+      if (this.loadedItems < this.totalItems) {
+        console.warn(
+          `Loading timeout reached with ${this.loadedItems}/${this.totalItems} items loaded`
+        );
+        this.completeLoading();
       }
-    };
-
-    typeNextChar();
+    }, this.timeoutDuration);
   }
 
   setItemsToLoad(count) {
-    // Limit max items to 10 to ensure faster loading
-    this.totalItems = Math.min(Math.max(this.totalItems, count), 10);
+    this.totalItems = count;
     this.updateProgress();
   }
 
-  itemLoaded(itemDescription = "") {
+  itemLoaded(itemName) {
     this.loadedItems++;
-
-    if (itemDescription) {
-      this.statusText.textContent = `LOADING: ${itemDescription.toUpperCase()}`;
+    if (this.statusText) {
+      this.statusText.textContent = `LOADED: ${itemName}`;
     }
-
     this.updateProgress();
 
-    // Check if all items are loaded or if we're past 75%
-    if (
-      this.loadedItems >= this.totalItems ||
-      (this.totalItems > 0 && this.loadedItems / this.totalItems > 0.75)
-    ) {
+    // Check if loading is complete
+    if (this.loadedItems >= this.totalItems) {
       this.completeLoading();
     }
   }
 
   updateProgress() {
-    const percentage =
-      this.totalItems > 0
-        ? Math.min(Math.floor((this.loadedItems / this.totalItems) * 100), 100)
-        : 0;
-
-    // Update text-based progress bar (20 characters wide)
-    const progressChars = 20;
-    const filledChars = Math.floor((percentage / 100) * progressChars);
-    const emptyChars = progressChars - filledChars;
-
-    const progressBar =
-      "[" + "=".repeat(filledChars) + " ".repeat(emptyChars) + "]";
-    this.progressElement.textContent = `LOADING: ${progressBar} ${percentage}%`;
+    if (this.totalItems > 0) {
+      const progress = (this.loadedItems / this.totalItems) * 100;
+      if (this.loadingBarFill) {
+        this.loadingBarFill.style.width = `${progress}%`;
+      }
+      if (this.loadingText) {
+        this.loadingText.textContent = `LOADING... ${Math.round(progress)}%`;
+      }
+    }
   }
 
   completeLoading() {
-    this.statusText.textContent = "SYSTEM READY!";
-    this.progressElement.textContent = "LOADING: [====================] 100%";
+    // Add fade out animation
+    if (this.loadingScreen) {
+      this.loadingScreen.style.transition = "opacity 0.5s ease-out";
+      this.loadingScreen.style.opacity = "0";
 
-    // Very short delay before hiding
-    setTimeout(() => {
-      this.hideLoader();
-    }, 300);
-  }
-
-  hideLoader() {
-    if (this.isLoaded) return;
-
-    // Clear all timeouts
-    if (this.loadingTimeout) {
-      clearTimeout(this.loadingTimeout);
-    }
-
-    if (this.forceCompleteTimeout) {
-      clearTimeout(this.forceCompleteTimeout);
-    }
-
-    this.isLoaded = true;
-
-    // Make background transparent
-    this.loaderElement.style.backgroundColor = "transparent";
-
-    // Keep terminal visible but make it fade out
-    const terminalContainer = this.loaderElement.querySelector(
-      ".terminal-container"
-    );
-    if (terminalContainer) {
-      terminalContainer.style.transition = "opacity 1s ease-out";
-      terminalContainer.style.opacity = "0";
-    }
-
-    // Remove loader after the fade-out transition without animation
-    setTimeout(() => {
-      if (this.loaderElement && this.loaderElement.parentNode) {
-        this.loaderElement.parentNode.removeChild(this.loaderElement);
-      }
-    }, 1000);
-  }
-
-  showLoader() {
-    this.isLoaded = false;
-    this.loaderElement.style.backgroundColor = "#004671";
-
-    const terminalContainer = this.loaderElement.querySelector(
-      ".terminal-container"
-    );
-    if (terminalContainer) {
-      terminalContainer.style.opacity = "1";
+      // Remove loading screen after fade
+      setTimeout(() => {
+        if (this.loadingScreen && this.loadingScreen.parentNode) {
+          this.loadingScreen.parentNode.removeChild(this.loadingScreen);
+        }
+      }, 500);
     }
   }
 }

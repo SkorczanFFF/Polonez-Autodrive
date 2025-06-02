@@ -11,6 +11,7 @@ class DevStats {
     this.lastTime = performance.now();
     this.frames = 0;
     this.fps = 0;
+    this.polonezController = null;
 
     // Create stats container
     this.container = document.createElement("div");
@@ -33,6 +34,10 @@ class DevStats {
     // Bind event listener
     this.handleKeyPress = this.handleKeyPress.bind(this);
     document.addEventListener("keydown", this.handleKeyPress);
+  }
+
+  setPolonezController(controller) {
+    this.polonezController = controller;
   }
 
   handleKeyPress(event) {
@@ -61,6 +66,15 @@ class DevStats {
     const memory = info.memory;
     const render = info.render;
 
+    // Get Polonez position if available
+    let polonezPosition = { x: "N/A" };
+    if (this.polonezController && this.polonezController.polonezModel) {
+      const pos = this.polonezController.polonezModel.position;
+      polonezPosition = {
+        x: pos.x.toFixed(3),
+      };
+    }
+
     // Update stats display with better formatting
     this.container.innerHTML = `
       <div style="margin-bottom: 5px; border-bottom: 1px solid #00ff00;">PERFORMANCE STATS</div>
@@ -74,6 +88,10 @@ class DevStats {
           info.programs ? info.programs.length : 0
         }</td></tr>
         <tr><td>Frame #:</td><td>${render.frame}</td></tr>
+      </table>
+      <div style="margin: 10px 0 5px; border-bottom: 1px solid #00ff00;">POLONEZ POSITION</div>
+      <table style="border-spacing: 10px 0; border-collapse: separate;">
+        <tr><td>X:</td><td>${polonezPosition.x}</td></tr>
       </table>
     `;
   }

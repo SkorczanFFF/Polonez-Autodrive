@@ -11,22 +11,37 @@ class SceneManager {
     this.mixers = [];
     this.updateCallbacks = [];
     this.devStats = null;
+    this.lastWidth = 0;
+    this.lastHeight = 0;
+    this.resizeThrottleId = null;
+    this.isResizing = false;
 
     this.init();
 
     // Initialize dev stats after renderer is created
     this.devStats = new DevStats(this.renderer, this.scene);
 
+    // Add resize listener with throttling
+    window.addEventListener("resize", () => this.handleResize(), {
+      passive: true,
+    });
+
     // Start animation loop
     this.animate();
   }
 
   init() {
-    // Create renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Create renderer with optimized settings
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance",
+      stencil: false,
+      depth: true,
+    });
+
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMapSoft = true;
     this.renderer.shadowMap.type = THREE.VSMShadowMap;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio
 
     this.canvas = this.renderer.domElement;
     document.body.appendChild(this.canvas);
@@ -52,6 +67,36 @@ class SceneManager {
 
     // Setup lights
     this.setupLights();
+
+    // Initial resize
+    this.handleResize();
+  }
+
+  handleResize() {
+    if (this.resizeThrottleId) return;
+
+    this.resizeThrottleId = requestAnimationFrame(() => {
+      this.resize();
+      this.resizeThrottleId = null;
+    });
+  }
+
+  resize() {
+    const canvas = this.renderer.domElement;
+    const width = canvas.clientWidth / 2;
+    const height = canvas.clientHeight / 2;
+
+    if (this.lastWidth !== width || this.lastHeight !== height) {
+      this.lastWidth = width;
+      this.lastHeight = height;
+
+      this.renderer.setSize(width, height, false);
+      this.camera.aspect = width / height;
+      this.camera.updateProjectionMatrix();
+
+      return true;
+    }
+    return false;
   }
 
   setupLights() {
@@ -103,19 +148,29 @@ class SceneManager {
   animate() {
     requestAnimationFrame(() => this.animate());
 
-    // Update dev stats
-    this.devStats.update();
-
-    // Update all mixers
     const delta = this.clock.getDelta();
-    this.mixers.forEach((mixer) => mixer.update(delta));
 
-    // Update all callbacks
-    this.updateCallbacks.forEach((callback) => callback(delta));
+    // Batch updates
+    if (this.mixers.length > 0 || this.updateCallbacks.length > 0) {
+      // Update all mixers
+      for (let i = 0; i < this.mixers.length; i++) {
+        this.mixers[i].update(delta);
+      }
 
-    // Check if we need to resize
-    if (this.resize()) {
-      this.updateCameraAspect();
+      // Update all callbacks
+      for (let i = 0; i < this.updateCallbacks.length; i++) {
+        this.updateCallbacks[i](delta);
+      }
+    }
+
+    // Update controls if needed
+    if (this.controls.enabled) {
+      this.controls.update();
+    }
+
+    // Update dev stats
+    if (this.devStats) {
+      this.devStats.update();
     }
 
     // Render the scene
@@ -139,20 +194,16 @@ class SceneManager {
     this.renderer.render(this.scene, this.camera);
   }
 
-  resize() {
-    const canvas = this.renderer.domElement;
-    const width = canvas.clientWidth / 2; // Reduced resolution for 80s feel + performance
-    const height = canvas.clientHeight / 2;
-    const resize = canvas.width !== width || canvas.height !== height;
-    if (resize) {
-      this.renderer.setSize(width, height, false);
-    }
-    return resize;
-  }
-
   updateCameraAspect() {
     this.camera.aspect = this.canvas.clientWidth / this.canvas.clientHeight;
     this.camera.updateProjectionMatrix();
+  }
+
+  // Add method to set PolonezController for DevStats
+  setPolonezController(controller) {
+    if (this.devStats) {
+      this.devStats.setPolonezController(controller);
+    }
   }
 }
 

@@ -7,6 +7,7 @@ class ModelLoader {
     this.fbxLoader = new THREE.FBXLoader();
     this.models = {};
     this.mixers = {};
+    this.geometryCache = new Map(); // Cache for geometries
 
     // Track models being loaded
     this.activeLoads = 0;
@@ -165,11 +166,33 @@ class ModelLoader {
   // Removed unused loadWireframeModel method
 
   applyMaterialToModel(model, material) {
+    const materialId = material.uuid;
     model.traverse((child) => {
       if (child.isMesh) {
-        child.material = material;
+        // Cache geometry if not already cached
+        const geometryId = child.geometry.uuid;
+        if (!this.geometryCache.has(geometryId)) {
+          this.geometryCache.set(geometryId, child.geometry);
+        }
+
+        // Use cached geometry
+        child.geometry = this.geometryCache.get(geometryId);
+
+        // Only update material if different
+        if (!child.material || child.material.uuid !== materialId) {
+          child.material = material;
+        }
+
         child.castShadow = true;
         child.receiveShadow = true;
+
+        // Optimize mesh for static objects
+        if (
+          !child.geometry.attributes.skinWeight &&
+          !child.geometry.attributes.skinIndex
+        ) {
+          child.matrixAutoUpdate = false;
+        }
       }
     });
   }
