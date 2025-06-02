@@ -124,6 +124,11 @@ class MinigameManager {
     this.countdown = 3;
     this.speedMultiplier = 1.0;
 
+    // Set cursor to default during minigame
+    if (this.sceneManager && this.sceneManager.canvas) {
+      this.sceneManager.canvas.style.cursor = "default";
+    }
+
     // Lock steering at the start
     if (this.polonezController) {
       this.polonezController.setSteeringLock(true);
@@ -473,7 +478,14 @@ class MinigameManager {
     const polonezBox = new THREE.Box3().setFromObject(polonezModel);
 
     // Check intersection with box
-    return polonezBox.intersectsBox(box.userData.collisionBox);
+    const hasCollision = polonezBox.intersectsBox(box.userData.collisionBox);
+
+    // If collision detected, immediately reset rotation to prevent lag
+    if (hasCollision && this.polonezController.polonezModel) {
+      this.polonezController.polonezModel.rotation.set(0, 0, 0);
+    }
+
+    return hasCollision;
   }
 
   endMinigame(collision) {
@@ -481,6 +493,11 @@ class MinigameManager {
 
     this.isMinigameActive = false;
     this.boxSpawningActive = false;
+
+    // Reset cursor style back to grab
+    if (this.sceneManager && this.sceneManager.canvas) {
+      this.sceneManager.canvas.style.cursor = "grab";
+    }
 
     // Stop spawning boxes
     if (this.boxSpawningInterval) {
@@ -494,7 +511,7 @@ class MinigameManager {
       this.nextSpawnTimeout = null;
     }
 
-    // Remove all boxes
+    // Remove all boxes immediately to reduce lag
     this.boxes.forEach((box) => {
       this.scene.remove(box);
     });
@@ -515,38 +532,40 @@ class MinigameManager {
       this._rockManager.setSpeed(1.0);
     }
 
-    // Only reset camera and Polonez positions if game was ended with ESC
-    if (!collision) {
-      // Reset camera and Polonez positions with smooth transitions
-      if (this.sceneManager && this.sceneManager.camera) {
-        const startPos = {
-          x: this.sceneManager.camera.position.x,
-          y: this.sceneManager.camera.position.y,
-          z: this.sceneManager.camera.position.z,
-        };
+    // Reset camera and handle Polonez based on end condition
+    if (this.sceneManager && this.sceneManager.camera) {
+      const startPos = {
+        x: this.sceneManager.camera.position.x,
+        y: this.sceneManager.camera.position.y,
+        z: this.sceneManager.camera.position.z,
+      };
 
-        // Reset Polonez position with smooth transition
-        if (this.polonezController) {
+      // Handle Polonez differently for collision vs ESC
+      if (this.polonezController && this.polonezController.polonezModel) {
+        if (!collision) {
+          // On ESC: Reset both position and rotation
           this.polonezController.resetPositionWithTransition(1000);
-          this.polonezController.setSteeringLock(true);
+          this.polonezController.polonezModel.rotation.set(0, 0, 0);
         }
-
-        // Animate camera back to default position
-        this.animateCameraPosition(startPos, this.defaultCameraPosition, 1000);
-
-        // Re-enable orbit controls after animation completes
-        setTimeout(() => {
-          if (this.sceneManager && this.sceneManager.controls) {
-            this.sceneManager.controls.enabled = true;
-          }
-        }, 1000);
+        // For collision: rotation is already reset in checkCollision
       }
 
-      // Show GUI again
-      if (this.gui) {
-        this.gui.domElement.style.display = "block";
-      }
+      // Animate camera back to default position
+      this.animateCameraPosition(startPos, this.defaultCameraPosition, 1000);
+
+      // Re-enable orbit controls after animation completes
+      setTimeout(() => {
+        if (this.sceneManager && this.sceneManager.controls) {
+          this.sceneManager.controls.enabled = true;
+        }
+      }, 1000);
     }
+
+    // Show GUI again
+    if (this.gui && !collision) {
+      this.gui.domElement.style.display = "block";
+    }
+
     // Hide escape info
     this.escapeInfoElement.style.display = "none";
 
