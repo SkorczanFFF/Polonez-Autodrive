@@ -5,18 +5,20 @@ class PolonezController {
     this.isSteeringEnabled = false;
     this.initialPosition = null;
     this.initialRotation = null;
-    this.steeringSpeed = 0.05;
-    this.movementSpeed = 0.1;
-    this.maxMovementSpeed = 0.5; // Increased max speed for more noticeable effect
-    this.acceleration = 0.03; // Increased acceleration for more noticeable effect
-    this.currentSpeed = 0; // Current movement speed
-    this.maxSteeringAngle = 0.1; // Maximum rotation when steering
-    this.maxDisplacement = 6.0; // Maximum left/right displacement
+    this.steeringSpeed = 0.045;
+    this.movementSpeed = 0.08;
+    this.maxMovementSpeed = 0.4;
+    this.acceleration = 0.02;
+    this.currentSpeed = 0;
+    this.maxSteeringAngle = 0.1;
+    this.maxDisplacement = 6.0;
     this.polonezModel = null;
     this.polonezWireframeModel = null;
 
     // Current state
     this.currentSteeringAngle = 0;
+    this.targetSteeringAngle = 0;
+    this.rotationEasing = 0.15;
     this.isLeftPressed = false;
     this.isRightPressed = false;
     this.lastKeyPressTime = 0;
@@ -110,44 +112,48 @@ class PolonezController {
     if (event.key === "ArrowLeft") {
       this.isLeftPressed = false;
       // Start slowing down gradually
-      this.currentSpeed = this.currentSpeed * 0.75; // Keep some momentum
+      this.currentSpeed = this.currentSpeed * 0.45; // Keep some momentum
     } else if (event.key === "ArrowRight") {
       this.isRightPressed = false;
       // Start slowing down gradually
-      this.currentSpeed = this.currentSpeed * 0.75; // Keep some momentum
+      this.currentSpeed = this.currentSpeed * 0.45; // Keep some momentum
     }
   }
 
   steerLeft() {
     if (!this.polonezModel || !this.isSteeringEnabled) return;
 
-    // Calculate how long the key has been pressed - make it more noticeable
-    const keyPressDuration = (Date.now() - this.lastKeyPressTime) / 1000; // in seconds
+    // Calculate how long the key has been pressed
+    const keyPressDuration = (Date.now() - this.lastKeyPressTime) / 1000;
 
-    // Increase speed based on how long the key has been pressed - enhanced effect
-    this.currentSpeed = Math.min(
-      this.movementSpeed + this.acceleration * keyPressDuration * 3,
-      this.maxMovementSpeed
-    );
+    // Increase speed with easing
+    const targetSpeed =
+      this.movementSpeed + this.acceleration * keyPressDuration * 2;
+    this.currentSpeed =
+      this.currentSpeed +
+      (Math.min(targetSpeed, this.maxMovementSpeed) - this.currentSpeed) * 0.1;
 
     // Calculate potential new position
     const potentialPositionX = this.polonezModel.position.x - this.currentSpeed;
 
     // Check if the movement would exceed the maximum displacement
     if (potentialPositionX < this.initialPosition.x - this.maxDisplacement) {
-      return; // Don't move further if at max displacement
+      return;
     }
 
     // Move the car laterally to the left
     this.polonezModel.position.x = potentialPositionX;
 
-    // Rotate the model on the Z axis for tilting effect during turning
-    this.currentSteeringAngle = Math.min(
-      this.currentSteeringAngle + this.steeringSpeed,
-      this.maxSteeringAngle
-    );
-    this.polonezModel.rotation.z =
-      this.initialRotation.z + this.currentSteeringAngle;
+    // Set target steering angle with easing
+    this.targetSteeringAngle = this.maxSteeringAngle;
+    this.currentSteeringAngle +=
+      (this.targetSteeringAngle - this.currentSteeringAngle) *
+      this.rotationEasing;
+
+    // Apply rotation with easing
+    const targetRotation = this.initialRotation.z + this.currentSteeringAngle;
+    this.polonezModel.rotation.z +=
+      (targetRotation - this.polonezModel.rotation.z) * this.rotationEasing;
 
     // If wireframe model exists, apply the same transformations
     if (this.polonezWireframeModel) {
@@ -159,40 +165,42 @@ class PolonezController {
     if (this.environment) {
       this.environment.updateWheelsPosition(this.polonezModel);
     }
-
-    // We no longer rotate wheels during steering
   }
 
   steerRight() {
     if (!this.polonezModel || !this.isSteeringEnabled) return;
 
-    // Calculate how long the key has been pressed - make it more noticeable
-    const keyPressDuration = (Date.now() - this.lastKeyPressTime) / 1000; // in seconds
+    // Calculate how long the key has been pressed
+    const keyPressDuration = (Date.now() - this.lastKeyPressTime) / 1000;
 
-    // Increase speed based on how long the key has been pressed - enhanced effect
-    this.currentSpeed = Math.min(
-      this.movementSpeed + this.acceleration * keyPressDuration * 3,
-      this.maxMovementSpeed
-    );
+    // Increase speed with easing
+    const targetSpeed =
+      this.movementSpeed + this.acceleration * keyPressDuration * 2;
+    this.currentSpeed =
+      this.currentSpeed +
+      (Math.min(targetSpeed, this.maxMovementSpeed) - this.currentSpeed) * 0.1;
 
     // Calculate potential new position
     const potentialPositionX = this.polonezModel.position.x + this.currentSpeed;
 
     // Check if the movement would exceed the maximum displacement
     if (potentialPositionX > this.initialPosition.x + this.maxDisplacement) {
-      return; // Don't move further if at max displacement
+      return;
     }
 
     // Move the car laterally to the right
     this.polonezModel.position.x = potentialPositionX;
 
-    // Rotate the model on the Z axis for tilting effect during turning
-    this.currentSteeringAngle = Math.max(
-      this.currentSteeringAngle - this.steeringSpeed,
-      -this.maxSteeringAngle
-    );
-    this.polonezModel.rotation.z =
-      this.initialRotation.z + this.currentSteeringAngle;
+    // Set target steering angle with easing
+    this.targetSteeringAngle = -this.maxSteeringAngle;
+    this.currentSteeringAngle +=
+      (this.targetSteeringAngle - this.currentSteeringAngle) *
+      this.rotationEasing;
+
+    // Apply rotation with easing
+    const targetRotation = this.initialRotation.z + this.currentSteeringAngle;
+    this.polonezModel.rotation.z +=
+      (targetRotation - this.polonezModel.rotation.z) * this.rotationEasing;
 
     // If wireframe model exists, apply the same transformations
     if (this.polonezWireframeModel) {
@@ -209,21 +217,18 @@ class PolonezController {
   returnToNeutralSteering() {
     if (!this.polonezModel || !this.isSteeringEnabled) return;
 
-    // Gradually return to neutral steering angle
-    const returnSpeed = this.steeringSpeed * 0.5;
+    // Reset target angle to neutral
+    this.targetSteeringAngle = 0;
 
-    // Smoothly return to neutral
-    if (Math.abs(this.currentSteeringAngle) < returnSpeed) {
-      this.currentSteeringAngle = 0;
-    } else if (this.currentSteeringAngle > 0) {
-      this.currentSteeringAngle -= returnSpeed;
-    } else if (this.currentSteeringAngle < 0) {
-      this.currentSteeringAngle += returnSpeed;
-    }
+    // Apply easing to steering angle
+    this.currentSteeringAngle +=
+      (this.targetSteeringAngle - this.currentSteeringAngle) *
+      this.rotationEasing;
 
-    // Apply the updated rotation on the Z axis
-    this.polonezModel.rotation.z =
-      this.initialRotation.z + this.currentSteeringAngle;
+    // Apply rotation with easing
+    const targetRotation = this.initialRotation.z + this.currentSteeringAngle;
+    this.polonezModel.rotation.z +=
+      (targetRotation - this.polonezModel.rotation.z) * this.rotationEasing;
 
     // If wireframe model exists, apply the same rotation
     if (this.polonezWireframeModel) {
@@ -234,8 +239,6 @@ class PolonezController {
     if (this.environment) {
       this.environment.updateWheelsPosition(this.polonezModel);
     }
-
-    // Reset wheels to neutral orientation - no rotation during steering
   }
 
   resetPosition() {
