@@ -28,6 +28,9 @@ class SceneManager {
     // Initialize dev stats after renderer is created
     this.devStats = new DevStats(this.renderer, this.scene);
 
+    // Add mouse interaction styles
+    this.setupMouseInteraction();
+
     // Start animation loop
     this.animate();
   }
@@ -235,6 +238,37 @@ class SceneManager {
 
   easeInOutCubic(t) {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  setupMouseInteraction() {
+    if (!this.canvas) return;
+
+    // Set default cursor style
+    this.canvas.style.cursor = "grab";
+
+    // Add mousedown event
+    this.canvas.addEventListener("mousedown", () => {
+      this.canvas.style.cursor = "grabbing";
+    });
+
+    // Add mouseup event
+    this.canvas.addEventListener("mouseup", () => {
+      this.canvas.style.cursor = "grab";
+    });
+
+    // Add mouseleave event to reset cursor
+    this.canvas.addEventListener("mouseleave", () => {
+      this.canvas.style.cursor = "grab";
+    });
+  }
+
+  cleanup() {
+    if (this.canvas) {
+      // Remove mouse event listeners
+      this.canvas.removeEventListener("mousedown", () => {});
+      this.canvas.removeEventListener("mouseup", () => {});
+      this.canvas.removeEventListener("mouseleave", () => {});
+    }
   }
 }
 

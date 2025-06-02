@@ -36,6 +36,11 @@ class MinigameManager {
 
     // Add escape key listener to end minigame
     document.addEventListener("keydown", this.onEscKeyPress);
+
+    // Lock steering initially when game starts
+    if (this.polonezController) {
+      this.polonezController.setSteeringLock(true);
+    }
   }
 
   // Set GUI reference to handle visibility
@@ -119,7 +124,12 @@ class MinigameManager {
     this.countdown = 3;
     this.speedMultiplier = 1.0;
 
-    // First reset camera to default position, then change to game view
+    // Lock steering at the start
+    if (this.polonezController) {
+      this.polonezController.setSteeringLock(true);
+    }
+
+    // First reset camera and Polonez to default positions
     if (
       this.sceneManager &&
       this.sceneManager.camera &&
@@ -131,18 +141,21 @@ class MinigameManager {
       // Reset camera to default position with smooth transition
       this.sceneManager.resetCameraWithTransition(1000);
 
-      // After the reset transition, animate to game position
-      setTimeout(() => {
-        const startPos = {
-          x: this.defaultCameraPosition.x,
-          y: this.defaultCameraPosition.y,
-          z: this.defaultCameraPosition.z,
-        };
-        const endPos = this.gameCameraPosition;
+      // Reset Polonez position with smooth transition
+      if (this.polonezController) {
+        this.polonezController.resetPositionWithTransition(1000, () => {
+          // After both camera and Polonez are reset, animate to game position
+          const startPos = {
+            x: this.defaultCameraPosition.x,
+            y: this.defaultCameraPosition.y,
+            z: this.defaultCameraPosition.z,
+          };
+          const endPos = this.gameCameraPosition;
 
-        // Animate camera position change
-        this.animateCameraPosition(startPos, endPos, 1000);
-      }, 1000); // Wait for the reset transition to complete
+          // Animate camera position change
+          this.animateCameraPosition(startPos, endPos, 1000);
+        });
+      }
     }
 
     // Hide GUI during game
@@ -175,6 +188,11 @@ class MinigameManager {
         }
       } else if (this.countdown === 0) {
         this.countdownElement.textContent = "START!";
+
+        // Unlock steering when "START!" is displayed
+        if (this.polonezController) {
+          this.polonezController.setSteeringLock(false);
+        }
       } else {
         // Clear countdown interval
         clearInterval(countdownInterval);
@@ -497,30 +515,38 @@ class MinigameManager {
       this._rockManager.setSpeed(1.0);
     }
 
-    // Reset camera position to default
-    if (this.sceneManager && this.sceneManager.camera) {
-      const startPos = {
-        x: this.sceneManager.camera.position.x,
-        y: this.sceneManager.camera.position.y,
-        z: this.sceneManager.camera.position.z,
-      };
+    // Only reset camera and Polonez positions if game was ended with ESC
+    if (!collision) {
+      // Reset camera and Polonez positions with smooth transitions
+      if (this.sceneManager && this.sceneManager.camera) {
+        const startPos = {
+          x: this.sceneManager.camera.position.x,
+          y: this.sceneManager.camera.position.y,
+          z: this.sceneManager.camera.position.z,
+        };
 
-      // Animate camera back to default position
-      this.animateCameraPosition(startPos, this.defaultCameraPosition, 1000);
-
-      // Re-enable orbit controls after animation completes
-      setTimeout(() => {
-        if (this.sceneManager && this.sceneManager.controls) {
-          this.sceneManager.controls.enabled = true;
+        // Reset Polonez position with smooth transition
+        if (this.polonezController) {
+          this.polonezController.resetPositionWithTransition(1000);
+          this.polonezController.setSteeringLock(true);
         }
-      }, 1000);
-    }
 
-    // Show GUI again
-    if (this.gui) {
-      this.gui.domElement.style.display = "block";
-    }
+        // Animate camera back to default position
+        this.animateCameraPosition(startPos, this.defaultCameraPosition, 1000);
 
+        // Re-enable orbit controls after animation completes
+        setTimeout(() => {
+          if (this.sceneManager && this.sceneManager.controls) {
+            this.sceneManager.controls.enabled = true;
+          }
+        }, 1000);
+      }
+
+      // Show GUI again
+      if (this.gui) {
+        this.gui.domElement.style.display = "block";
+      }
+    }
     // Hide escape info
     this.escapeInfoElement.style.display = "none";
 

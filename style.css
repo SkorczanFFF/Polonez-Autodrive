@@ -12,6 +12,7 @@ canvas {
   height: 100%;
   display: block;
   outline: none !important;
+  cursor: grab;
 }
 
 canvas:focus {

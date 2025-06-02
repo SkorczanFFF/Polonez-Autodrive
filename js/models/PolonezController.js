@@ -29,6 +29,11 @@ class PolonezController {
     // Bind event handlers
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
+
+    this.isTransitioning = false;
+    this.transitionCallback = null;
+
+    this.isSteeringLocked = false;
   }
 
   initialize() {
@@ -121,7 +126,8 @@ class PolonezController {
   }
 
   steerLeft() {
-    if (!this.polonezModel || !this.isSteeringEnabled) return;
+    if (!this.polonezModel || !this.isSteeringEnabled || this.isSteeringLocked)
+      return;
 
     // Calculate how long the key has been pressed
     const keyPressDuration = (Date.now() - this.lastKeyPressTime) / 1000;
@@ -168,7 +174,8 @@ class PolonezController {
   }
 
   steerRight() {
-    if (!this.polonezModel || !this.isSteeringEnabled) return;
+    if (!this.polonezModel || !this.isSteeringEnabled || this.isSteeringLocked)
+      return;
 
     // Calculate how long the key has been pressed
     const keyPressDuration = (Date.now() - this.lastKeyPressTime) / 1000;
@@ -215,7 +222,8 @@ class PolonezController {
   }
 
   returnToNeutralSteering() {
-    if (!this.polonezModel || !this.isSteeringEnabled) return;
+    if (!this.polonezModel || !this.isSteeringEnabled || this.isSteeringLocked)
+      return;
 
     // Reset target angle to neutral
     this.targetSteeringAngle = 0;
@@ -241,35 +249,76 @@ class PolonezController {
     }
   }
 
+  resetPositionWithTransition(duration = 1000, callback = null) {
+    if (!this.polonezModel || !this.initialPosition) return;
+
+    this.isTransitioning = true;
+    this.transitionCallback = callback;
+
+    // Store start positions
+    const startPos = {
+      x: this.polonezModel.position.x,
+      y: this.polonezModel.position.y,
+      z: this.polonezModel.position.z,
+    };
+
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Use cubic easing for smooth transition
+      const eased = this.easeInOutCubic(progress);
+
+      // Update position only
+      this.polonezModel.position.x =
+        startPos.x + (this.initialPosition.x - startPos.x) * eased;
+      this.polonezModel.position.y =
+        startPos.y + (this.initialPosition.y - startPos.y) * eased;
+      this.polonezModel.position.z =
+        startPos.z + (this.initialPosition.z - startPos.z) * eased;
+
+      // Update wireframe model if it exists
+      if (this.polonezWireframeModel) {
+        this.polonezWireframeModel.position.copy(this.polonezModel.position);
+      }
+
+      // Update wheel positions
+      if (this.environment) {
+        this.environment.updateWheelsPosition(this.polonezModel);
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        this.isTransitioning = false;
+        this.currentSpeed = 0;
+        this.isLeftPressed = false;
+        this.isRightPressed = false;
+
+        if (this.transitionCallback) {
+          this.transitionCallback();
+          this.transitionCallback = null;
+        }
+      }
+    };
+
+    animate();
+  }
+
+  easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
   resetPosition() {
-    if (!this.polonezModel || !this.initialPosition || !this.initialRotation)
-      return;
-
-    // Reset the model position and rotation
-    this.polonezModel.position.copy(this.initialPosition);
-    this.polonezModel.rotation.copy(this.initialRotation);
-    this.currentSteeringAngle = 0;
-    this.currentSpeed = 0;
-    this.isLeftPressed = false;
-    this.isRightPressed = false;
-
-    // Reset wireframe model if it exists
-    if (this.polonezWireframeModel) {
-      this.polonezWireframeModel.position.copy(this.initialPosition);
-      this.polonezWireframeModel.rotation.copy(this.initialRotation);
-    }
-
-    // Update wheel positions to stay with the car
-    if (this.environment) {
-      this.environment.updateWheelsPosition(this.polonezModel);
-    }
-
-    // Reset wheels to their initial orientation - no rotation
+    // Replace immediate reset with transition
+    this.resetPositionWithTransition(1000);
   }
 
   update(deltaTime) {
-    // Process active steering
-    if (this.isSteeringEnabled) {
+    // Process active steering only if not locked
+    if (this.isSteeringEnabled && !this.isSteeringLocked) {
       // Show key hold duration visually
       const elapsedTime =
         this.isLeftPressed || this.isRightPressed
@@ -338,6 +387,19 @@ class PolonezController {
 
     // Clear references
     this.enterKeyListeners = [];
+  }
+
+  // Add method to lock/unlock steering
+  setSteeringLock(locked) {
+    this.isSteeringLocked = locked;
+    if (locked) {
+      // Reset steering state when locked
+      this.currentSteeringAngle = 0;
+      this.targetSteeringAngle = 0;
+      this.currentSpeed = 0;
+      this.isLeftPressed = false;
+      this.isRightPressed = false;
+    }
   }
 }
 
