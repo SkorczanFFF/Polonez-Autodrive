@@ -16,9 +16,13 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          three: ["three"],
-          "dat.gui": ["dat.gui"],
+        manualChunks: (id) => {
+          if (id.includes("node_modules/three/")) {
+            return "three";
+          }
+          if (id.includes("node_modules/dat.gui/")) {
+            return "dat.gui";
+          }
         },
         assetFileNames: (assetInfo) => {
           let extType = assetInfo.name.split(".").at(1);
@@ -39,6 +43,13 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ["three", "dat.gui"],
+    exclude: [],
+  },
+  resolve: {
+    alias: {
+      three: "three",
+      "@": "/js",
+    },
   },
   base: "./",
 });

@@ -1,4 +1,14 @@
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+import { GUI } from "dat.gui";
 import Application from "./core/Application.js";
+
+// Make THREE available globally for other modules
+window.THREE = THREE;
+window.OrbitControls = OrbitControls;
+window.FBXLoader = FBXLoader;
+window.GUI = GUI;
 
 // Add diagnostics before starting application
 function printDiagnostics() {
