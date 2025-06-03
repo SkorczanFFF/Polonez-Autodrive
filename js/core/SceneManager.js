@@ -12,6 +12,13 @@ class SceneManager {
     this.updateCallbacks = [];
     this.devStats = null;
 
+    // Add performance monitoring
+    this.lastFpsCheck = Date.now();
+    this.frameCount = 0;
+    this.currentFps = 60;
+    this.resolutionScale = 0.5; // Start at 50% resolution
+    this.targetFps = 50; // Target FPS threshold
+
     this.defaultCameraPosition = {
       x: 0,
       y: 1.975,
@@ -37,10 +44,13 @@ class SceneManager {
 
   init() {
     // Create renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance", // Prefer high performance GPU
+    });
     this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap; // Changed from VSMShadowMap for better performance
     this.renderer.shadowMapSoft = true;
-    this.renderer.shadowMap.type = THREE.VSMShadowMap;
 
     this.canvas = this.renderer.domElement;
     document.body.appendChild(this.canvas);
@@ -99,15 +109,15 @@ class SceneManager {
     const light = new THREE.DirectionalLight(color, intensity);
     light.position.set(x, y, z);
     light.castShadow = true;
-    light.shadow.bias = 0;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
+    light.shadow.bias = -0.001;
+    light.shadow.mapSize.width = 512; // Reduced from 1024
+    light.shadow.mapSize.height = 512; // Reduced from 1024
     light.shadow.camera.near = 1;
-    light.shadow.camera.far = 500;
-    light.shadow.camera.left = -50;
-    light.shadow.camera.right = 50;
-    light.shadow.camera.top = 50;
-    light.shadow.camera.bottom = -50;
+    light.shadow.camera.far = 200; // Reduced from 500
+    light.shadow.camera.left = -25; // Reduced from -50
+    light.shadow.camera.right = 25; // Reduced from 50
+    light.shadow.camera.top = 25; // Reduced from 50
+    light.shadow.camera.bottom = -25; // Reduced from -50
     this.scene.add(light);
     return light;
   }
@@ -128,12 +138,26 @@ class SceneManager {
     // Update dev stats
     this.devStats.update();
 
-    // Update all mixers
+    // Calculate delta time
     const delta = this.clock.getDelta();
-    this.mixers.forEach((mixer) => mixer.update(delta));
 
-    // Update all callbacks
-    this.updateCallbacks.forEach((callback) => callback(delta));
+    // Skip frame if delta is too high (tab was inactive)
+    if (delta > 0.1) {
+      return;
+    }
+
+    // Update all mixers with frame limiting
+    if (this.currentFps < this.targetFps) {
+      // Update only every other frame when FPS is low
+      if (this.frameCount % 2 === 0) {
+        this.mixers.forEach((mixer) => mixer.update(delta * 2));
+        this.updateCallbacks.forEach((callback) => callback(delta * 2));
+      }
+    } else {
+      // Normal update when FPS is good
+      this.mixers.forEach((mixer) => mixer.update(delta));
+      this.updateCallbacks.forEach((callback) => callback(delta));
+    }
 
     // Check if we need to resize
     if (this.resize()) {
@@ -163,8 +187,28 @@ class SceneManager {
 
   resize() {
     const canvas = this.renderer.domElement;
-    const width = canvas.clientWidth / 2; // Reduced resolution for 80s feel + performance
-    const height = canvas.clientHeight / 2;
+
+    // Measure FPS every second
+    this.frameCount++;
+    const now = Date.now();
+    if (now - this.lastFpsCheck >= 1000) {
+      this.currentFps = this.frameCount;
+      this.frameCount = 0;
+      this.lastFpsCheck = now;
+
+      // Adjust resolution scale based on performance
+      if (this.currentFps < this.targetFps && this.resolutionScale > 0.25) {
+        this.resolutionScale = Math.max(0.25, this.resolutionScale - 0.1);
+      } else if (
+        this.currentFps > this.targetFps + 10 &&
+        this.resolutionScale < 0.5
+      ) {
+        this.resolutionScale = Math.min(0.5, this.resolutionScale + 0.1);
+      }
+    }
+
+    const width = canvas.clientWidth * this.resolutionScale;
+    const height = canvas.clientHeight * this.resolutionScale;
     const resize = canvas.width !== width || canvas.height !== height;
     if (resize) {
       this.renderer.setSize(width, height, false);
