@@ -83,6 +83,9 @@ class GUIManager {
       showRockWireframe: null,
     };
 
+    // Add isTransitioning flag
+    this.isTransitioning = false;
+
     // Initialize CRT effect settings
     this.initCRTEffect();
 
@@ -705,6 +708,192 @@ class GUIManager {
       .onChange((value) => {
         this.scene.fog.far = value;
       });
+
+    // Add randomize button to GUI
+    this.gui
+      .add({ randomize: () => this.randomizeAllColors() }, "randomize")
+      .name("🎨 Randomize all");
+  }
+
+  // Helper to interpolate between colors
+  lerpColor(startColor, endColor, t) {
+    const start = parseInt(startColor.replace("#", "0x"), 16);
+    const end = parseInt(endColor.replace("#", "0x"), 16);
+
+    const sr = (start >> 16) & 255;
+    const sg = (start >> 8) & 255;
+    const sb = start & 255;
+
+    const er = (end >> 16) & 255;
+    const eg = (end >> 8) & 255;
+    const eb = end & 255;
+
+    const r = Math.round(sr + (er - sr) * t);
+    const g = Math.round(sg + (eg - sg) * t);
+    const b = Math.round(sb + (eb - sb) * t);
+
+    return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, "0");
+  }
+
+  // Randomize all colors with smooth transition
+  randomizeAllColors() {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+
+    // Disable orbit controls
+    if (this.scene.orbitControls) {
+      this.scene.orbitControls.enabled = false;
+    }
+
+    // Store initial colors
+    const startColors = {
+      polonezColor: this.parameters.polonezColor,
+      polonezWireframeColor: this.parameters.polonezWireframeColor,
+      hillsColor: this.parameters.hillsColor,
+      hillsWireframeColor: this.parameters.hillsWireframeColor,
+      sideColor: this.parameters.sideColor,
+      sideWireframeColor: this.parameters.sideWireframeColor,
+      roadColor: this.parameters.roadColor,
+      roadWireframeColor: this.parameters.roadWireframeColor,
+      terrainColor: this.parameters.terrainColor,
+      terrainWireframeColor: this.parameters.terrainWireframeColor,
+      palmColor: this.parameters.palmColor,
+      palmWireframeColor: this.parameters.palmWireframeColor,
+      rockColor: this.parameters.rockColor,
+      rockWireframeColor: this.parameters.rockWireframeColor,
+      sunColorTop: this.parameters.sunColorTop,
+      sunColorBottom: this.parameters.sunColorBottom,
+      backgroundColor: this.parameters.backgroundColor,
+      fogColor: this.parameters.fogColor,
+      crtScanLineColor: this.parameters.crtScanLineColor,
+    };
+
+    // Generate target colors
+    const targetColors = {};
+    for (const key in startColors) {
+      targetColors[key] = this.generateRandomColor();
+    }
+
+    // Animation duration in milliseconds
+    const duration = 1000;
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Smooth easing function
+      const t =
+        progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      // Interpolate all colors
+      for (const key in startColors) {
+        this.parameters[key] = this.lerpColor(
+          startColors[key],
+          targetColors[key],
+          t
+        );
+      }
+
+      // Apply color changes
+      const materials = this.materialManager.materials;
+
+      // Update all materials
+      materials.polonez.color.setHex(
+        this.parameters.polonezColor.replace("#", "0x")
+      );
+      materials.polonezWireframe.color.setHex(
+        this.parameters.polonezWireframeColor.replace("#", "0x")
+      );
+      if (this._environment) {
+        this._environment.setWheelsColor(materials.polonez.clone());
+        this._environment.setWheelsWireframeColor(
+          materials.polonezWireframe.clone()
+        );
+      }
+
+      materials.hills.color.setHex(
+        this.parameters.hillsColor.replace("#", "0x")
+      );
+      materials.hillsWireframe.color.setHex(
+        this.parameters.hillsWireframeColor.replace("#", "0x")
+      );
+
+      materials.side.color.setHex(this.parameters.sideColor.replace("#", "0x"));
+      materials.sideWireframe.color.setHex(
+        this.parameters.sideWireframeColor.replace("#", "0x")
+      );
+
+      materials.road.color.setHex(this.parameters.roadColor.replace("#", "0x"));
+      materials.roadWireframe.color.setHex(
+        this.parameters.roadWireframeColor.replace("#", "0x")
+      );
+
+      materials.terrain.color.setHex(
+        this.parameters.terrainColor.replace("#", "0x")
+      );
+      materials.terrainWireframe.color.setHex(
+        this.parameters.terrainWireframeColor.replace("#", "0x")
+      );
+
+      materials.palm.color.setHex(this.parameters.palmColor.replace("#", "0x"));
+      materials.palmWireframe.color.setHex(
+        this.parameters.palmWireframeColor.replace("#", "0x")
+      );
+
+      materials.rock.color.setHex(this.parameters.rockColor.replace("#", "0x"));
+      materials.rockWireframe.color.setHex(
+        this.parameters.rockWireframeColor.replace("#", "0x")
+      );
+
+      materials.sun.color.setHex(
+        this.parameters.sunColorTop.replace("#", "0x")
+      );
+      materials.sunEffect.color.setHex(
+        this.parameters.sunColorBottom.replace("#", "0x")
+      );
+
+      this.scene.background.setHex(
+        this.parameters.backgroundColor.replace("#", "0x")
+      );
+      this.scene.fog.color.setHex(this.parameters.fogColor.replace("#", "0x"));
+
+      this.updateCRTScanLineColor();
+
+      // Update GUI controllers
+      for (const folder of Object.values(this.gui.__folders)) {
+        for (const controller of folder.__controllers) {
+          controller.updateDisplay();
+        }
+      }
+      for (const controller of this.gui.__controllers) {
+        controller.updateDisplay();
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Re-enable orbit controls
+        if (this.scene.orbitControls) {
+          this.scene.orbitControls.enabled = true;
+        }
+        this.isTransitioning = false;
+      }
+    };
+
+    animate();
+  }
+
+  // Generate random hex color
+  generateRandomColor() {
+    return (
+      "#" +
+      Math.floor(Math.random() * 16777215)
+        .toString(16)
+        .padStart(6, "0")
+    );
   }
 }
 

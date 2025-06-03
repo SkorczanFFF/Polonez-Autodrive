@@ -129,7 +129,7 @@ class MinigameManager {
     // Disable steering until START is displayed
     if (this.polonezController) {
       // Disable both steering and keyboard inputs
-      this.polonezController.steeringEnabled = false;
+      this.polonezController.isSteeringEnabled = false;
       this.polonezController.disableKeyboardInputs = true;
     }
 
@@ -199,7 +199,7 @@ class MinigameManager {
 
         // Re-enable steering and keyboard inputs when START is displayed
         if (this.polonezController) {
-          this.polonezController.steeringEnabled = true;
+          this.polonezController.isSteeringEnabled = true;
           this.polonezController.disableKeyboardInputs = false;
         }
       } else {
@@ -539,7 +539,7 @@ class MinigameManager {
 
     // Re-enable steering and keyboard inputs
     if (this.polonezController) {
-      this.polonezController.steeringEnabled = true;
+      this.polonezController.isSteeringEnabled = true;
       this.polonezController.disableKeyboardInputs = false;
     }
 
