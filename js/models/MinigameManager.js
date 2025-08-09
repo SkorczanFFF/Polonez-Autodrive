@@ -11,7 +11,7 @@ class MinigameManager {
     this.speedMultiplier = 1.0;
     this.baseSpawnInterval = 2000; // Base interval for box spawning
     this.minSpawnInterval = 600; // Minimum spawn interval
-    this.maxSpawnInterval = 1500; // Maximum spawn interval
+    this.maxSpawnInterval = 1300; // Maximum spawn interval
     this.safeZone = { min: -0.1, max: 0.1 }; // Safe zone where boxes shouldn't spawn
     this.gui = null; // Reference to the GUI to hide/show it
     this.sceneManager = null; // Reference to the scene manager for camera control
@@ -24,6 +24,11 @@ class MinigameManager {
     this.currentLane = "left"; // Which lane is active
     this.laneBoxCount = 0; // How many spawned so far in this batch
     this.boxesThisBatch = Math.floor(Math.random() * 3) + 1; // Random 1-3
+
+    // Box spawn tuning to control difficulty
+    this.boxWidth = 4.25;
+    this.innerGapFromCenter = 0.9;
+    this.outerSpawnMargin = 0.5;
 
     // Create overlay for minigame UI
     this.createMinigameUI();
@@ -394,17 +399,23 @@ class MinigameManager {
 
   spawnBox() {
     const maxSteeringRange = this.polonezController.maxDisplacement;
-    const boxWidth = 4.25;
+    const boxWidth = this.boxWidth;
 
     const safeMin = this.safeZone.min;
     const safeMax = this.safeZone.max;
 
     // Define spawn ranges
-    const leftSpawnMin = -maxSteeringRange - 1;
-    const leftSpawnMax = safeMin - boxWidth - 1;
+    // Reduce center gap so boxes can spawn closer to the middle
+    const halfWidth = boxWidth / 2;
+    let leftSpawnMin = -maxSteeringRange + this.outerSpawnMargin;
+    let leftSpawnMax = safeMin - halfWidth - this.innerGapFromCenter;
 
-    const rightSpawnMin = safeMax + boxWidth - 1;
-    const rightSpawnMax = maxSteeringRange - 1;
+    let rightSpawnMin = safeMax + halfWidth + this.innerGapFromCenter;
+    let rightSpawnMax = maxSteeringRange - this.outerSpawnMargin;
+
+    // Ensure valid ranges
+    if (leftSpawnMax <= leftSpawnMin) leftSpawnMax = leftSpawnMin + 0.1;
+    if (rightSpawnMax <= rightSpawnMin) rightSpawnMax = rightSpawnMin + 0.1;
 
     // Decide current lane
     const spawnInLane = this.currentLane;
