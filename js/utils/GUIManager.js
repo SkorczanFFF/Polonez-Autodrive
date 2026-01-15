@@ -69,21 +69,6 @@ class GUIManager {
       backgroundColor: "#eb94c1",
     };
 
-    // Palm controls that need to be updated when palmManager is set
-    this.palmControls = {
-      folder: null,
-      showPalm: null,
-      showPalmWireframe: null,
-    };
-
-    // Rock controls that need to be updated when rockManager is set
-    this.rockControls = {
-      folder: null,
-      showRock: null,
-      showRockWireframe: null,
-    };
-
-    // Add isTransitioning flag
     this.isTransitioning = false;
 
     // Initialize CRT effect settings
@@ -125,31 +110,6 @@ class GUIManager {
 
   set palmManager(manager) {
     this._palmManager = manager;
-
-    // Update palm controls if they exist
-    if (manager && this.palmControls.folder) {
-      this.updatePalmControls();
-    }
-  }
-
-  updatePalmControls() {
-    // Update the onChange handlers for palm visibility controls
-    if (this.palmControls.showPalm) {
-      this.palmControls.showPalm.onChange((value) => {
-        this.parameters.showPalm = value;
-        this._palmManager.updateVisibility(
-          value,
-          this.parameters.showPalmWireframe
-        );
-      });
-    }
-
-    if (this.palmControls.showPalmWireframe) {
-      this.palmControls.showPalmWireframe.onChange((value) => {
-        this.parameters.showPalmWireframe = value;
-        this._palmManager.updateVisibility(this.parameters.showPalm, value);
-      });
-    }
   }
 
   // Getter and setter for environment
@@ -168,31 +128,6 @@ class GUIManager {
 
   set rockManager(manager) {
     this._rockManager = manager;
-
-    // Update rock controls if they exist
-    if (manager && this.rockControls.folder) {
-      this.updateRockControls();
-    }
-  }
-
-  updateRockControls() {
-    // Update the onChange handlers for rock visibility controls
-    if (this.rockControls.showRock) {
-      this.rockControls.showRock.onChange((value) => {
-        this.parameters.showRock = value;
-        this._rockManager.updateVisibility(
-          value,
-          this.parameters.showRockWireframe
-        );
-      });
-    }
-
-    if (this.rockControls.showRockWireframe) {
-      this.rockControls.showRockWireframe.onChange((value) => {
-        this.parameters.showRockWireframe = value;
-        this._rockManager.updateVisibility(this.parameters.showRock, value);
-      });
-    }
   }
 
   setupGUI() {
@@ -425,7 +360,6 @@ class GUIManager {
 
   setupPalmFolder() {
     const folder = this.gui.addFolder("Palms");
-    this.palmControls.folder = folder;
 
     folder
       .addColor(this.parameters, "palmColor")
@@ -435,38 +369,19 @@ class GUIManager {
         material.color.setHex(color.replace("#", "0x"));
       });
 
-    // Store the control for later updates when palmManager is set
-    this.palmControls.showPalm = folder
+    folder
       .add(this.parameters, "showPalm")
-      .name("Show palms");
+      .name("Show palms")
+      .onChange((value) => {
+        this.parameters.showPalm = value;
+        this._palmManager?.updateVisibility(value, this.parameters.showPalmWireframe);
+      });
 
-    // Add density slider for palms
     folder
       .add(this.parameters, "palmDensity", 0.1, 2.0)
       .name("Palm density")
       .step(0.1)
-      .onChange((value) => {
-        if (this._palmManager) {
-          this._palmManager.setDensity(value);
-        }
-      });
-
-    // Add initial onChange handler
-    if (this._palmManager) {
-      this.palmControls.showPalm.onChange((value) => {
-        this.parameters.showPalm = value;
-        this._palmManager.updateVisibility(
-          value,
-          this.parameters.showPalmWireframe
-        );
-      });
-    } else {
-      // Dummy handler when palmManager is not available
-      this.palmControls.showPalm.onChange((value) => {
-        this.parameters.showPalm = value;
-        console.log("Palm manager not available yet");
-      });
-    }
+      .onChange((value) => this._palmManager?.setDensity(value));
 
     folder
       .addColor(this.parameters, "palmWireframeColor")
@@ -476,31 +391,19 @@ class GUIManager {
         material.color.setHex(color.replace("#", "0x"));
       });
 
-    // Store the control for later updates when palmManager is set
-    this.palmControls.showPalmWireframe = folder
+    folder
       .add(this.parameters, "showPalmWireframe")
-      .name("Show wireframe");
-
-    // Add initial onChange handler
-    if (this._palmManager) {
-      this.palmControls.showPalmWireframe.onChange((value) => {
+      .name("Show wireframe")
+      .onChange((value) => {
         this.parameters.showPalmWireframe = value;
-        this._palmManager.updateVisibility(this.parameters.showPalm, value);
+        this._palmManager?.updateVisibility(this.parameters.showPalm, value);
       });
-    } else {
-      // Dummy handler when palmManager is not available
-      this.palmControls.showPalmWireframe.onChange((value) => {
-        this.parameters.showPalmWireframe = value;
-        console.log("Palm manager not available yet");
-      });
-    }
 
     folder.close();
   }
 
   setupRockFolder() {
     const folder = this.gui.addFolder("Rocks");
-    this.rockControls.folder = folder;
 
     folder
       .addColor(this.parameters, "rockColor")
@@ -510,21 +413,19 @@ class GUIManager {
         material.color.setHex(color.replace("#", "0x"));
       });
 
-    // Store the control for later updates when rockManager is set
-    this.rockControls.showRock = folder
+    folder
       .add(this.parameters, "showRock")
-      .name("Show rocks");
+      .name("Show rocks")
+      .onChange((value) => {
+        this.parameters.showRock = value;
+        this._rockManager?.updateVisibility(value, this.parameters.showRockWireframe);
+      });
 
-    // Add density slider for rocks
     folder
       .add(this.parameters, "rockDensity", 0.1, 2.0)
       .name("Rock density")
       .step(0.1)
-      .onChange((value) => {
-        if (this._rockManager) {
-          this._rockManager.setDensity(value);
-        }
-      });
+      .onChange((value) => this._rockManager?.setDensity(value));
 
     folder
       .addColor(this.parameters, "rockWireframeColor")
@@ -534,15 +435,13 @@ class GUIManager {
         material.color.setHex(color.replace("#", "0x"));
       });
 
-    // Store reference to controller for later use
-    this.rockControls.showRockWireframe = folder
+    folder
       .add(this.parameters, "showRockWireframe")
-      .name("Show wireframe");
-
-    // Update controls if rockManager is already set
-    if (this._rockManager) {
-      this.updateRockControls();
-    }
+      .name("Show wireframe")
+      .onChange((value) => {
+        this.parameters.showRockWireframe = value;
+        this._rockManager?.updateVisibility(this.parameters.showRock, value);
+      });
 
     folder.close();
   }
@@ -593,40 +492,30 @@ class GUIManager {
     folder
       .addColor(this.parameters, "crtScanLineColor")
       .name("Scan line color")
-      .onChange((color) => {
-        this.updateCRTScanLineColor();
-      });
+      .onChange(() => this.updateCRTScanLineColor());
 
     folder
       .add(this.parameters, "crtScanLineOpacity", 0, 1)
       .step(0.05)
       .name("Scan line opacity")
-      .onChange((value) => {
-        this.updateCRTScanLineColor();
-      });
+      .onChange(() => this.updateCRTScanLineColor());
 
     folder
       .add(this.parameters, "enableCRTFlicker")
       .name("Enable flicker")
-      .onChange((value) => {
-        this.updateCRTFlickerState();
-      });
+      .onChange(() => this.updateCRTFlickerState());
 
     folder
       .add(this.parameters, "crtFlickerSpeed", 0.05, 0.5)
       .step(0.01)
       .name("Flicker speed")
-      .onChange((value) => {
-        this.updateCRTFlickerState();
-      });
+      .onChange(() => this.updateCRTFlickerState());
 
     folder
       .add(this.parameters, "crtFlickerIntensity", 0, 2)
       .step(0.1)
       .name("Flicker intensity")
-      .onChange((value) => {
-        this.updateCRTFlickerState();
-      });
+      .onChange(() => this.updateCRTFlickerState());
 
     // Apply initial settings
     this.updateCRTScanLineColor();
