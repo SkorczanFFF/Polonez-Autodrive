@@ -194,7 +194,7 @@ class Application {
     this.animationFrameId = requestAnimationFrame(() => this.animate());
     const delta = this.sceneManager.clock.getDelta();
     this.sceneManager.update(delta);
-    this.materialManager.updateTextures();
+    this.materialManager.updateTextures(delta);
     this.sceneManager.render();
   }
 

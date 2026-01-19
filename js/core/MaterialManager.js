@@ -94,8 +94,9 @@ class MaterialManager {
     this.textureSpeedMultiplier = multiplier;
   }
 
-  updateTextures() {
-    const speed = 0.06 * this.textureSpeedMultiplier;
+  updateTextures(deltaTime = 1 / 60) {
+    const frameScale = deltaTime * 60;
+    const speed = 0.06 * this.textureSpeedMultiplier * frameScale;
 
     if (this.textures.terrainGrid) {
       this.textures.terrainGrid.offset.y += speed;
