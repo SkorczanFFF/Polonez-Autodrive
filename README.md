@@ -23,9 +23,9 @@ All models were created in 3Ds Max 2018, updated in 3Ds Max 2023, and exported a
 | **F** | Free ride: steer without obstacles |
 | **← / →** | Steer (hold to speed up) |
 | **ESC** | Back to the menu |
-| **F10** | Performance stats |
+| **H** | Hide / show the menu (eye button under FREE RIDE) to enjoy or recolor the scene |
 
-The menu prompts in the top-left corner are clickable too. Drag with the mouse to orbit the camera outside the minigame.
+All menu and game over buttons are clickable too. Drag with the mouse to orbit the camera outside the minigame.
 
 ---
 
@@ -42,6 +42,8 @@ npm test           # unit tests (Vitest)
 npm run typecheck  # JSDoc type check (tsc)
 npm run format     # Prettier
 ```
+
+Press **F10** in the app for the developer stats overlay (FPS, draw calls, triangles, memory).
 
 ### Project layout
 

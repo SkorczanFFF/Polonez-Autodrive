@@ -7,7 +7,9 @@ import { CRT } from "../config.js";
  * @param {HTMLElement} [root]
  */
 export function createCrt(root = document.getElementById("crt")) {
-  const state = { ...CRT };
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Fast full-screen flicker is a photosensitivity risk; respect the OS setting by default.
+  const state = { ...CRT, flicker: CRT.flicker && !reducedMotion };
 
   function apply() {
     root.hidden = !state.enabled;

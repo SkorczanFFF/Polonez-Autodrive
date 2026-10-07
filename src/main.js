@@ -1,4 +1,5 @@
 import "@fontsource/pacifico/latin.css";
+import "@fontsource/vt323/latin.css";
 import "./style.css";
 import { ASSETS, TEXT } from "./config.js";
 import { createView } from "./core/renderer.js";
@@ -48,7 +49,10 @@ async function main() {
   const menu = createSceneGui({ scene: view.scene, materials, world, crt, tweens });
   const game = createGame({ view, world, car, minigame, tweens, input, hud, menu });
   const stats = createDevStats(view.renderer);
-  input.onPress((action) => action === "stats" && stats.toggle());
+  input.onPress((action) => {
+    if (action === "stats") stats.toggle();
+    if (action === "menu" && game.state === "idle") hud.toggleMenu(); // only where the toggle is shown
+  });
 
   loop.add(tweens.update);
   loop.add(world.update);
@@ -59,7 +63,22 @@ async function main() {
 
   if (import.meta.env.DEV)
     Object.assign(window, {
-      app: { view, loop, tweens, input, materials, world, car, minigame, game, menu, crt, models },
+      app: {
+        view,
+        loop,
+        tweens,
+        input,
+        materials,
+        world,
+        car,
+        minigame,
+        game,
+        menu,
+        crt,
+        stats,
+        hud,
+        models,
+      },
     });
 }
 

@@ -5,11 +5,11 @@
 
 /* ---------- tokens ---------- */
 :root {
-  --z-hud: 900;
-  --z-loader: 1000;
-  --z-devstats: 1100;
+  --z-hud: 900; /* lil-gui sits at 1001 */
+  --z-loader: 1200;
+  --z-devstats: 1300;
   --z-crt: 9999;
-  --font-terminal: "Courier New", monospace;
+  --font-terminal: "VT323", monospace;
   --font-script: "Pacifico", cursive;
 }
 
@@ -55,6 +55,7 @@ canvas:active {
   align-items: center;
   background-color: var(--ui-loader-bg);
   font-family: var(--font-terminal);
+  font-size: 22px;
   animation: loader-flicker 8s linear infinite;
 }
 
@@ -84,8 +85,8 @@ canvas:active {
 }
 
 .loader__header {
-  padding: 8px 15px;
-  font-weight: bold;
+  padding: 6px 15px;
+  letter-spacing: 0.2em;
   text-align: center;
   color: var(--ui-deep);
   background-color: var(--aqua);
@@ -112,7 +113,6 @@ canvas:active {
 
 .loader__progress {
   margin: 15px 0;
-  font-weight: bold;
   white-space: pre;
   color: var(--red);
   text-shadow: 0 0 5px var(--red);
@@ -128,16 +128,40 @@ canvas:active {
   animation: blink 1s step-end infinite;
 }
 
-/* finish(): background clears, terminal fades; loader.js removes the element (timings from config.LOADER) */
+/* finish(): background clears, the terminal switches off like a CRT; loader.js removes the
+   element afterwards (timings from config.LOADER) */
 .loader.is-done {
   pointer-events: none;
   background-color: transparent;
   transition: background-color 0s var(--loader-fade-delay);
 }
 
-.loader.is-done .loader__terminal {
+.loader.is-done::before {
   opacity: 0;
-  transition: opacity var(--loader-fade-duration) ease-out var(--loader-fade-delay);
+  transition: opacity var(--loader-fade-duration) var(--loader-fade-delay);
+}
+
+.loader.is-done .loader__terminal {
+  animation: crt-off var(--loader-fade-duration) ease-in var(--loader-fade-delay) forwards;
+}
+
+@keyframes crt-off {
+  0% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+  40% {
+    transform: scale(1, 0.006);
+    filter: brightness(3);
+  }
+  70% {
+    transform: scale(0.15, 0.006);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0, 0);
+    opacity: 0;
+  }
 }
 
 @keyframes blink {
@@ -197,9 +221,10 @@ canvas:active {
   }
 }
 
-/* ---------- HUD (v1 look; redesign in phase 7) ---------- */
+/* ---------- HUD: menu, in-game overlay, game over ---------- */
 .hud {
   font-family: var(--font-terminal);
+  font-size: 22px;
   color: var(--aqua);
 }
 
@@ -209,22 +234,21 @@ canvas:active {
   display: none !important;
 }
 
-[data-state="idle"] .hud__prompt,
-[data-state="gameover"] .hud__prompt {
+[data-state="idle"] .hud__menu,
+[data-state="gameover"] .hud__gameover,
+[data-state="playing"] .hud__scoreboard:not([hidden]) {
   display: flex !important;
 }
 
-[data-state="free"] .hud__exit,
-[data-state="countdown"] .hud__exit,
-[data-state="playing"] .hud__exit,
+[data-state="free"] .hud__corner,
+[data-state="countdown"] .hud__corner,
+[data-state="playing"] .hud__corner,
 [data-state="countdown"] .hud__countdown:not([hidden]),
-[data-state="playing"] .hud__countdown:not([hidden]),
-[data-state="playing"] .hud__score:not([hidden]),
-[data-state="gameover"] .hud__gameover {
+[data-state="playing"] .hud__countdown:not([hidden]) {
   display: block !important;
 }
 
-.hud__panel {
+.panel {
   background-color: color-mix(in srgb, var(--ui-deep) 84%, transparent);
   border: 2px solid var(--aqua);
   box-shadow:
@@ -232,89 +256,408 @@ canvas:active {
     inset 0 0 10px color-mix(in srgb, var(--aqua) 50%, transparent);
 }
 
-.hud__glow {
-  text-shadow:
-    0 0 10px var(--pink),
-    0 0 20px var(--pink),
-    0 0 30px var(--pink);
+/* sun-gradient script text: logo, countdown, game over title */
+.sunset-text {
+  font-family: var(--font-script);
+  font-weight: normal;
+  color: transparent;
+  background: linear-gradient(var(--yellow) 30%, var(--red) 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(3px 3px 0 var(--ui-deep)) drop-shadow(0 0 14px var(--red));
 }
 
-.hud__prompt {
+/* line icons from ui/icons.js */
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+kbd .icon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.3em;
+  margin: 0 0.12em;
+  padding: 0 0.3em;
+  font: inherit;
+  font-size: 0.8em;
+  line-height: 1.25;
+  text-align: center;
+  color: inherit;
+  border: 1px solid currentColor;
+  border-bottom-width: 3px;
+  border-radius: 4px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.3em 1em;
+  font: inherit;
+  font-size: 28px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  color: var(--aqua);
+  text-shadow: 0 0 8px currentColor;
+  background-color: color-mix(in srgb, var(--ui-deep) 84%, transparent);
+  border: 2px solid currentColor;
+  box-shadow:
+    0 0 14px color-mix(in srgb, currentColor 70%, transparent),
+    inset 0 0 10px color-mix(in srgb, currentColor 35%, transparent);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.button:hover,
+.button:focus-visible {
+  outline: none;
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 26px currentColor,
+    inset 0 0 14px color-mix(in srgb, currentColor 50%, transparent);
+}
+
+.button--primary {
+  color: var(--red);
+}
+
+.button kbd {
+  min-width: 2em; /* icon and letter keycaps end up the same width */
+  box-sizing: border-box;
+  font-size: 0.6em;
+  text-shadow: none;
+}
+
+/* menu (idle) */
+.hud__menu {
   position: fixed;
-  top: 15px;
-  left: 15px;
+  inset: 0;
   z-index: var(--z-hud);
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  padding: 5vh 16px 3vh;
+  text-align: center;
+  pointer-events: none;
 }
 
-.hud__button {
-  padding: 4px 12px;
-  font: inherit;
-  font-size: 16px;
-  color: inherit;
-  cursor: pointer;
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  font-weight: normal;
+  line-height: 1;
 }
 
-.hud__button:hover,
-.hud__button:focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 28px var(--aqua),
-    inset 0 0 14px color-mix(in srgb, var(--aqua) 70%, transparent);
+.logo__script {
+  /* background-clip: text paints only inside the box; Pacifico's ascenders ("l") rise ~0.2em
+     above a line-height: 1 box, so pad the top and pull the box back up */
+  margin-top: -0.3em;
+  padding: 0.3em 0.2em 0.15em;
+  font-size: clamp(56px, 9vw, 128px);
+  transform: rotate(-6deg);
 }
 
-.hud__exit {
+.logo__caps {
+  margin-top: -0.1em;
+  padding-left: 0.6em; /* balances the trailing letter-spacing */
+  font-size: clamp(22px, 2.6vw, 36px);
+  letter-spacing: 0.6em;
+  text-shadow:
+    2px 2px 0 var(--ui-deep),
+    0 0 12px var(--aqua);
+}
+
+.hud__best {
+  margin: 0.4em 0 0;
+  letter-spacing: 0.2em;
+  text-shadow:
+    2px 2px 0 var(--ui-deep),
+    0 0 8px var(--aqua);
+}
+
+/* equal-width button columns (menu: 2, game over: 3) */
+/* columns share the widest content, so the grid is as narrow as its longest button */
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--columns, 2), 1fr);
+  align-items: center;
+  gap: 14px 16px;
+  width: max-content;
+  max-width: 92vw;
+}
+
+.button-grid--3 {
+  --columns: 3;
+  width: 100%;
+}
+
+.button-grid > .button:not(.button--small) {
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.button-grid--3 > .button {
+  padding-inline: 0.7em;
+  font-size: 18px;
+}
+
+.hud__bottom {
+  margin-top: auto;
+}
+
+.hud__steer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 18px;
+  text-shadow:
+    2px 2px 0 var(--ui-deep),
+    0 0 6px var(--aqua);
+}
+
+.hud__steer kbd {
+  margin: 0 0.25em;
+}
+
+.hud__dot {
+  margin: 0 0.5em;
+}
+
+.button--small {
+  justify-self: center;
+  gap: 0.45em;
+  padding: 0.2em 0.7em;
+  font-size: 18px;
+}
+
+/* the menu toggle sits in the corner and hides everything else; hidden, only its icon stays */
+.hud__fade {
+  transition:
+    opacity 0.3s,
+    visibility 0.3s;
+}
+
+[data-menu="hidden"] .hud__fade {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.hud__toggle {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  transition:
+    opacity 0.3s,
+    border-color 0.3s,
+    background-color 0.3s,
+    box-shadow 0.3s,
+    transform 0.15s;
+}
+
+.hud__toggle-icon {
+  width: 1.3em;
+  height: 1.3em;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.hud__toggle-slash {
+  display: none;
+}
+
+/* padding and border stay (transparent), so the icon does not move */
+[data-menu="hidden"] .hud__toggle {
+  opacity: 0.3;
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+[data-menu="hidden"] .hud__toggle > :not(.hud__toggle-icon) {
+  display: none;
+}
+
+[data-menu="hidden"] .hud__toggle:hover,
+[data-menu="hidden"] .hud__toggle:focus-visible {
+  opacity: 1;
+}
+
+[data-menu="hidden"] .hud__toggle-slash {
+  display: inline;
+}
+
+/* top-left hints (free ride, countdown, playing) */
+.hud__corner {
   position: fixed;
   top: 15px;
   left: 15px;
   z-index: var(--z-hud);
   padding: 4px 12px;
-  font-size: 16px;
+  font-size: 20px;
+  text-shadow: 0 0 6px var(--aqua);
   pointer-events: none;
 }
 
+.hud__tag {
+  display: none;
+  margin-right: 0.8em;
+  padding: 0 0.4em;
+  color: var(--ui-deep);
+  text-shadow: none;
+  background-color: var(--red);
+}
+
+[data-state="free"] .hud__tag {
+  display: inline-block;
+}
+
+/* countdown + START! */
 .hud__countdown {
   position: fixed;
-  top: 15%;
+  top: 16%;
   left: 50%;
   z-index: var(--z-hud);
   transform: translateX(-50%);
-  padding: 40px 80px;
-  font-family: var(--font-script);
-  font-size: 120px;
-  letter-spacing: 2px;
-  text-align: center;
+  padding: 0 0.3em;
+  font-size: clamp(96px, 13vw, 168px);
+  line-height: 1.3;
+  white-space: nowrap;
   pointer-events: none;
 }
 
-.hud__score {
+.hud__countdown.is-pop {
+  animation: pop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+/* scoreboard */
+.hud__scoreboard {
   position: fixed;
-  top: 0;
+  top: 12px;
   left: 50%;
   z-index: var(--z-hud);
   transform: translateX(-50%);
-  min-width: 200px;
-  padding: 5px 20px;
-  font-size: 32px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  text-align: center;
+  align-items: flex-end;
+  gap: 28px;
+  padding: 6px 22px;
   pointer-events: none;
 }
 
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.stat__label {
+  font-size: 16px;
+  letter-spacing: 0.2em;
+  opacity: 0.8;
+}
+
+.stat__value {
+  font-size: 32px;
+  text-shadow: 0 0 8px var(--aqua);
+}
+
+.stat--main .stat__value {
+  font-size: 52px;
+  color: var(--white);
+  text-shadow:
+    0 0 10px var(--pink),
+    0 0 20px var(--pink);
+}
+
+.stat__value.is-pop {
+  animation: pop-small 0.25s ease-out;
+}
+
+.stat__value.is-flash {
+  animation: flash 0.3s steps(1) 4;
+}
+
+/* game over */
 .hud__gameover {
   position: fixed;
-  top: 12%;
+  top: 14%;
   left: 50%;
   z-index: var(--z-hud);
-  transform: translate(-50%, -50%);
-  padding: 40px 80px;
-  font-size: 60px;
-  font-weight: bold;
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(92vw, 600px);
+  box-sizing: border-box;
+  padding: 16px 24px 22px;
   text-align: center;
-  pointer-events: none;
+}
+
+.hud__gameover-title {
+  margin: 0;
+  padding: 0 0.2em 0.1em;
+  font-size: clamp(44px, 5vw, 64px);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.hud__new-best {
+  margin: 0;
+  color: var(--yellow);
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 10px var(--yellow);
+  animation: blink 0.8s step-end infinite;
+}
+
+.hud__results {
+  display: flex;
+  align-items: flex-end;
+  gap: 40px;
+}
+
+@keyframes pop {
+  from {
+    scale: 1.8;
+    opacity: 0;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+@keyframes pop-small {
+  from {
+    scale: 1.35;
+  }
+  to {
+    scale: 1;
+  }
+}
+
+@keyframes flash {
+  50% {
+    color: var(--yellow);
+    text-shadow: 0 0 12px var(--yellow);
+  }
 }
 
 /* ---------- CRT overlay (settings from config.CRT via ui/crt.js) ---------- */
@@ -403,32 +746,72 @@ canvas:active {
   }
 }
 
-/* ---------- F10 stats ---------- */
+/* ---------- F10 developer stats (SYS.MONITOR) ---------- */
 .devstats {
   position: fixed;
   bottom: 20px;
   left: 20px;
   z-index: var(--z-devstats);
-  padding: 15px;
-  font: 14px/1.5 monospace;
-  color: var(--debug);
-  background-color: rgb(0 0 0 / 85%);
-  border: 1px solid var(--debug);
-  border-radius: 5px;
-  box-shadow: 0 0 10px color-mix(in srgb, var(--debug) 30%, transparent);
+  min-width: 230px;
+  font-family: var(--font-terminal);
+  font-size: 20px;
+  color: var(--aqua);
+  pointer-events: none;
 }
 
 .devstats[hidden] {
   display: none;
 }
 
-.devstats__title {
-  margin-bottom: 5px;
-  border-bottom: 1px solid var(--debug);
+.devstats__header {
+  padding: 2px 12px;
+  letter-spacing: 0.2em;
+  text-align: center;
+  color: var(--ui-deep);
+  background-color: var(--aqua);
 }
 
-.devstats table {
-  border-spacing: 10px 0;
+.devstats__fps {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3em;
+  padding: 8px 12px 2px;
+  letter-spacing: 0.15em;
+}
+
+.devstats__fps-value {
+  font-size: 52px;
+  line-height: 1;
+  color: var(--aqua);
+  text-shadow: 0 0 10px currentColor;
+}
+
+.devstats__fps-value[data-level="warn"] {
+  color: var(--yellow);
+}
+
+.devstats__fps-value[data-level="bad"] {
+  color: var(--red);
+}
+
+.devstats__rows {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 18px;
+  margin: 0;
+  padding: 4px 12px 10px;
+}
+
+.devstats__rows dt {
+  opacity: 0.75;
+}
+
+.devstats__rows dd {
+  margin: 0;
+  text-align: right;
+  color: var(--white);
+  text-shadow: 0 0 6px var(--pink);
 }
 
 /* ---------- scene GUI (lil-gui), v1 colors ---------- */
@@ -494,4 +877,16 @@ canvas:active {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   text-shadow: 0 0 6px var(--aqua);
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .loader,
+  .loader *,
+  .loader::before,
+  .hud *,
+  .crt {
+    animation: none !important;
+    transition: none !important;
+  }
 }

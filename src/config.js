@@ -22,7 +22,6 @@ export const PALETTE = {
   uiDeep: "#004671",
   uiLoaderBg: "#215a7e",
   crtLine: "#eba2a2",
-  debug: "#00ff00", // F10 stats overlay
 };
 
 /**
@@ -209,7 +208,8 @@ export const KEYS = {
   exit: ["Escape"],
   left: ["ArrowLeft"],
   right: ["ArrowRight"],
-  stats: ["F10"],
+  stats: ["F10"], // developer overlay, not advertised in the UI
+  menu: ["KeyH"],
 };
 
 export const GUI = {
@@ -220,6 +220,17 @@ export const GUI = {
   crtSpeed: [0.05, 0.5, 0.01],
   crtIntensity: [0, 2, 0.1],
   randomizeDuration: 1, // seconds
+};
+
+export const STORAGE = {
+  bestScore: "polonez-autodrive:best", // localStorage key
+};
+
+/** F10 developer overlay. */
+export const DEVSTATS = {
+  refresh: 1, // seconds between updates
+  fpsGood: 55, // FPS at or above: aqua
+  fpsWarn: 30, // FPS at or above: yellow, below: red
 };
 
 export const LOADER = {
@@ -261,12 +272,33 @@ export const TEXT = {
   loaderError: "ERROR",
   loaderFailed: "SYSTEM FAILURE: REFRESH TO RETRY",
   loading: "LOADING",
-  promptStart: "Press <b>ENTER</b> to start minigame",
-  promptFree: "Press <b>F</b> for free ride",
-  promptExit: "Press <b>ESC</b> to exit",
+  logoScript: "Polonez",
+  logoCaps: "AUTODRIVE",
+  menuStart: "MINI GAME", // same length as "FREE RIDE", so both buttons match
+  menuFree: "FREE RIDE",
+  again: "AGAIN",
+  menu: "MENU",
+  steer: "steer",
+  exit: "exit",
+  freeRide: "FREE RIDE",
   countdownGo: "START!",
   score: "SCORE",
-  gameOver: "GAME OVER",
+  best: "BEST",
+  level: "LVL",
+  newBest: "NEW BEST!",
+  gameOver: "Game Over",
+  /** Keycap labels per action (see KEYS); keys with an icon (ui/icons.js) use them as names. */
+  keys: {
+    start: "Enter",
+    free: "F",
+    exit: "ESC",
+    left: "Left arrow",
+    right: "Right arrow",
+    menu: "H",
+  },
+  menuHide: "Hide menu",
+  menuShow: "Show menu",
+  hide: "HIDE",
   gui: {
     title: "Controls",
     color: "Color",
@@ -291,13 +323,13 @@ export const TEXT = {
     fogFar: "Fog far",
     randomize: "🎨 Randomize all",
   },
-  stats: {
-    title: "PERFORMANCE STATS",
+  statsPanel: {
+    title: "SYS.MONITOR",
     fps: "FPS",
-    calls: "Draw calls",
-    triangles: "Triangles",
-    geometries: "Geometries",
-    textures: "Textures",
-    programs: "Programs",
+    calls: "DRAW CALLS",
+    triangles: "TRIANGLES",
+    geometries: "GEOMETRIES",
+    textures: "TEXTURES",
+    programs: "PROGRAMS",
   },
 };

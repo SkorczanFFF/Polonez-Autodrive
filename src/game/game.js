@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { MINIGAME, SCENE, SPEED, TEXT } from "../config.js";
+import { MINIGAME, SCENE, SPEED, STORAGE, TEXT } from "../config.js";
+import { loadNumber, saveNumber } from "../core/storage.js";
 import { createStateMachine } from "./state.js";
 
 /** @typedef {import("./state.js").GameState} GameState */
@@ -23,7 +24,10 @@ import { createStateMachine } from "./state.js";
  */
 
 /** @param {number} score */
-const speedForScore = (score) => 1 + Math.floor(score / SPEED.tierEvery) * SPEED.tierStep;
+const tierForScore = (score) => Math.floor(score / SPEED.tierEvery);
+
+/** @param {number} score */
+const speedForScore = (score) => 1 + tierForScore(score) * SPEED.tierStep;
 
 /**
  * Orchestrates the game: maps input to state events, runs per-state timers inside update(dt)
@@ -40,6 +44,16 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
   /** @type {import("../core/tween.js").TweenHandle | null} */
   let cameraTween = null;
   let stateTime = 0;
+  let best = loadNumber(STORAGE.bestScore);
+
+  /** Keeps the best score (also when leaving mid-game with ESC). @returns {boolean} new record */
+  function recordScore() {
+    if (minigame.score <= best) return false;
+    best = minigame.score;
+    saveNumber(STORAGE.bestScore, best);
+    hud.setBest(best);
+    return true;
+  }
 
   /**
    * Controls stay disabled during the move; controls.update() applies the orbit limits, so the
@@ -87,6 +101,7 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
         menu?.hide();
         moveCamera(gamePosition);
         hud.setScore(null);
+        hud.setLevel(1);
         hud.setCountdown(String(MINIGAME.countdown));
         break;
 
@@ -97,14 +112,17 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
 
       case "gameover":
         car.steering = false;
-        hud.showGameOver(minigame.score);
+        hud.showGameOver(minigame.score, recordScore());
         leaveMinigame();
         break;
 
       case "idle":
         car.steering = false;
         car.reset(tweens);
-        if (previous === "countdown" || previous === "playing") leaveMinigame();
+        if (previous === "countdown" || previous === "playing") {
+          recordScore();
+          leaveMinigame();
+        }
         break;
 
       case "free":
@@ -130,6 +148,7 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
   }
 
   hud.setState(machine.state);
+  hud.setBest(best);
 
   return {
     get state() {
@@ -166,6 +185,7 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
           if (scored) {
             world.speedMultiplier = speedForScore(minigame.score);
             hud.setScore(minigame.score);
+            hud.setLevel(tierForScore(minigame.score) + 1);
           }
           break;
         }
