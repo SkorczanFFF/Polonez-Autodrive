@@ -5,8 +5,10 @@
 
 /* ---------- tokens ---------- */
 :root {
+  --z-hud: 900;
   --z-loader: 1000;
   --font-terminal: "Courier New", monospace;
+  --font-script: "Pacifico", cursive;
 }
 
 /* ---------- base ---------- */
@@ -30,7 +32,8 @@ canvas:active {
 }
 
 /* UI waits for theme.js so it never paints without colors. */
-:root:not([data-theme]) .loader {
+:root:not([data-theme]) .loader,
+:root:not([data-theme]) .hud {
   visibility: hidden;
 }
 
@@ -190,4 +193,124 @@ canvas:active {
   93% {
     --flicker-opacity: 0.85;
   }
+}
+
+/* ---------- HUD (v1 look; redesign in phase 7) ---------- */
+.hud {
+  font-family: var(--font-terminal);
+  color: var(--aqua);
+}
+
+/* every element is hidden unless the current state shows it */
+.hud > *,
+.hud [hidden] {
+  display: none !important;
+}
+
+[data-state="idle"] .hud__prompt,
+[data-state="gameover"] .hud__prompt {
+  display: flex !important;
+}
+
+[data-state="free"] .hud__exit,
+[data-state="countdown"] .hud__exit,
+[data-state="playing"] .hud__exit,
+[data-state="countdown"] .hud__countdown:not([hidden]),
+[data-state="playing"] .hud__countdown:not([hidden]),
+[data-state="playing"] .hud__score:not([hidden]),
+[data-state="gameover"] .hud__gameover {
+  display: block !important;
+}
+
+.hud__panel {
+  background-color: color-mix(in srgb, var(--ui-deep) 84%, transparent);
+  border: 2px solid var(--aqua);
+  box-shadow:
+    0 0 20px var(--aqua),
+    inset 0 0 10px color-mix(in srgb, var(--aqua) 50%, transparent);
+}
+
+.hud__glow {
+  text-shadow:
+    0 0 10px var(--pink),
+    0 0 20px var(--pink),
+    0 0 30px var(--pink);
+}
+
+.hud__prompt {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: var(--z-hud);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.hud__button {
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 16px;
+  color: inherit;
+  cursor: pointer;
+}
+
+.hud__button:hover,
+.hud__button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 28px var(--aqua),
+    inset 0 0 14px color-mix(in srgb, var(--aqua) 70%, transparent);
+}
+
+.hud__exit {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: var(--z-hud);
+  padding: 4px 12px;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.hud__countdown {
+  position: fixed;
+  top: 15%;
+  left: 50%;
+  z-index: var(--z-hud);
+  transform: translateX(-50%);
+  padding: 40px 80px;
+  font-family: var(--font-script);
+  font-size: 120px;
+  letter-spacing: 2px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hud__score {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: var(--z-hud);
+  transform: translateX(-50%);
+  min-width: 200px;
+  padding: 5px 20px;
+  font-size: 32px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hud__gameover {
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  z-index: var(--z-hud);
+  transform: translate(-50%, -50%);
+  padding: 40px 80px;
+  font-size: 60px;
+  font-weight: bold;
+  text-align: center;
+  pointer-events: none;
 }

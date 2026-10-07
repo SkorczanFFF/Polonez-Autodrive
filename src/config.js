@@ -101,6 +101,7 @@ export const SCENE = {
     position: [0, 1.975, 7],
     target: [0, 1.8, 0],
     gamePosition: [0, 4, 7], // OrbitControls clamps it to maxDistance -> (0, 3.9, 6.68), as in v1
+    transition: 1, // seconds for camera moves between menu and minigame
   },
   controls: {
     minDistance: 4.5,
@@ -149,6 +150,7 @@ export const CAR = {
     maxAngle: 0.1, // radians of tilt
     angleEasing: 0.15, // per frame
     maxOffset: 6, // max distance from the start position
+    angleEpsilon: 0.001, // tilt below this counts as neutral
   },
   resetDuration: 1, // seconds
 };

@@ -22,6 +22,19 @@
         </div>
       </div>
     </div>
+    <div class="hud" id="hud">
+      <div class="hud__prompt">
+        <button class="hud__panel hud__glow hud__button" type="button" data-action="start"></button>
+        <button class="hud__panel hud__glow hud__button" type="button" data-action="free"></button>
+      </div>
+      <div class="hud__panel hud__glow hud__exit"></div>
+      <div class="hud__glow hud__countdown" hidden></div>
+      <div class="hud__panel hud__glow hud__score" aria-live="polite" hidden></div>
+      <div class="hud__glow hud__gameover">
+        <span class="hud__gameover-title"></span><br />
+        <span class="hud__gameover-score"></span>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

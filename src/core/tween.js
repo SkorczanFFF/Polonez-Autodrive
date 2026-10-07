@@ -19,6 +19,8 @@ export function easeInOutCubic(t) {
  * @property {() => boolean} isActive
  */
 
+/** @typedef {ReturnType<typeof createTweens>} Tweens */
+
 /**
  * Tweens driven by the main loop (replaces the per-animation requestAnimationFrame loops of v1).
  */

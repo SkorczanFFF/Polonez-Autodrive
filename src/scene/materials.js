@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { LAYERS, ROAD, SCENE, SUN, WORLD } from "../config.js";
+import { LAYERS, MINIGAME, ROAD, SCENE, SUN, WORLD } from "../config.js";
 
 /**
  * @typedef {object} Materials
@@ -7,6 +7,7 @@ import { LAYERS, ROAD, SCENE, SUN, WORLD } from "../config.js";
  * @property {Record<string, THREE.MeshPhongMaterial | THREE.MeshBasicMaterial>} wire per layer
  * @property {THREE.MeshPhongMaterial} sun
  * @property {THREE.MeshPhongMaterial} sunEffect
+ * @property {THREE.MeshPhongMaterial} box minigame obstacle
  */
 
 /**
@@ -58,7 +59,9 @@ export function createMaterials(textures, anisotropy) {
     fog: false,
   });
 
-  return { solid, wire, sun, sunEffect };
+  const box = new THREE.MeshPhongMaterial({ color: MINIGAME.box.color });
+
+  return { solid, wire, sun, sunEffect, box };
 }
 
 /**

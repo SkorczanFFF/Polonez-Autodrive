@@ -37,6 +37,8 @@ export function createSpawner({
     objects,
     /** Spawn-rate multiplier (GUI density). */
     density: 1,
+    /** When false, existing objects keep moving but nothing new spawns. */
+    spawning: true,
 
     /** @param {number} speedMultiplier */
     currentInterval(speedMultiplier) {
@@ -57,6 +59,11 @@ export function createSpawner({
           parent.remove(object);
           objects.splice(i, 1);
         }
+      }
+
+      if (!spawner.spawning) {
+        elapsed = 0; // the first spawn after re-enabling waits a full interval
+        return;
       }
 
       elapsed += dt;
