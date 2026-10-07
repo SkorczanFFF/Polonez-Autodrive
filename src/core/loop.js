@@ -13,8 +13,8 @@ export function createLoop(renderer, render) {
   const timer = new THREE.Timer();
   timer.connect(document); // resets the delta after the tab was hidden
 
-  /** @type {Update[]} */
-  const updates = [];
+  /** @type {Set<Update>} */
+  const updates = new Set();
 
   /** @param {number} timestamp */
   function tick(timestamp) {
@@ -25,9 +25,13 @@ export function createLoop(renderer, render) {
   }
 
   return {
-    /** @param {Update} update */
+    /**
+     * @param {Update} update
+     * @returns {() => void} removes the update again
+     */
     add(update) {
-      updates.push(update);
+      updates.add(update);
+      return () => updates.delete(update);
     },
     start() {
       renderer.setAnimationLoop(tick);

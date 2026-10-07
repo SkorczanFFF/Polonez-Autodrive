@@ -1,7 +1,5 @@
 import * as THREE from "three";
-import { LAYERS, SCENE, SUN } from "../config.js";
-
-const WRAP = { repeat: THREE.RepeatWrapping, mirrored: THREE.MirroredRepeatWrapping };
+import { LAYERS, ROAD, SCENE, SUN, WORLD } from "../config.js";
 
 /**
  * @typedef {object} Materials
@@ -21,7 +19,7 @@ const WRAP = { repeat: THREE.RepeatWrapping, mirrored: THREE.MirroredRepeatWrapp
 export function createMaterials(textures, anisotropy) {
   setupTextures(textures, anisotropy);
 
-  const { factor, units } = SCENE.polygonOffset;
+  const { enabled, factor, units } = SCENE.polygonOffset;
   /** @type {Materials["solid"]} */
   const solid = {};
   /** @type {Materials["wire"]} */
@@ -30,7 +28,7 @@ export function createMaterials(textures, anisotropy) {
   for (const [key, layer] of Object.entries(LAYERS)) {
     solid[key] = new THREE.MeshPhongMaterial({
       color: layer.solid,
-      polygonOffset: true,
+      polygonOffset: enabled,
       polygonOffsetFactor: factor,
       polygonOffsetUnits: units,
     });
@@ -64,15 +62,38 @@ export function createMaterials(textures, anisotropy) {
 }
 
 /**
+ * Ground textures tile once per WORLD.cellSize, so they follow any change of world dimensions.
+ *
  * @param {Record<string, THREE.Texture>} textures
  * @param {number} anisotropy
  */
 function setupTextures(textures, anisotropy) {
-  for (const [key, options] of Object.entries(SCENE.textures)) {
-    const texture = textures[key];
-    if (!texture) continue;
-    texture.wrapS = texture.wrapT = WRAP[options.wrap];
-    texture.repeat.fromArray(options.repeat);
+  /** @param {number} units */
+  const tiles = (units) => units / WORLD.cellSize;
+
+  /**
+   * @param {THREE.Texture} texture
+   * @param {THREE.Wrapping} wrap
+   * @param {number} repeatX
+   * @param {number} repeatY
+   */
+  const configure = (texture, wrap, repeatX, repeatY) => {
+    texture.wrapS = texture.wrapT = wrap;
+    texture.repeat.set(repeatX, repeatY);
     texture.anisotropy = anisotropy;
-  }
+  };
+
+  configure(
+    textures[LAYERS.road.wireMap],
+    THREE.MirroredRepeatWrapping,
+    ROAD.lineTilesAcross,
+    tiles(WORLD.length),
+  );
+  configure(
+    textures[LAYERS.terrain.wireMap],
+    THREE.RepeatWrapping,
+    tiles(WORLD.width),
+    tiles(WORLD.length),
+  );
+  configure(textures[SUN.effect.texture], THREE.RepeatWrapping, 1, 1);
 }

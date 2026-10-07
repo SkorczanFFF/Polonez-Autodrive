@@ -11,6 +11,17 @@
     <link rel="icon" href="./favicon.ico" />
   </head>
   <body>
+    <div class="loader" id="loader" role="status" aria-live="polite">
+      <div class="loader__terminal">
+        <div class="loader__header"></div>
+        <div class="loader__content">
+          <div class="loader__text"></div>
+          <div class="loader__progress"></div>
+          <div class="loader__status"></div>
+          <span class="loader__cursor" aria-hidden="true">█</span>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

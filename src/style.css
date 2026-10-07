@@ -1,3 +1,14 @@
+/*
+ * Colors come from config.PALETTE via ui/theme.js (`uiDeep` -> `--ui-deep`).
+ * Do not hardcode palette colors here.
+ */
+
+/* ---------- tokens ---------- */
+:root {
+  --z-loader: 1000;
+  --font-terminal: "Courier New", monospace;
+}
+
 /* ---------- base ---------- */
 html,
 body {
@@ -16,4 +27,167 @@ canvas {
 
 canvas:active {
   cursor: grabbing;
+}
+
+/* UI waits for theme.js so it never paints without colors. */
+:root:not([data-theme]) .loader {
+  visibility: hidden;
+}
+
+/* ---------- loader (80s terminal) ---------- */
+@property --flicker-opacity {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-loader);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--ui-loader-bg);
+  font-family: var(--font-terminal);
+  animation: loader-flicker 8s linear infinite;
+}
+
+/* scanlines */
+.loader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(transparent 50%, rgb(0 0 0 / 25%) 50%);
+  background-size: 100% 4px;
+  opacity: var(--flicker-opacity);
+}
+
+.loader__terminal {
+  position: relative;
+  width: 80%;
+  max-width: 650px;
+  overflow: hidden;
+  color: var(--aqua);
+  background-color: var(--ui-deep);
+  border: 2px solid var(--aqua);
+  box-shadow:
+    0 0 20px var(--aqua),
+    inset 0 0 10px color-mix(in srgb, var(--aqua) 50%, transparent);
+}
+
+.loader__header {
+  padding: 8px 15px;
+  font-weight: bold;
+  text-align: center;
+  color: var(--ui-deep);
+  background-color: var(--aqua);
+  border-bottom: 2px solid var(--aqua);
+}
+
+.loader__content {
+  position: relative;
+  min-height: 200px;
+  padding: 20px;
+}
+
+.loader__text,
+.loader__status {
+  margin-bottom: 10px;
+  line-height: 1.5;
+  text-shadow: 0 0 5px var(--aqua);
+  animation: glow 2s infinite;
+}
+
+.loader__status {
+  margin-top: 10px;
+}
+
+.loader__progress {
+  margin: 15px 0;
+  font-weight: bold;
+  white-space: pre;
+  color: var(--red);
+  text-shadow: 0 0 5px var(--red);
+  animation: glow 2s infinite;
+}
+
+.loader__cursor {
+  position: absolute;
+  bottom: 20px;
+  margin-left: 5px;
+  font-size: 1.2em;
+  color: var(--aqua);
+  animation: blink 1s step-end infinite;
+}
+
+/* finish(): background clears, terminal fades; loader.js removes the element (timings from config.LOADER) */
+.loader.is-done {
+  pointer-events: none;
+  background-color: transparent;
+  transition: background-color 0s var(--loader-fade-delay);
+}
+
+.loader.is-done .loader__terminal {
+  opacity: 0;
+  transition: opacity var(--loader-fade-duration) ease-out var(--loader-fade-delay);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    text-shadow: 0 0 5px var(--aqua);
+  }
+  50% {
+    text-shadow:
+      0 0 10px var(--aqua),
+      0 0 15px var(--aqua);
+  }
+}
+
+@keyframes loader-flicker {
+  0%,
+  2%,
+  8%,
+  10%,
+  20%,
+  22%,
+  53%,
+  56%,
+  77%,
+  79%,
+  92%,
+  94%,
+  100% {
+    --flicker-opacity: 1;
+  }
+  1% {
+    --flicker-opacity: 0.8;
+  }
+  9% {
+    --flicker-opacity: 0.9;
+  }
+  21% {
+    --flicker-opacity: 0.6;
+  }
+  54% {
+    --flicker-opacity: 0.5;
+  }
+  55% {
+    --flicker-opacity: 0.8;
+  }
+  78% {
+    --flicker-opacity: 0.7;
+  }
+  93% {
+    --flicker-opacity: 0.85;
+  }
 }

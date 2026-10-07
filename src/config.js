@@ -63,6 +63,25 @@ export const LAYERS = {
   },
 };
 
+/**
+ * World dimensions and motion. Ground size, texture tiling, scenery travel and speeds derive
+ * from these values, so changing them rescales the scene consistently.
+ */
+export const WORLD = {
+  length: 200, // ground length (z); scenery travels from -length/2 to +length/2
+  width: 200, // ground width (x)
+  cellSize: 4, // units per ground texture tile (terrain grid and road lines)
+  speed: 14.4, // units/s at speedMultiplier 1 (v1 ground: 0.06 tiles/frame; scenery was 200/14 = 14.3)
+};
+
+export const ROAD = {
+  width: 15.95,
+  thickness: 0.02,
+  lineInset: 0.15, // road-line overlay is this much narrower than the road
+  lineY: 0.06, // overlay height above the road
+  lineTilesAcross: 2, // road-line texture tiles across the road width
+};
+
 export const SUN = {
   top: PALETTE.yellow, // disc color
   bottom: PALETTE.red, // stripe overlay tint
@@ -104,15 +123,11 @@ export const SCENE = {
     /** three >= r155 dropped the implicit PI factor of "legacy" lights; restores the v1 brightness. */
     legacyScale: Math.PI,
   },
-  /** Pushes solid surfaces back so their wireframe children never z-fight. */
-  polygonOffset: { factor: 1, units: 1 },
-  terrain: { size: 200 },
-  road: { width: 15.95, length: 200, thickness: 0.02, lineWidth: 15.8, lineY: 0.06 },
-  textures: {
-    roadline: { repeat: [2, 50], wrap: "mirrored" },
-    grid: { repeat: [50, 50], wrap: "repeat" },
-    sun: { repeat: [1, 1], wrap: "repeat" },
-  },
+  /**
+   * Pushes solid surfaces back so their wireframe children never z-fight (crisp, complete lines).
+   * enabled: false reproduces the v1 look, where lines were thinner, dashed and shimmering.
+   */
+  polygonOffset: { enabled: true, factor: 1, units: 1 },
 };
 
 export const CAR = {
@@ -139,17 +154,15 @@ export const CAR = {
 };
 
 export const SPEED = {
-  textureScroll: 0.06, // UV offset per frame
   wheelSpin: -0.22, // radians per frame
-  scenery: 200 / 14, // units per second (v1: z -100 -> 100 in 14 s)
-  box: 200 / 6, // units per second (v1: 6 s)
+  box: WORLD.length / 6, // units per second (v1: boxes cross the world in 6 s)
   tierEvery: 20, // points
   tierStep: 0.15, // speed multiplier added per tier
 };
 
 export const SPAWN = {
-  startZ: -100,
-  endZ: 100,
+  startZ: -WORLD.length / 2,
+  endZ: WORLD.length / 2,
   palms: { model: "palm", interval: 1.5, minInterval: 0.5, x: [-11, 11] },
   /** v1 ran two 1.5 s intervals offset by half -> one 0.75 s interval. */
   rocks: {
@@ -206,6 +219,14 @@ export const GUI = {
   randomizeDuration: 1, // seconds
 };
 
+export const LOADER = {
+  barLength: 20, // characters in the progress bar
+  typeDelay: [0.03, 0.06], // seconds per typed character (random in range)
+  messagePause: 0.5, // seconds between messages
+  fadeDelay: 0.3, // seconds "SYSTEM READY!" stays before fading
+  fadeDuration: 1, // seconds of the fade-out
+};
+
 export const ASSETS = {
   models: {
     polonez: "models/polonez.fbx",
@@ -234,6 +255,9 @@ export const TEXT = {
     "LOADING ASSETS...",
   ],
   loaderReady: "SYSTEM READY!",
+  loaderError: "ERROR",
+  loaderFailed: "SYSTEM FAILURE: REFRESH TO RETRY",
+  loading: "LOADING",
   promptStart: "Press <b>ENTER</b> to start minigame",
   promptFree: "Press <b>F</b> for free ride",
   promptExit: "Press <b>ESC</b> to exit",
