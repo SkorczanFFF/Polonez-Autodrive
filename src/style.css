@@ -1,0 +1,19 @@
+/* ---------- base ---------- */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  cursor: grab;
+}
+
+canvas:active {
+  cursor: grabbing;
+}

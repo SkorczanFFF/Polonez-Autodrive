@@ -1,0 +1,8 @@
+# Prettier enforces LF; keep LF in every checkout (also with core.autocrlf=true on Windows).
+* text=auto eol=lf
+*.fbx binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
