@@ -4,6 +4,9 @@
   "version": "2.0.0",
   "description": "Synthwave coloring-book style Three.js animation with a minigame.",
   "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
