@@ -14,9 +14,13 @@ import { createGame } from "./game/game.js";
 import { applyTheme } from "./ui/theme.js";
 import { createLoader } from "./ui/loader.js";
 import { createHud } from "./ui/hud.js";
+import { createCrt } from "./ui/crt.js";
+import { createSceneGui } from "./ui/gui.js";
+import { createDevStats } from "./ui/devstats.js";
 
 async function main() {
   applyTheme();
+  const crt = createCrt();
 
   const view = createView();
   const loop = createLoop(view.renderer, view.render);
@@ -41,17 +45,21 @@ async function main() {
   const tweens = createTweens();
   const input = createInput();
   const hud = createHud(input.dispatch);
-  const game = createGame({ view, world, car, minigame, tweens, input, hud });
+  const menu = createSceneGui({ scene: view.scene, materials, world, crt, tweens });
+  const game = createGame({ view, world, car, minigame, tweens, input, hud, menu });
+  const stats = createDevStats(view.renderer);
+  input.onPress((action) => action === "stats" && stats.toggle());
 
   loop.add(tweens.update);
   loop.add(world.update);
   loop.add(game.update);
+  loop.add(stats.update);
 
   loader.finish();
 
   if (import.meta.env.DEV)
     Object.assign(window, {
-      app: { view, loop, tweens, input, materials, world, car, minigame, game, models },
+      app: { view, loop, tweens, input, materials, world, car, minigame, game, menu, crt, models },
     });
 }
 

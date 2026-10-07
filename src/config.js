@@ -22,6 +22,7 @@ export const PALETTE = {
   uiDeep: "#004671",
   uiLoaderBg: "#215a7e",
   crtLine: "#eba2a2",
+  debug: "#00ff00", // F10 stats overlay
 };
 
 /**
@@ -266,4 +267,37 @@ export const TEXT = {
   countdownGo: "START!",
   score: "SCORE",
   gameOver: "GAME OVER",
+  gui: {
+    title: "Controls",
+    color: "Color",
+    showModel: "Show model",
+    wireColor: "Wireframe color",
+    showWire: "Show wireframe",
+    density: "Density",
+    sun: "Sun",
+    sunTop: "Sun color top",
+    sunBottom: "Sun color bottom",
+    sunEffect: "Show effect",
+    crt: "CRT Effect",
+    crtEnabled: "Show CRT effect",
+    crtLineColor: "Scan line color",
+    crtLineOpacity: "Scan line opacity",
+    crtFlicker: "Enable flicker",
+    crtFlickerSpeed: "Flicker speed",
+    crtFlickerIntensity: "Flicker intensity",
+    sky: "Sky color",
+    fogColor: "Fog color",
+    fogNear: "Fog near",
+    fogFar: "Fog far",
+    randomize: "🎨 Randomize all",
+  },
+  stats: {
+    title: "PERFORMANCE STATS",
+    fps: "FPS",
+    calls: "Draw calls",
+    triangles: "Triangles",
+    geometries: "Geometries",
+    textures: "Textures",
+    programs: "Programs",
+  },
 };

@@ -7,6 +7,8 @@
 :root {
   --z-hud: 900;
   --z-loader: 1000;
+  --z-devstats: 1100;
+  --z-crt: 9999;
   --font-terminal: "Courier New", monospace;
   --font-script: "Pacifico", cursive;
 }
@@ -313,4 +315,183 @@ canvas:active {
   font-weight: bold;
   text-align: center;
   pointer-events: none;
+}
+
+/* ---------- CRT overlay (settings from config.CRT via ui/crt.js) ---------- */
+.crt {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-crt);
+  pointer-events: none;
+  background: linear-gradient(transparent 50%, var(--crt-line-color) 50%);
+  background-size: 100% 4px;
+  animation: crt-flicker var(--crt-flicker-speed) infinite;
+}
+
+.crt[hidden] {
+  display: none;
+}
+
+.crt[data-flicker="off"] {
+  animation: none;
+}
+
+/* v1 flicker curve, scaled by --crt-flicker-intensity */
+@keyframes crt-flicker {
+  0% {
+    opacity: calc(0.27861 * var(--crt-flicker-intensity));
+  }
+  5% {
+    opacity: calc(0.34769 * var(--crt-flicker-intensity));
+  }
+  10% {
+    opacity: calc(0.23604 * var(--crt-flicker-intensity));
+  }
+  15% {
+    opacity: calc(0.90626 * var(--crt-flicker-intensity));
+  }
+  20% {
+    opacity: calc(0.18128 * var(--crt-flicker-intensity));
+  }
+  25% {
+    opacity: calc(0.83891 * var(--crt-flicker-intensity));
+  }
+  30% {
+    opacity: calc(0.65583 * var(--crt-flicker-intensity));
+  }
+  35% {
+    opacity: calc(0.67807 * var(--crt-flicker-intensity));
+  }
+  40% {
+    opacity: calc(0.26559 * var(--crt-flicker-intensity));
+  }
+  45% {
+    opacity: calc(0.84693 * var(--crt-flicker-intensity));
+  }
+  50% {
+    opacity: calc(0.96019 * var(--crt-flicker-intensity));
+  }
+  55% {
+    opacity: calc(0.08594 * var(--crt-flicker-intensity));
+  }
+  60% {
+    opacity: calc(0.20313 * var(--crt-flicker-intensity));
+  }
+  65% {
+    opacity: calc(0.71988 * var(--crt-flicker-intensity));
+  }
+  70% {
+    opacity: calc(0.53455 * var(--crt-flicker-intensity));
+  }
+  75% {
+    opacity: calc(0.37288 * var(--crt-flicker-intensity));
+  }
+  80% {
+    opacity: calc(0.71428 * var(--crt-flicker-intensity));
+  }
+  85% {
+    opacity: calc(0.70419 * var(--crt-flicker-intensity));
+  }
+  90% {
+    opacity: calc(0.7003 * var(--crt-flicker-intensity));
+  }
+  95% {
+    opacity: calc(0.36108 * var(--crt-flicker-intensity));
+  }
+  100% {
+    opacity: calc(0.24387 * var(--crt-flicker-intensity));
+  }
+}
+
+/* ---------- F10 stats ---------- */
+.devstats {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: var(--z-devstats);
+  padding: 15px;
+  font: 14px/1.5 monospace;
+  color: var(--debug);
+  background-color: rgb(0 0 0 / 85%);
+  border: 1px solid var(--debug);
+  border-radius: 5px;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--debug) 30%, transparent);
+}
+
+.devstats[hidden] {
+  display: none;
+}
+
+.devstats__title {
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--debug);
+}
+
+.devstats table {
+  border-spacing: 10px 0;
+}
+
+/* ---------- scene GUI (lil-gui), v1 colors ---------- */
+.lil-gui {
+  --background-color: color-mix(in srgb, var(--ui-deep) 73%, transparent);
+  --title-background-color: color-mix(in srgb, var(--ui-deep) 90%, transparent);
+  --widget-color: color-mix(in srgb, var(--ui-deep) 70%, black);
+  --hover-color: color-mix(in srgb, var(--ui-deep) 50%, var(--aqua));
+  --focus-color: color-mix(in srgb, var(--ui-deep) 40%, var(--aqua));
+  --number-color: var(--aqua);
+  --string-color: var(--aqua);
+  /* terminal font like the HUD; VT323 runs small, hence the larger sizes */
+  --font-family: var(--font-terminal);
+  --font-family-mono: var(--font-terminal);
+  --font-size: 17px;
+  --input-font-size: 17px;
+  --widget-height: 22px;
+  /* VT323 is monospaced: the name column fits the longest label (17 characters plus the letter
+     spacing), so every widget, and every color swatch, starts on the same line */
+  --name-width: calc(19ch + var(--spacing));
+  --width: 290px;
+  letter-spacing: 0.04em;
+}
+
+/* label on the left, values on the right: checkboxes and colors sit at the right edge */
+.lil-gui .lil-controller.lil-boolean .lil-widget,
+.lil-gui .lil-controller.lil-color .lil-widget {
+  justify-content: flex-end;
+}
+
+/* colors: "#hex" field, then an equal square preview (not a bar as wide as the free space);
+   lil-gui shows the hex without "#", so the "#" is drawn in front of the field */
+.lil-gui .lil-controller.lil-color .lil-widget::before {
+  content: "#";
+  order: 1;
+  height: var(--widget-height);
+  padding-left: 3px;
+  line-height: var(--widget-height);
+  color: var(--text-color);
+  background: var(--widget-color);
+  border-radius: var(--widget-border-radius) 0 0 var(--widget-border-radius);
+}
+
+.lil-gui .lil-controller.lil-color input[type="text"] {
+  order: 2;
+  width: 7ch;
+  min-width: 0;
+  margin-left: 0;
+  padding-left: 0;
+  border-radius: 0 var(--widget-border-radius) var(--widget-border-radius) 0;
+}
+
+.lil-gui .lil-controller.lil-color .lil-display {
+  order: 3;
+  flex: none;
+  width: var(--widget-height);
+  margin-left: var(--spacing);
+}
+
+/* .lil-root raises specificity over lil-gui's own sheet, injected after ours */
+.lil-gui.lil-root .lil-title {
+  font-weight: normal; /* a pixel font has no bold; faux bold blurs it */
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 6px var(--aqua);
 }
