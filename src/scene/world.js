@@ -4,6 +4,7 @@ import { createGround } from "./environment/ground.js";
 import { createSun } from "./environment/sun.js";
 import { createHills } from "./environment/hills.js";
 import { createSideHills } from "./environment/sideHills.js";
+import { createScenery } from "./environment/scenery.js";
 
 /**
  * @typedef {object} WorldContext
@@ -22,9 +23,6 @@ import { createSideHills } from "./environment/sideHills.js";
 
 /** @typedef {(context: WorldContext) => WorldPart} WorldPartFactory */
 
-/** @type {WorldPartFactory[]} */
-const PARTS = [createSky, createLights, createGround, createSun, createHills, createSideHills];
-
 /**
  * The environment the car drives through. Owns the world speed shared by everything that
  * moves with the ground.
@@ -32,15 +30,29 @@ const PARTS = [createSky, createLights, createGround, createSun, createHills, cr
  * @param {WorldContext} context
  */
 export function createWorld(context) {
-  const parts = PARTS.map((create) => create(context));
+  // Order = update order. Swap a factory to replace a part (e.g. procedural side hills).
+  const parts = {
+    sky: createSky(context),
+    lights: createLights(context),
+    ground: createGround(context),
+    sun: createSun(context),
+    hills: createHills(context),
+    sideHills: createSideHills(context),
+    scenery: createScenery(context),
+  };
+  /** @type {WorldPart[]} */
+  const ordered = Object.values(parts);
 
   const world = {
+    /** Named parts, e.g. parts.scenery.palms.density for the GUI. */
+    parts,
+
     /** 1 = base speed; the minigame raises it per tier. */
     speedMultiplier: 1,
 
     /** @param {number} dt */
     update(dt) {
-      for (const part of parts) part.update?.(dt, world.speedMultiplier);
+      for (const part of ordered) part.update?.(dt, world.speedMultiplier);
     },
   };
 
