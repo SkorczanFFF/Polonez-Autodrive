@@ -5,6 +5,7 @@
  */
 
 export const PALETTE = {
+  // UI colors (CSS) and the original 2024 scene palette, kept for the planned "Original" preset
   pink: "#c348dd",
   skyPink: "#eb94c1",
   violet: "#4f33d9",
@@ -22,6 +23,21 @@ export const PALETTE = {
   uiDeep: "#004671",
   uiLoaderBg: "#215a7e",
   crtLine: "#eba2a2",
+  // "Retrowave Dusk" scene palette (default): dark fills, neon lines
+  night: "#1b0b3b", // sky
+  void: "#0d0221", // ground, palm silhouettes
+  dusk: "#261447", // road
+  deepTeal: "#13304a", // rocks
+  polonezBody: "#420d59", // the star: stands apart from the road; neon pink lines are its own
+  grape: "#2a0a4a", // horizon hills
+  plum: "#1e0f4f", // side hills
+  horizon: "#920075", // fog: distant things sink into a magenta glow
+  neonPink: "#ff2a6d",
+  neonMagenta: "#f706cf",
+  neonCyan: "#2de2e6",
+  neonViolet: "#b967ff",
+  neonOrange: "#ff8c1a",
+  sunYellow: "#f9c80e",
 };
 
 /**
@@ -41,23 +57,28 @@ export const PALETTE = {
 
 /** @type {Record<string, Layer>} */
 export const LAYERS = {
-  polonez: { label: "Polonez", solid: PALETTE.laguna, wire: PALETTE.tweety, toggleSolid: true },
-  hills: { label: "Hills", solid: PALETTE.violet, wire: PALETTE.pink, toggleSolid: true },
-  side: { label: "Side hills", solid: PALETTE.blue, wire: PALETTE.violet, toggleSolid: true },
-  road: { label: "Road", solid: PALETTE.pink, wire: PALETTE.aqua, wireMap: "roadline" },
-  terrain: { label: "Terrain", solid: PALETTE.aqua, wire: PALETTE.pink, wireGrid: true },
+  polonez: {
+    label: "Polonez",
+    solid: PALETTE.polonezBody,
+    wire: PALETTE.neonPink,
+    toggleSolid: true,
+  },
+  hills: { label: "Hills", solid: PALETTE.grape, wire: PALETTE.neonMagenta, toggleSolid: true },
+  side: { label: "Side hills", solid: PALETTE.plum, wire: PALETTE.neonViolet, toggleSolid: true },
+  road: { label: "Road", solid: PALETTE.dusk, wire: PALETTE.sunYellow, wireMap: "roadline" },
+  terrain: { label: "Terrain", solid: PALETTE.void, wire: PALETTE.neonCyan, wireGrid: true },
   palm: {
     label: "Palms",
-    solid: PALETTE.palm,
-    wire: PALETTE.tweety,
+    solid: PALETTE.void,
+    wire: PALETTE.neonOrange,
     toggleSolid: true,
     wireType: "basic",
     density: "palms",
   },
   rock: {
     label: "Rocks",
-    solid: PALETTE.rock,
-    wire: PALETTE.rockLine,
+    solid: PALETTE.deepTeal,
+    wire: PALETTE.neonCyan,
     toggleSolid: true,
     wireType: "basic",
     density: "rocks",
@@ -89,8 +110,8 @@ export const ROAD = {
 };
 
 export const SUN = {
-  top: PALETTE.yellow, // color at the top of the disc
-  bottom: PALETTE.red, // color at the horizon and of the halo
+  top: PALETTE.sunYellow, // color at the top of the disc
+  bottom: PALETTE.neonPink, // color at the horizon and of the halo
   disc: { radius: 200, position: [1, -20, -350] }, // centre on the horizon line
   /** Horizontal cuts in the lower part (fractions of the radius), wider towards the horizon. */
   stripes: { count: 6, top: 0.55, gap: [0.08, 0.55] },
@@ -100,9 +121,9 @@ export const SUN = {
 export const SCENE = {
   renderScale: 0.5, // intentionally blurry 80s look
   maxDelta: 0.1, // seconds; clamps frame delta after stalls
-  background: PALETTE.skyPink,
+  background: PALETTE.night,
   fog: {
-    color: PALETTE.pink,
+    color: PALETTE.horizon,
     near: 32.5,
     get far() {
       return WORLD.length;
