@@ -52,6 +52,8 @@ export const PALETTE = {
  * @property {"phong" | "basic"} [wireType] wireframe material type (default phong)
  * @property {"roadline"} [wireMap] textured overlay instead of a wireframe
  * @property {boolean} [wireGrid] procedural line grid overlay instead of a wireframe
+ * @property {number} [lineFade] WIRE.fade for this layer (lower: lines stay visible further)
+ * @property {number} [lineMin] visibility (0..1) lines fade down to on tiny triangles (default 0)
  * @property {"palms" | "rocks"} [density] GUI exposes a density slider for this spawner
  */
 
@@ -62,6 +64,8 @@ export const LAYERS = {
     solid: PALETTE.polonezBody,
     wire: PALETTE.neonPink,
     toggleSolid: true,
+    lineFade: 1.5,
+    lineMin: 0.2, // the far end of the car keeps a hint of its lines
   },
   hills: { label: "Hills", solid: PALETTE.grape, wire: PALETTE.neonMagenta, toggleSolid: true },
   side: { label: "Side hills", solid: PALETTE.plum, wire: PALETTE.neonViolet, toggleSolid: true },
@@ -73,6 +77,7 @@ export const LAYERS = {
     wire: PALETTE.neonOrange,
     toggleSolid: true,
     wireType: "basic",
+    lineFade: 0.6, // dense leaves: lines faint where palms spawn, full from mid-distance
     density: "palms",
   },
   rock: {
@@ -133,7 +138,7 @@ export const SCENE = {
     fov: 90,
     near: 0.1,
     far: 1000,
-    position: [0, 1.975, 7],
+    position: [0, 3, 7],
     target: [0, 1.8, 0],
     gamePosition: [0, 4, 7], // OrbitControls clamps it to maxDistance -> (0, 3.9, 6.68), as in v1
     transition: 1, // seconds for camera moves between menu and minigame
@@ -176,10 +181,15 @@ export const SCENE = {
  * small model flaws. "edges": ink-like outlines, only creases sharper than `edgeAngle`
  * (coloring-book look) — clean, but it exposes the off-centre wheel rims of wheel.fbx, so it
  * waits for a model fix.
+ * width: triangle lines in world units, so they thin out with distance, never below a pixel
+ * (scene/lines.js). fade: lines of triangles whose inradius on screen is below `fade` render
+ * pixels fade out (gone at a quarter of it), so dense meshes far away show their fill; 0 = off.
  */
 export const WIRE = {
   mode: /** @type {"edges" | "triangles"} */ ("triangles"),
   edgeAngle: 20, // degrees
+  width: 0.02,
+  fade: 2,
 };
 
 /**
@@ -310,6 +320,9 @@ export const KEYS = {
 
 export const GUI = {
   fogNear: [1, 200],
+  lineWidth: [0.005, 0.1, 0.005],
+  lineFade: [0, 4, 0.05],
+  lineMin: [0, 1, 0.05],
   /** Upper bound follows the world, so the default fog end (WORLD.length) always fits. */
   get fogFar() {
     return [50, Math.max(400, 2 * WORLD.length)];
@@ -418,6 +431,9 @@ export const TEXT = {
     fogColor: "Fog color",
     fogNear: "Fog near",
     fogFar: "Fog far",
+    lineWidth: "Line width",
+    lineFade: "Line fade",
+    lineMin: "Line min",
     randomize: "🎨 Randomize all",
   },
   statsPanel: {

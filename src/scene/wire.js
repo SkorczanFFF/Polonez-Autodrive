@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { WIRE } from "../config.js";
+import { BasicLineMaterial, PhongLineMaterial, lineGeometry } from "./lines.js";
 
 /**
  * Replaces every mesh material under root (disposing the loader's defaults) and enables shadows.
@@ -33,7 +34,8 @@ function edgesOf(geometry) {
 
 /**
  * Adds a line twin as a child of every mesh under root: outlines (LineSegments over the
- * mesh's creases) for line materials, a triangle wireframe for mesh materials. The twin
+ * mesh's creases) for line materials, shader-drawn triangle lines for the materials of
+ * scene/lines.js (they need the `wireEdge` attribute), the plain geometry otherwise. The twin
  * inherits the transform and animation of its parent, so nothing has to be kept in sync.
  *
  * @param {THREE.Object3D} root
@@ -47,10 +49,11 @@ export function addWireframe(root, material) {
   });
 
   for (const mesh of meshes) {
+    const lines = material instanceof BasicLineMaterial || material instanceof PhongLineMaterial;
     const wire =
       material instanceof THREE.LineBasicMaterial
         ? new THREE.LineSegments(edgesOf(mesh.geometry), material)
-        : new THREE.Mesh(mesh.geometry, material);
+        : new THREE.Mesh(lines ? lineGeometry(mesh.geometry) : mesh.geometry, material);
     wire.userData.isWire = true;
     wire.castShadow = false; // thin lines add no visible shadow, only shadow-pass draw calls
     wire.receiveShadow = true;

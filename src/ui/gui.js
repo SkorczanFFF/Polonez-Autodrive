@@ -1,6 +1,7 @@
 import GUI from "lil-gui";
 import * as THREE from "three";
 import { GUI as RANGES, LAYERS, SCENE, SUN, TEXT } from "../config.js";
+import { BasicLineMaterial, PhongLineMaterial, lineWidth } from "../scene/lines.js";
 
 /**
  * @typedef {object} SceneGuiDeps
@@ -69,6 +70,11 @@ export function createSceneGui({ scene, materials, world, crt, tweens }) {
       .add(params, "showWire")
       .name(L.showWire)
       .onChange((v) => (wire.visible = v));
+    if (wire instanceof BasicLineMaterial || wire instanceof PhongLineMaterial) {
+      const { fade, min } = wire.lineUniforms;
+      folder.add(fade, "value", ...RANGES.lineFade).name(L.lineFade);
+      folder.add(min, "value", ...RANGES.lineMin).name(L.lineMin);
+    }
     folder.close();
   }
 
@@ -113,6 +119,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens }) {
     .add(sceneParams, "far", ...RANGES.fogFar)
     .name(L.fogFar)
     .onChange((v) => (fog.far = v));
+  gui.add(lineWidth, "value", ...RANGES.lineWidth).name(L.lineWidth); // a shared uniform
 
   /** @type {import("../core/tween.js").TweenHandle | null} */
   let randomizing = null;

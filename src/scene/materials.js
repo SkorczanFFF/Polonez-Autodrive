@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GRID, LAYERS, MINIGAME, ROAD, SCENE, SHADING, SUN, WIRE, WORLD } from "../config.js";
 import { createGridMaterial } from "./grid.js";
+import { BasicLineMaterial, PhongLineMaterial } from "./lines.js";
 import { createSunMaterial } from "./sunMaterial.js";
 
 /**
@@ -54,9 +55,11 @@ export function createMaterials(textures, anisotropy) {
     } else if (WIRE.mode === "edges") {
       wire[key] = new THREE.LineBasicMaterial({ color: layer.wire });
     } else {
-      const Material =
-        layer.wireType === "basic" ? THREE.MeshBasicMaterial : THREE.MeshPhongMaterial;
-      wire[key] = new Material({ color: layer.wire, wireframe: true });
+      const Material = layer.wireType === "basic" ? BasicLineMaterial : PhongLineMaterial;
+      const lines = new Material({ color: layer.wire });
+      lines.lineUniforms.fade.value = layer.lineFade ?? WIRE.fade;
+      lines.lineUniforms.min.value = layer.lineMin ?? 0;
+      wire[key] = lines;
     }
   }
 
