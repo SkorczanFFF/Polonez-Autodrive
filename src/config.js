@@ -93,7 +93,13 @@ export const SCENE = {
   renderScale: 0.5, // intentionally blurry 80s look
   maxDelta: 0.1, // seconds; clamps frame delta after stalls
   background: PALETTE.skyPink,
-  fog: { color: PALETTE.pink, near: 32.5, far: 200 },
+  fog: {
+    color: PALETTE.pink,
+    near: 32.5,
+    get far() {
+      return WORLD.length;
+    },
+  },
   camera: {
     fov: 90,
     near: 0.1,
@@ -133,7 +139,12 @@ export const SCENE = {
 
 export const CAR = {
   bodyX: -0.013,
-  /** back-left, front-left, back-right, front-right; right wheels are mirrored. */
+  rollCenterY: 0.56, // the body rolls around the axle line, so the wheels stay on the road
+  lift: 0.04, // raises body and wheels: v1 tires sat a few mm into the road and looked sunk
+  /**
+   * Wheel model origins (v1 placement): back-left, front-left, back-right, front-right.
+   * The car faces -z, so wheels with z < 0 steer; right wheels (x > 0) are mirrored.
+   */
   wheels: [
     [-1.227, 0.56, 1.975],
     [-1.227, 0.56, -2.55],
@@ -147,17 +158,26 @@ export const CAR = {
     speedEasing: 0.1, // per frame
     decel: 0.04, // units per frame, after release
     releaseDamp: 0.45, // speed multiplier on key release
-    maxAngle: 0.1, // radians of tilt
-    angleEasing: 0.15, // per frame
-    maxOffset: 6, // max distance from the start position
-    angleEpsilon: 0.001, // tilt below this counts as neutral
+    roadMargin: 1.975, // the car's travel limit stays this far from the road edge
+    /** Max distance from the start position (6 with the default road). */
+    get maxOffset() {
+      return ROAD.width / 2 - this.roadMargin;
+    },
+  },
+  handling: {
+    /** Body roll (wheels stay upright). outward: true = realistic, false = lean into the turn (v1). */
+    roll: { max: 0.08, easing: 0.15, outward: true },
+    /** Nose turns towards the lane change: radians per unit/frame of lateral velocity. */
+    yaw: { perSpeed: 0.75, max: 0.12, easing: 0.15 },
+    /** Front wheel steering angle in radians. */
+    wheelSteer: { max: (5 * Math.PI) / 180, easing: 0.2 },
   },
   resetDuration: 1, // seconds
 };
 
 export const SPEED = {
   wheelSpin: -0.22, // radians per frame
-  box: WORLD.length / 6, // units per second (v1: boxes cross the world in 6 s)
+  box: 200 / 6, // units per second (v1: boxes crossed the 200-unit world in 6 s)
   tierEvery: 20, // points
   tierStep: 0.15, // speed multiplier added per tier
 };
@@ -165,16 +185,33 @@ export const SPEED = {
 export const SPAWN = {
   startZ: -WORLD.length / 2,
   endZ: WORLD.length / 2,
-  palms: { model: "palm", interval: 1.5, minInterval: 0.5, x: [-11, 11] },
+  palms: {
+    model: "palm",
+    interval: 1.5,
+    minInterval: 0.5,
+    roadGap: 3.025, // distance from the road edge
+    /** Both sides of the road (±11 with the default road). */
+    get x() {
+      const x = ROAD.width / 2 + this.roadGap;
+      return [-x, x];
+    },
+  },
   /** v1 ran two 1.5 s intervals offset by half -> one 0.75 s interval. */
   rocks: {
     models: ["rockmd", "rocksm"],
     interval: 0.75,
     minInterval: 0.25,
-    xRanges: [
-      [-80, -16],
-      [16, 80],
-    ],
+    roadGap: 8.025, // closest distance to the road edge
+    edgeMargin: 20, // closest distance to the terrain edge
+    /** Bands left and right of the road ([-80, -16] and [16, 80] with the defaults). */
+    get xRanges() {
+      const inner = ROAD.width / 2 + this.roadGap;
+      const outer = WORLD.width / 2 - this.edgeMargin;
+      return [
+        [-outer, -inner],
+        [inner, outer],
+      ];
+    },
     scale: [1, 4],
   },
 };
@@ -214,7 +251,10 @@ export const KEYS = {
 
 export const GUI = {
   fogNear: [1, 200],
-  fogFar: [50, 400],
+  /** Upper bound follows the world, so the default fog end (WORLD.length) always fits. */
+  get fogFar() {
+    return [50, Math.max(400, 2 * WORLD.length)];
+  },
   density: [0.1, 2, 0.1],
   crtOpacity: [0, 1, 0.05],
   crtSpeed: [0.05, 0.5, 0.01],
