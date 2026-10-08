@@ -68,3 +68,69 @@ describe("spawner", () => {
     expect(parent.children).toHaveLength(0);
   });
 });
+
+describe("spawner fade-in", () => {
+  /** @param {THREE.Material} material */
+  const fadingSetup = (material) =>
+    setup({
+      interval: () => 1,
+      fadeIn: 0.5,
+      create: () => [new THREE.Group().add(new THREE.Mesh(new THREE.BoxGeometry(), material))],
+    });
+
+  /** @param {THREE.Object3D} object */
+  const meshOf = (object) => /** @type {THREE.Mesh} */ (object.children[0]);
+
+  it("fades new instances from transparent and hands back the shared material", () => {
+    const shared = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const { spawner } = fadingSetup(shared);
+    run(spawner, 1); // first spawn
+    const mesh = meshOf(spawner.objects[0]);
+    const own = /** @type {THREE.MeshBasicMaterial} */ (mesh.material);
+    expect(own).not.toBe(shared);
+    expect(own.transparent).toBe(true);
+    expect(own.opacity).toBeLessThan(0.1);
+
+    run(spawner, 0.25);
+    expect(own.opacity).toBeGreaterThan(0.4);
+    expect(own.opacity).toBeLessThan(0.6);
+
+    run(spawner, 0.3);
+    expect(mesh.material).toBe(shared);
+    expect(shared.transparent).toBe(false);
+  });
+
+  it("keeps fading copies in sync with GUI changes on the shared material", () => {
+    const shared = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const { spawner } = fadingSetup(shared);
+    run(spawner, 1);
+    shared.color.set(0x00ff00);
+    shared.visible = false;
+    run(spawner, 0.1);
+    const own = /** @type {THREE.MeshBasicMaterial} */ (meshOf(spawner.objects[0]).material);
+    expect(own.color.getHex()).toBe(0x00ff00);
+    expect(own.visible).toBe(false);
+  });
+
+  // Disposing the last transparent copy deletes its shader; the next spawn would recompile it.
+  it("reuses material copies instead of disposing them", () => {
+    const shared = new THREE.MeshBasicMaterial();
+    const { spawner } = fadingSetup(shared);
+    run(spawner, 1);
+    const own = meshOf(spawner.objects[0]).material;
+    let disposed = false;
+    /** @type {THREE.Material} */ (own).addEventListener("dispose", () => (disposed = true));
+    run(spawner, 1); // first fade done, second spawn
+    expect(disposed).toBe(false);
+    expect(meshOf(spawner.objects[1]).material).toBe(own);
+  });
+
+  it("restores shared materials when instances are cleared mid-fade", () => {
+    const shared = new THREE.MeshBasicMaterial();
+    const { spawner } = fadingSetup(shared);
+    run(spawner, 1);
+    const mesh = meshOf(spawner.objects[0]);
+    spawner.clear();
+    expect(mesh.material).toBe(shared);
+  });
+});

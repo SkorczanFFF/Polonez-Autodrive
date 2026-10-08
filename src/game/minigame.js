@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CAR, MINIGAME, SPEED } from "../config.js";
+import { CAR, MINIGAME, SPAWN, SPEED } from "../config.js";
 import { createSpawner } from "../scene/spawner.js";
 
 /**
@@ -62,6 +62,7 @@ export function createMinigame({ scene, car, materials }) {
     parent: scene,
     speed: SPEED.box,
     interval: (roll) => minInterval + roll * (maxInterval - minInterval),
+    fadeIn: SPAWN.fadeIn,
     create: () => {
       const box = new THREE.Mesh(geometry, materials.box);
       box.position.set(nextX(), MINIGAME.box.y, 0);

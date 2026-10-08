@@ -1,4 +1,5 @@
 import { SPAWN } from "../config.js";
+import { createFadeIn } from "./fade.js";
 
 /**
  * @typedef {object} SpawnerOptions
@@ -10,6 +11,7 @@ import { SPAWN } from "../config.js";
  * @property {() => import("three").Object3D[]} create new instances placed in x/y; z is set here
  * @property {number} [startZ]
  * @property {number} [endZ]
+ * @property {number} [fadeIn] seconds new instances take to fade in from transparent (0 = pop in)
  */
 
 /**
@@ -27,11 +29,13 @@ export function createSpawner({
   create,
   startZ = SPAWN.startZ,
   endZ = SPAWN.endZ,
+  fadeIn = 0,
 }) {
   /** @type {import("three").Object3D[]} */
   const objects = [];
   let elapsed = 0;
   let roll = Math.random();
+  const fader = createFadeIn(fadeIn);
 
   const spawner = {
     objects,
@@ -51,11 +55,13 @@ export function createSpawner({
      */
     update(dt, speedMultiplier) {
       const velocity = speed * speedMultiplier;
+      fader.update(dt);
 
       for (let i = objects.length - 1; i >= 0; i--) {
         const object = objects[i];
         object.position.z += velocity * dt;
         if (object.position.z > endZ) {
+          fader.stop(object);
           parent.remove(object);
           objects.splice(i, 1);
         }
@@ -75,6 +81,7 @@ export function createSpawner({
           object.position.z = startZ + elapsed * velocity;
           parent.add(object);
           objects.push(object);
+          fader.start(object, elapsed);
         }
         roll = Math.random();
         wait = spawner.currentInterval(speedMultiplier);
@@ -83,6 +90,7 @@ export function createSpawner({
 
     /** Removes every instance and restarts the timer. */
     clear() {
+      fader.clear();
       for (const object of objects) parent.remove(object);
       objects.length = 0;
       elapsed = 0;
