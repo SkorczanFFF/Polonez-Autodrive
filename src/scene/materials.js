@@ -1,10 +1,11 @@
 import * as THREE from "three";
-import { LAYERS, MINIGAME, ROAD, SCENE, SUN, WORLD } from "../config.js";
+import { LAYERS, MINIGAME, ROAD, SCENE, SUN, WIRE, WORLD } from "../config.js";
 
 /**
  * @typedef {object} Materials
  * @property {Record<string, THREE.MeshPhongMaterial>} solid per layer
- * @property {Record<string, THREE.MeshPhongMaterial | THREE.MeshBasicMaterial>} wire per layer
+ * @property {Record<string, THREE.MeshPhongMaterial | THREE.MeshBasicMaterial | THREE.LineBasicMaterial>} wire
+ *   per layer: textured overlay (road, terrain), outline lines or a triangle wireframe (WIRE.mode)
  * @property {THREE.MeshPhongMaterial} sun
  * @property {THREE.MeshPhongMaterial} sunEffect
  * @property {THREE.MeshPhongMaterial} box minigame obstacle
@@ -40,6 +41,8 @@ export function createMaterials(textures, anisotropy) {
         map: textures[layer.wireMap],
         transparent: true,
       });
+    } else if (WIRE.mode === "edges") {
+      wire[key] = new THREE.LineBasicMaterial({ color: layer.wire });
     } else {
       const Material =
         layer.wireType === "basic" ? THREE.MeshBasicMaterial : THREE.MeshPhongMaterial;

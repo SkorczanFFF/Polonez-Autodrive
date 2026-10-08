@@ -53,3 +53,23 @@ describe("wire", () => {
     expect(wires).toBe(2);
   });
 });
+
+describe("outlines", () => {
+  it("line materials get LineSegments over the creases, shared between clones", () => {
+    const { root, a } = model();
+    const lines = new THREE.LineBasicMaterial();
+    addWireframe(root, lines);
+    const twin = /** @type {THREE.LineSegments} */ (a.children.find((c) => c.userData.isWire));
+    expect(twin).toBeInstanceOf(THREE.LineSegments);
+    expect(twin.geometry).toBeInstanceOf(THREE.EdgesGeometry);
+    expect(twin.material).toBe(lines);
+
+    // a cube has 12 crease edges (no triangle diagonals) -> 24 vertices
+    expect(twin.geometry.getAttribute("position").count).toBe(24);
+
+    const other = new THREE.Mesh(a.geometry, new THREE.MeshBasicMaterial());
+    addWireframe(other, lines);
+    const otherTwin = /** @type {THREE.LineSegments} */ (other.children[0]);
+    expect(otherTwin.geometry).toBe(twin.geometry);
+  });
+});

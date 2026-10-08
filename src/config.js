@@ -142,6 +142,17 @@ export const SCENE = {
   polygonOffset: { enabled: true, factor: 1, units: 1 },
 };
 
+/**
+ * Line overlay on models. "triangles": every triangle edge, as in v1; the dense lines also hide
+ * small model flaws. "edges": ink-like outlines, only creases sharper than `edgeAngle`
+ * (coloring-book look) — clean, but it exposes the off-centre wheel rims of wheel.fbx, so it
+ * waits for a model fix.
+ */
+export const WIRE = {
+  mode: /** @type {"edges" | "triangles"} */ ("triangles"),
+  edgeAngle: 20, // degrees
+};
+
 export const CAR = {
   bodyX: -0.013,
   rollCenterY: 0.56, // the body rolls around the axle line, so the wheels stay on the road

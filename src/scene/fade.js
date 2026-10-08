@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-/** @typedef {THREE.MeshBasicMaterial | THREE.MeshPhongMaterial} ColoredMaterial */
+/** @typedef {THREE.MeshBasicMaterial | THREE.MeshPhongMaterial | THREE.LineBasicMaterial} ColoredMaterial */
 
 /**
  * Fades freshly spawned objects in from transparent. Materials are shared between instances, so
@@ -17,7 +17,7 @@ export function createFadeIn(duration) {
   /**
    * @typedef {object} Fade
    * @property {number} age seconds since the object appeared
-   * @property {[THREE.Mesh, ColoredMaterial, ColoredMaterial][]} swaps mesh, shared, own copy
+   * @property {[THREE.Mesh | THREE.Line, ColoredMaterial, ColoredMaterial][]} swaps object, shared, own copy
    */
 
   /** @type {Map<THREE.Object3D, Fade>} */
@@ -70,7 +70,8 @@ export function createFadeIn(duration) {
       /** @type {Fade["swaps"]} */
       const swaps = [];
       object.traverse((child) => {
-        if (!(child instanceof THREE.Mesh) || Array.isArray(child.material)) return;
+        const drawable = child instanceof THREE.Mesh || child instanceof THREE.Line; // outlines too
+        if (!drawable || Array.isArray(child.material)) return;
         const shared = /** @type {ColoredMaterial} */ (child.material);
         const own = copyOf(shared);
         child.material = own;
