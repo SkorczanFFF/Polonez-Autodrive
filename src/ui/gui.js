@@ -74,12 +74,12 @@ export function createSceneGui({ scene, materials, world, crt, tweens }) {
 
   const sunParams = { top: SUN.top, bottom: SUN.bottom, effect: true };
   const sun = gui.addFolder(L.sun);
-  color(sun, sunParams, "top", L.sunTop, (v) => materials.sun.color.set(v));
-  color(sun, sunParams, "bottom", L.sunBottom, (v) => materials.sunEffect.color.set(v));
+  color(sun, sunParams, "top", L.sunTop, (v) => materials.sun.topColor.set(v));
+  color(sun, sunParams, "bottom", L.sunBottom, (v) => materials.sun.bottomColor.set(v));
   sun
     .add(sunParams, "effect")
     .name(L.sunEffect)
-    .onChange((v) => (materials.sunEffect.visible = v));
+    .onChange((v) => (materials.sun.effect = v));
   sun.close();
 
   const c = crt.state;

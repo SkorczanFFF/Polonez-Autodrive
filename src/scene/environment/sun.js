@@ -1,22 +1,23 @@
 import * as THREE from "three";
 import { SUN } from "../../config.js";
 
-/** Half-disc sun with the striped glow plane in front of it. @type {import("../world.js").WorldPartFactory} */
+/** Room around the disc for the halo, as a fraction of the radius. */
+const HALO_MARGIN = 0.25;
+
+/**
+ * The synthwave sun: one plane with the sun shader (scene/sunMaterial.js), covering the upper
+ * half disc and its halo. The disc centre sits on the horizon line at SUN.disc.position.
+ *
+ * @type {import("../world.js").WorldPartFactory}
+ */
 export function createSun({ scene, materials }) {
-  const { disc, effect } = SUN;
+  const { radius, position } = SUN.disc;
+  const size = radius * (1 + HALO_MARGIN);
+  const geometry = new THREE.PlaneGeometry(2 * size, size).translate(0, size / 2, 0);
 
-  const sun = new THREE.Mesh(
-    new THREE.CircleGeometry(disc.radius, disc.segments, 0, disc.thetaLength),
-    materials.sun,
-  );
-  sun.position.fromArray(disc.position);
-
-  const glow = new THREE.Mesh(
-    new THREE.PlaneGeometry(effect.size, effect.size),
-    materials.sunEffect,
-  );
-  glow.position.fromArray(effect.position);
-
-  scene.add(sun, glow);
+  const sun = new THREE.Mesh(geometry, materials.sun);
+  sun.position.fromArray(position);
+  sun.renderOrder = -1; // behind everything transparent in front of it
+  scene.add(sun);
   return {};
 }

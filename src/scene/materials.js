@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GRID, LAYERS, MINIGAME, ROAD, SCENE, SHADING, SUN, WIRE, WORLD } from "../config.js";
 import { createGridMaterial } from "./grid.js";
+import { createSunMaterial } from "./sunMaterial.js";
 
 /**
  * @typedef {object} Materials
@@ -8,8 +9,7 @@ import { createGridMaterial } from "./grid.js";
  * @property {Record<string, THREE.MeshPhongMaterial | THREE.MeshBasicMaterial | THREE.LineBasicMaterial | ReturnType<typeof createGridMaterial>>} wire
  *   per layer: textured overlay (road), procedural grid (terrain), outline lines or a triangle
  *   wireframe (WIRE.mode)
- * @property {THREE.MeshPhongMaterial} sun
- * @property {THREE.MeshPhongMaterial} sunEffect
+ * @property {ReturnType<typeof createSunMaterial>} sun
  * @property {THREE.MeshToonMaterial | THREE.MeshPhongMaterial} box minigame obstacle
  */
 
@@ -60,21 +60,17 @@ export function createMaterials(textures, anisotropy) {
     }
   }
 
-  const sun = new THREE.MeshPhongMaterial({
-    color: SUN.top,
-    shininess: SUN.disc.shininess,
-    fog: false,
-  });
-  const sunEffect = new THREE.MeshPhongMaterial({
-    color: SUN.bottom,
-    map: textures[SUN.effect.texture],
-    transparent: true,
-    fog: false,
+  const sun = createSunMaterial({
+    top: SUN.top,
+    bottom: SUN.bottom,
+    radius: SUN.disc.radius,
+    stripes: SUN.stripes,
+    glow: SUN.glow,
   });
 
   const box = shade({ color: MINIGAME.box.color });
 
-  return { solid, wire, sun, sunEffect, box };
+  return { solid, wire, sun, box };
 }
 
 /**
@@ -148,5 +144,4 @@ function setupTextures(textures, anisotropy) {
     ROAD.lineTilesAcross,
     tiles(WORLD.length),
   );
-  configure(textures[SUN.effect.texture], THREE.RepeatWrapping, 1, 1);
 }

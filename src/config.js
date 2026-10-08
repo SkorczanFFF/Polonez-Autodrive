@@ -89,10 +89,12 @@ export const ROAD = {
 };
 
 export const SUN = {
-  top: PALETTE.yellow, // disc color
-  bottom: PALETTE.red, // stripe overlay tint
-  disc: { radius: 200, segments: 20, thetaLength: 3.1, position: [1, -20, -350], shininess: 20 },
-  effect: { size: 460, position: [0, -35, -349.5], texture: "sun" },
+  top: PALETTE.yellow, // color at the top of the disc
+  bottom: PALETTE.red, // color at the horizon and of the halo
+  disc: { radius: 200, position: [1, -20, -350] }, // centre on the horizon line
+  /** Horizontal cuts in the lower part (fractions of the radius), wider towards the horizon. */
+  stripes: { count: 6, top: 0.55, gap: [0.08, 0.55] },
+  glow: 0.08, // halo falloff as a fraction of the radius
 };
 
 export const SCENE = {
@@ -329,7 +331,6 @@ export const ASSETS = {
   },
   textures: {
     roadline: "textures/roadline.png",
-    sun: "textures/suneffectalt.png",
   },
 };
 
