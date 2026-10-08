@@ -34,7 +34,8 @@ export const PALETTE = {
  * @property {string} wire default wireframe / overlay color
  * @property {boolean} [toggleSolid] GUI exposes a "show model" toggle
  * @property {"phong" | "basic"} [wireType] wireframe material type (default phong)
- * @property {"roadline" | "grid"} [wireMap] textured overlay instead of a wireframe
+ * @property {"roadline"} [wireMap] textured overlay instead of a wireframe
+ * @property {boolean} [wireGrid] procedural line grid overlay instead of a wireframe
  * @property {"palms" | "rocks"} [density] GUI exposes a density slider for this spawner
  */
 
@@ -44,7 +45,7 @@ export const LAYERS = {
   hills: { label: "Hills", solid: PALETTE.violet, wire: PALETTE.pink, toggleSolid: true },
   side: { label: "Side hills", solid: PALETTE.blue, wire: PALETTE.violet, toggleSolid: true },
   road: { label: "Road", solid: PALETTE.pink, wire: PALETTE.aqua, wireMap: "roadline" },
-  terrain: { label: "Terrain", solid: PALETTE.aqua, wire: PALETTE.pink, wireMap: "grid" },
+  terrain: { label: "Terrain", solid: PALETTE.aqua, wire: PALETTE.pink, wireGrid: true },
   palm: {
     label: "Palms",
     solid: PALETTE.palm,
@@ -72,6 +73,11 @@ export const WORLD = {
   width: 200, // ground width (x)
   cellSize: 4, // units per ground texture tile (terrain grid and road lines)
   speed: 14.4, // units/s at speedMultiplier 1 (v1 ground: 0.06 tiles/frame; scenery was 200/14 = 14.3)
+};
+
+/** Procedural terrain grid (one cell per WORLD.cellSize). */
+export const GRID = {
+  halfWidth: 3 / 512, // line half-width in cells, as in the v1 gridline texture (6 px of 512)
 };
 
 export const ROAD = {
@@ -323,7 +329,6 @@ export const ASSETS = {
   },
   textures: {
     roadline: "textures/roadline.png",
-    grid: "textures/gridline2.png",
     sun: "textures/suneffectalt.png",
   },
 };

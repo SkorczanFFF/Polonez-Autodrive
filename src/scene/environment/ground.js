@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import { ROAD, WORLD } from "../../config.js";
 
-/** Texture offsets wrap at 2: one full period for both Repeat and MirroredRepeat wrapping. */
+/** Offsets wrap at 2: one full period for Repeat and MirroredRepeat textures and the grid. */
 const OFFSET_PERIOD = 2;
 
 /**
- * Terrain and road, sized from WORLD/ROAD. Motion is faked by scrolling the overlay textures
- * at WORLD.speed, so the ground itself never moves.
+ * Terrain and road, sized from WORLD/ROAD. Motion is faked by scrolling the overlays (road-line
+ * texture, procedural grid) at WORLD.speed, so the ground itself never moves.
  *
  * @type {import("../world.js").WorldPartFactory}
  */
@@ -28,15 +28,19 @@ export function createGround({ scene, materials }) {
   for (const mesh of meshes) mesh.receiveShadow = true;
   scene.add(...meshes);
 
-  const scrolling = [wire.terrain.map, wire.road.map].filter(Boolean);
+  /** @type {THREE.Vector2[]} */
+  const scrolling = [];
+  for (const material of [wire.terrain, wire.road]) {
+    if ("offset" in material)
+      scrolling.push(material.offset); // procedural grid
+    else if ("map" in material && material.map) scrolling.push(material.map.offset);
+  }
   const tilesPerSecond = WORLD.speed / WORLD.cellSize;
 
   return {
     update(dt, speedMultiplier) {
       const step = tilesPerSecond * speedMultiplier * dt;
-      for (const texture of scrolling) {
-        texture.offset.y = (texture.offset.y + step) % OFFSET_PERIOD;
-      }
+      for (const offset of scrolling) offset.y = (offset.y + step) % OFFSET_PERIOD;
     },
   };
 }

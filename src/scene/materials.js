@@ -1,11 +1,13 @@
 import * as THREE from "three";
-import { LAYERS, MINIGAME, ROAD, SCENE, SHADING, SUN, WIRE, WORLD } from "../config.js";
+import { GRID, LAYERS, MINIGAME, ROAD, SCENE, SHADING, SUN, WIRE, WORLD } from "../config.js";
+import { createGridMaterial } from "./grid.js";
 
 /**
  * @typedef {object} Materials
  * @property {Record<string, THREE.MeshToonMaterial | THREE.MeshPhongMaterial>} solid per layer (SHADING.mode)
- * @property {Record<string, THREE.MeshPhongMaterial | THREE.MeshBasicMaterial | THREE.LineBasicMaterial>} wire
- *   per layer: textured overlay (road, terrain), outline lines or a triangle wireframe (WIRE.mode)
+ * @property {Record<string, THREE.MeshPhongMaterial | THREE.MeshBasicMaterial | THREE.LineBasicMaterial | ReturnType<typeof createGridMaterial>>} wire
+ *   per layer: textured overlay (road), procedural grid (terrain), outline lines or a triangle
+ *   wireframe (WIRE.mode)
  * @property {THREE.MeshPhongMaterial} sun
  * @property {THREE.MeshPhongMaterial} sunEffect
  * @property {THREE.MeshToonMaterial | THREE.MeshPhongMaterial} box minigame obstacle
@@ -36,7 +38,14 @@ export function createMaterials(textures, anisotropy) {
       polygonOffsetUnits: units,
     });
 
-    if (layer.wireMap) {
+    if (layer.wireGrid) {
+      wire[key] = createGridMaterial({
+        color: layer.wire,
+        cells: [WORLD.width / WORLD.cellSize, WORLD.length / WORLD.cellSize],
+        halfWidth: GRID.halfWidth,
+        gapHalfWidth: ROAD.width / 2 / WORLD.cellSize, // the road covers the centre
+      });
+    } else if (layer.wireMap) {
       wire[key] = new THREE.MeshPhongMaterial({
         color: layer.wire,
         map: textures[layer.wireMap],
@@ -137,12 +146,6 @@ function setupTextures(textures, anisotropy) {
     textures[LAYERS.road.wireMap],
     THREE.MirroredRepeatWrapping,
     ROAD.lineTilesAcross,
-    tiles(WORLD.length),
-  );
-  configure(
-    textures[LAYERS.terrain.wireMap],
-    THREE.RepeatWrapping,
-    tiles(WORLD.width),
     tiles(WORLD.length),
   );
   configure(textures[SUN.effect.texture], THREE.RepeatWrapping, 1, 1);
