@@ -117,16 +117,21 @@ export const SCENE = {
   },
   lights: {
     color: PALETTE.white,
-    ambient: 0.95,
-    /** [x, y, z, intensity]; every light casts shadows (as in v1). */
-    directional: [
-      [0, 15, -50, 0.5],
-      [-5, 17, -50, 0.25],
-      [5, 17, -50, 0.25],
-      [-10, 20, -50, 0.15],
-      [10, 20, -50, 0.15],
-    ],
-    shadow: { mapSize: 1024, near: 1, far: 500, extent: 50, bias: 0 },
+    /** Slightly above v1 (0.95): the low sunset light reaches flat ground less. */
+    ambient: 1.05,
+    /**
+     * The sun as a wide light source: `samples` shadow-casting directional lights spread over
+     * `spread` of the sun disc's apparent size, aimed from the middle of the visible sun. Their
+     * overlapping shadows give the soft, wide-source shadow of v1 (five lights in a small arc)
+     * and long sunset shadows towards the camera. Follows SUN, so resizing the sun reshapes it.
+     */
+    sun: {
+      samples: 5,
+      spread: 0.4, // fraction of the sun disc's apparent size covered by the samples
+      intensity: 1.6, // total of all samples (v1: 1.3 from higher up)
+      distance: 53, // light distance from the scene origin (shadow camera placement)
+    },
+    shadow: { mapSize: 1024, near: 1, far: 500, extent: 50, bias: 0, radius: 3 },
     /** three >= r155 dropped the implicit PI factor of "legacy" lights; restores the v1 brightness. */
     legacyScale: Math.PI,
   },

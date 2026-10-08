@@ -34,7 +34,7 @@ export function addWireframe(root, material) {
   for (const mesh of meshes) {
     const wire = new THREE.Mesh(mesh.geometry, material);
     wire.userData.isWire = true;
-    wire.castShadow = true;
+    wire.castShadow = false; // thin lines add no visible shadow, only shadow-pass draw calls
     wire.receiveShadow = true;
     mesh.add(wire);
   }
