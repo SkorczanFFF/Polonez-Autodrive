@@ -1,14 +1,14 @@
 import * as THREE from "three";
-import { LAYERS, MINIGAME, ROAD, SCENE, SUN, WIRE, WORLD } from "../config.js";
+import { LAYERS, MINIGAME, ROAD, SCENE, SHADING, SUN, WIRE, WORLD } from "../config.js";
 
 /**
  * @typedef {object} Materials
- * @property {Record<string, THREE.MeshPhongMaterial>} solid per layer
+ * @property {Record<string, THREE.MeshToonMaterial | THREE.MeshPhongMaterial>} solid per layer (SHADING.mode)
  * @property {Record<string, THREE.MeshPhongMaterial | THREE.MeshBasicMaterial | THREE.LineBasicMaterial>} wire
  *   per layer: textured overlay (road, terrain), outline lines or a triangle wireframe (WIRE.mode)
  * @property {THREE.MeshPhongMaterial} sun
  * @property {THREE.MeshPhongMaterial} sunEffect
- * @property {THREE.MeshPhongMaterial} box minigame obstacle
+ * @property {THREE.MeshToonMaterial | THREE.MeshPhongMaterial} box minigame obstacle
  */
 
 /**
@@ -22,13 +22,14 @@ export function createMaterials(textures, anisotropy) {
   setupTextures(textures, anisotropy);
 
   const { enabled, factor, units } = SCENE.polygonOffset;
+  const shade = createShading();
   /** @type {Materials["solid"]} */
   const solid = {};
   /** @type {Materials["wire"]} */
   const wire = {};
 
   for (const [key, layer] of Object.entries(LAYERS)) {
-    solid[key] = new THREE.MeshPhongMaterial({
+    solid[key] = shade({
       color: layer.solid,
       polygonOffset: enabled,
       polygonOffsetFactor: factor,
@@ -62,9 +63,52 @@ export function createMaterials(textures, anisotropy) {
     fog: false,
   });
 
-  const box = new THREE.MeshPhongMaterial({ color: MINIGAME.box.color });
+  const box = shade({ color: MINIGAME.box.color });
 
   return { solid, wire, sun, sunEffect, box };
+}
+
+/**
+ * Factory for lit solid materials: toon (banded, via a tiny gradient ramp) or Phong, flat
+ * shaded per SHADING.flat.
+ *
+ * @returns {(parameters: THREE.MeshToonMaterialParameters) => THREE.MeshToonMaterial | THREE.MeshPhongMaterial}
+ */
+function createShading() {
+  const { flat } = SHADING;
+  if (SHADING.mode === "phong") {
+    return (parameters) => new THREE.MeshPhongMaterial({ ...parameters, flatShading: flat });
+  }
+
+  const steps = SHADING.toonSteps;
+  const ramp = new THREE.DataTexture(
+    new Uint8Array(steps.map((step) => Math.round(step * 255))),
+    steps.length,
+    1,
+    THREE.RedFormat,
+  );
+  ramp.minFilter = ramp.magFilter = THREE.NearestFilter; // hard bands
+  ramp.needsUpdate = true;
+
+  return (parameters) =>
+    Object.assign(new ToonMaterial({ ...parameters, gradientMap: ramp }), { flatShading: flat });
+}
+
+/**
+ * MeshToonMaterial that keeps flatShading on clone(). The renderer honours flatShading on any
+ * material (WebGLPrograms reads it), but three declares and copies it only for Phong, Standard
+ * and Lambert. A clone without it (fade-in copies) would render smooth shaded while fading and
+ * need a shader variant of its own.
+ */
+class ToonMaterial extends THREE.MeshToonMaterial {
+  flatShading = false;
+
+  /** @param {ToonMaterial} source */
+  copy(source) {
+    super.copy(source);
+    this.flatShading = source.flatShading;
+    return this;
+  }
 }
 
 /**

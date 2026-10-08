@@ -153,6 +153,19 @@ export const WIRE = {
   edgeAngle: 20, // degrees
 };
 
+/**
+ * Solid surfaces. "toon": flat bands of color like crayon fills; "phong": smooth v1 shading.
+ * toonSteps: light multipliers from surfaces facing away from the sun to facing it. The middle
+ * band (0.2) keeps flat ground as bright as with Phong under the low sunset light.
+ * flat: one shade per triangle. Some models ship smooth normals (all of hills.fbx), which
+ * would bend the shading across faces so it no longer matches the wireframe lines.
+ */
+export const SHADING = {
+  mode: /** @type {"toon" | "phong"} */ ("toon"),
+  toonSteps: [0, 0.2, 1],
+  flat: true,
+};
+
 export const CAR = {
   bodyX: -0.013,
   rollCenterY: 0.56, // the body rolls around the axle line, so the wheels stay on the road
