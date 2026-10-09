@@ -535,6 +535,7 @@ export const TEXT = {
     crtFlicker: "Enable flicker",
     crtFlickerSpeed: "Flicker speed",
     crtFlickerIntensity: "Flicker intensity",
+    environment: "Environment",
     sky: "Sky color",
     fogColor: "Fog color",
     fogNear: "Fog near",

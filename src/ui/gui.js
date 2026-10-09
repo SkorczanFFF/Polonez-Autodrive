@@ -71,6 +71,9 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
       .add(params, "showWire")
       .name(L.showWire)
       .onChange((v) => (wire.visible = v));
+    if (key === "polonez") {
+      folder.add(lineWidth, "value", ...RANGES.lineWidth).name(L.lineWidth); // a shared uniform
+    }
     if (wire instanceof BasicLineMaterial || wire instanceof PhongLineMaterial) {
       const { fade, min } = wire.lineUniforms;
       folder.add(fade, "value", ...RANGES.lineFade).name(L.lineFade);
@@ -112,21 +115,24 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     .add(c, "flickerIntensity", ...RANGES.crtIntensity)
     .name(L.crtFlickerIntensity)
     .onChange(crt.apply);
+  crtFolder.close();
 
   const fog = /** @type {THREE.Fog} */ (scene.fog);
   const background = /** @type {THREE.Color} */ (scene.background);
   const sceneParams = { ...SCENE.fog, sky: SCENE.background };
-  color(gui, sceneParams, "sky", L.sky, (v) => background.set(v));
-  color(gui, sceneParams, "color", L.fogColor, (v) => fog.color.set(v));
-  gui
+  const environment = gui.addFolder(L.environment);
+  color(environment, sceneParams, "sky", L.sky, (v) => background.set(v));
+  color(environment, sceneParams, "color", L.fogColor, (v) => fog.color.set(v));
+  environment
     .add(sceneParams, "near", ...RANGES.fogNear)
     .name(L.fogNear)
     .onChange((v) => (fog.near = v));
-  gui
+  environment
     .add(sceneParams, "far", ...RANGES.fogFar)
     .name(L.fogFar)
     .onChange((v) => (fog.far = v));
-  gui.add(lineWidth, "value", ...RANGES.lineWidth).name(L.lineWidth); // a shared uniform
+  environment.close();
+
   gui.add(bloom, "enabled").name(`${L.bloomEnabled} (${TEXT.keys.glow})`).listen(); // G too
 
   /** @type {import("../core/tween.js").TweenHandle | null} */
