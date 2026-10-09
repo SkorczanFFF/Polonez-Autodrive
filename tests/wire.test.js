@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
+import { BLOOM } from "../src/config.js";
 import { addWireframe, applyMaterial, dress } from "../src/scene/wire.js";
 
 function model() {
@@ -22,6 +23,15 @@ describe("wire", () => {
     expect(wireOf(a).geometry).toBe(a.geometry);
     expect(wireOf(b).geometry).toBe(b.geometry);
     expect(wireOf(a).material).toBe(wire);
+  });
+
+  it("puts the wireframes, and only them, on the bloom layer", () => {
+    const { root, a } = model();
+    addWireframe(root, new THREE.MeshBasicMaterial());
+    const twin = /** @type {THREE.Mesh} */ (a.children.find((c) => c.userData.isWire));
+    expect(twin.layers.isEnabled(BLOOM.layer)).toBe(true);
+    expect(twin.layers.isEnabled(0)).toBe(true); // still drawn by the camera
+    expect(a.layers.isEnabled(BLOOM.layer)).toBe(false);
   });
 
   it("does not wire the wireframes again", () => {

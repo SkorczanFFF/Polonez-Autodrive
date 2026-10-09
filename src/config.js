@@ -56,6 +56,7 @@ export const PALETTE = {
  * @property {boolean} [wireGrid] procedural line grid overlay instead of a wireframe
  * @property {number} [lineFade] WIRE.fade for this layer (lower: lines stay visible further)
  * @property {number} [lineMin] visibility (0..1) lines fade down to on tiny triangles (default 0)
+ * @property {number} [glow] bloom on this layer's lines, 0..1 (default 1)
  * @property {"palms" | "rocks"} [density] GUI exposes a density slider for this spawner
  */
 
@@ -68,6 +69,7 @@ export const LAYERS = {
     toggleSolid: true,
     lineFade: 1.5,
     lineMin: 0.2, // the far end of the car keeps a hint of its lines
+    glow: 0.3, // its dense lines would blow out to white at full bloom
   },
   hills: { label: "Hills", solid: PALETTE.grape, wire: PALETTE.neonMagenta, toggleSolid: true },
   side: { label: "Side hills", solid: PALETTE.plum, wire: PALETTE.neonViolet, toggleSolid: true },
@@ -80,6 +82,7 @@ export const LAYERS = {
     toggleSolid: true,
     wireType: "basic",
     lineFade: 0.6, // dense leaves: lines faint where palms spawn, full from mid-distance
+    glow: 0.5,
     density: "palms",
   },
   rock: {
@@ -207,6 +210,17 @@ export const WIRE = {
   edgeAngle: 20, // degrees
   width: 0.02,
   fade: 2,
+};
+
+/**
+ * Glow on the wireframes only (core/bloom.js): the wire twins sit on `layer`, everything else is
+ * black in the glow pass. strength / radius as in UnrealBloomPass.
+ */
+export const BLOOM = {
+  enabled: true,
+  layer: 1,
+  strength: 0.5,
+  radius: 0.3,
 };
 
 /**
@@ -405,6 +419,7 @@ export const KEYS = {
   right: ["ArrowRight"],
   stats: ["F10"], // developer overlay, not advertised in the UI
   menu: ["KeyH"],
+  glow: ["KeyG"],
 };
 
 export const GUI = {
@@ -412,6 +427,9 @@ export const GUI = {
   lineWidth: [0.005, 0.1, 0.005],
   lineFade: [0, 4, 0.05],
   lineMin: [0, 1, 0.05],
+  bloomStrength: [0, 3, 0.05],
+  bloomRadius: [0, 1, 0.05],
+  glow: [0, 1, 0.05],
   /** Upper bound follows the world, so the default fog end (WORLD.length) always fits. */
   get fogFar() {
     return [50, Math.max(400, 2 * WORLD.length)];
@@ -494,6 +512,7 @@ export const TEXT = {
     left: "Left arrow",
     right: "Right arrow",
     menu: "H",
+    glow: "G",
   },
   menuHide: "Hide menu",
   menuShow: "Show menu",
@@ -523,6 +542,11 @@ export const TEXT = {
     lineWidth: "Line width",
     lineFade: "Line fade",
     lineMin: "Line min",
+    bloom: "Bloom",
+    bloomEnabled: "Glow",
+    bloomStrength: "Strength",
+    bloomRadius: "Radius",
+    glow: "Glow",
     randomize: "🎨 Randomize all",
   },
   statsPanel: {

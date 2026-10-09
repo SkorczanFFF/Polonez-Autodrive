@@ -46,12 +46,20 @@ async function main() {
   const tweens = createTweens();
   const input = createInput();
   const hud = createHud(input.dispatch);
-  const menu = createSceneGui({ scene: view.scene, materials, world, crt, tweens });
+  const menu = createSceneGui({
+    scene: view.scene,
+    materials,
+    world,
+    crt,
+    tweens,
+    bloom: view.bloom,
+  });
   const game = createGame({ view, world, car, minigame, tweens, input, hud, menu });
   const stats = createDevStats(view.renderer);
   input.onPress((action) => {
     if (action === "stats") stats.toggle();
     if (action === "menu" && game.state === "idle") hud.toggleMenu(); // only where the toggle is shown
+    if (action === "glow") view.bloom.enabled = !view.bloom.enabled;
   });
 
   loop.add(tweens.update);

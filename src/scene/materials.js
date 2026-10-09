@@ -59,6 +59,7 @@ export function createMaterials(textures, anisotropy) {
       const lines = new Material({ color: layer.wire });
       lines.lineUniforms.fade.value = layer.lineFade ?? WIRE.fade;
       lines.lineUniforms.min.value = layer.lineMin ?? 0;
+      lines.userData.glow = layer.glow ?? 1; // core/bloom.js; clones (fade-in) copy userData
       wire[key] = lines;
     }
   }

@@ -10,6 +10,7 @@ import { BasicLineMaterial, PhongLineMaterial, lineWidth } from "../scene/lines.
  * @property {ReturnType<typeof import("../scene/world.js").createWorld>} world
  * @property {ReturnType<typeof import("./crt.js").createCrt>} crt
  * @property {import("../core/tween.js").Tweens} tweens
+ * @property {ReturnType<typeof import("../core/bloom.js").createBloom>} bloom
  */
 
 const randomColor = () => `#${new THREE.Color(Math.random() * 0xffffff).getHexString()}`;
@@ -20,7 +21,7 @@ const randomColor = () => `#${new THREE.Color(Math.random() * 0xffffff).getHexSt
  *
  * @param {SceneGuiDeps} deps
  */
-export function createSceneGui({ scene, materials, world, crt, tweens }) {
+export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) {
   const L = TEXT.gui;
   const gui = new GUI({ title: L.title });
 
@@ -74,6 +75,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens }) {
       const { fade, min } = wire.lineUniforms;
       folder.add(fade, "value", ...RANGES.lineFade).name(L.lineFade);
       folder.add(min, "value", ...RANGES.lineMin).name(L.lineMin);
+      folder.add(wire.userData, "glow", ...RANGES.glow).name(L.glow);
     }
     folder.close();
   }
@@ -87,6 +89,11 @@ export function createSceneGui({ scene, materials, world, crt, tweens }) {
     .name(L.sunEffect)
     .onChange((v) => (materials.sun.effect = v));
   sun.close();
+
+  const bloomFolder = gui.addFolder(L.bloom);
+  bloomFolder.add(bloom, "strength", ...RANGES.bloomStrength).name(L.bloomStrength);
+  bloomFolder.add(bloom, "radius", ...RANGES.bloomRadius).name(L.bloomRadius);
+  bloomFolder.close();
 
   const c = crt.state;
   const crtFolder = gui.addFolder(L.crt);
@@ -120,6 +127,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens }) {
     .name(L.fogFar)
     .onChange((v) => (fog.far = v));
   gui.add(lineWidth, "value", ...RANGES.lineWidth).name(L.lineWidth); // a shared uniform
+  gui.add(bloom, "enabled").name(`${L.bloomEnabled} (${TEXT.keys.glow})`).listen(); // G too
 
   /** @type {import("../core/tween.js").TweenHandle | null} */
   let randomizing = null;

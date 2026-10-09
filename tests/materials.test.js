@@ -22,3 +22,12 @@ describe("solid materials", () => {
     expect(/** @type {any} */ (mesh.material).flatShading).toBe(SHADING.flat);
   });
 });
+
+describe("line materials", () => {
+  it("carry the layer's glow for the bloom (default 1)", () => {
+    const { wire } = materials();
+    expect(wire.polonez.userData.glow).toBe(LAYERS.polonez.glow);
+    expect(wire.hills.userData.glow).toBe(1);
+    expect(wire.polonez.clone().userData.glow).toBe(LAYERS.polonez.glow); // fade-in copies
+  });
+});

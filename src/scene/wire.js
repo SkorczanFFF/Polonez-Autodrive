@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { WIRE } from "../config.js";
+import { BLOOM, WIRE } from "../config.js";
 import { BasicLineMaterial, PhongLineMaterial, lineGeometry } from "./lines.js";
 
 /**
@@ -55,6 +55,7 @@ export function addWireframe(root, material) {
         ? new THREE.LineSegments(edgesOf(mesh.geometry), material)
         : new THREE.Mesh(lines ? lineGeometry(mesh.geometry) : mesh.geometry, material);
     wire.userData.isWire = true;
+    wire.layers.enable(BLOOM.layer); // glows (core/bloom.js)
     wire.castShadow = false; // thin lines add no visible shadow, only shadow-pass draw calls
     wire.receiveShadow = true;
     mesh.add(wire);

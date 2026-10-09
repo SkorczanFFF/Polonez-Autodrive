@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { ROAD, WORLD } from "../../config.js";
+import { BLOOM, ROAD, WORLD } from "../../config.js";
 
 /** Offsets wrap at 2: one full period for Repeat and MirroredRepeat textures and the grid. */
 const OFFSET_PERIOD = 2;
@@ -27,6 +27,7 @@ export function createGround({ scene, materials }) {
     new THREE.Mesh(roadLines, wire.road),
   ];
   meshes[3].position.y = ROAD.lineY;
+  meshes[1].layers.enable(BLOOM.layer); // the terrain grid glows like the wireframes
   for (const mesh of meshes) mesh.receiveShadow = true;
   scene.add(...meshes);
 

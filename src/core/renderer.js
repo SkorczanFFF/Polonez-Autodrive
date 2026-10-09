@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { SCENE } from "../config.js";
+import { createBloom } from "./bloom.js";
 
 // Match the v1 (r116) look: colors are used as-is and the output stays linear.
 THREE.ColorManagement.enabled = false;
@@ -17,6 +18,7 @@ export function createView(container = document.body) {
   renderer.setPixelRatio(1);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.info.autoReset = false; // one frame can be several passes (bloom); reset per frame
 
   const canvas = renderer.domElement;
   container.appendChild(canvas);
@@ -36,20 +38,25 @@ export function createView(container = document.body) {
   controls.target.fromArray(cam.target);
   controls.update();
 
+  const bloom = createBloom(renderer, scene, camera);
+
   function resize() {
     const width = Math.floor(canvas.clientWidth * SCENE.renderScale);
     const height = Math.floor(canvas.clientHeight * SCENE.renderScale);
     if (canvas.width === width && canvas.height === height) return;
 
     renderer.setSize(width, height, false);
+    bloom.setSize(width, height);
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
   }
 
   function render() {
     resize();
-    renderer.render(scene, camera);
+    renderer.info.reset();
+    if (bloom.enabled) bloom.render();
+    else renderer.render(scene, camera);
   }
 
-  return { renderer, scene, camera, controls, render };
+  return { renderer, scene, camera, controls, bloom, render };
 }
