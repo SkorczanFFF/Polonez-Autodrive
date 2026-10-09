@@ -42,7 +42,7 @@ export function createMaterials(textures, anisotropy) {
     if (layer.wireGrid) {
       wire[key] = createGridMaterial({
         color: layer.wire,
-        cells: [WORLD.width / WORLD.cellSize, WORLD.length / WORLD.cellSize],
+        cells: [WORLD.groundSize / WORLD.cellSize, WORLD.groundSize / WORLD.cellSize],
         halfWidth: GRID.halfWidth,
         gapHalfWidth: ROAD.width / 2 / WORLD.cellSize, // the road covers the centre
       });
@@ -145,6 +145,6 @@ function setupTextures(textures, anisotropy) {
     textures[LAYERS.road.wireMap],
     THREE.MirroredRepeatWrapping,
     ROAD.lineTilesAcross,
-    tiles(WORLD.length),
+    tiles(WORLD.groundSize),
   );
 }

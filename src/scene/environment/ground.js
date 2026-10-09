@@ -5,7 +5,8 @@ import { ROAD, WORLD } from "../../config.js";
 const OFFSET_PERIOD = 2;
 
 /**
- * Terrain and road, sized from WORLD/ROAD. Motion is faked by scrolling the overlays (road-line
+ * Terrain and road, WORLD.groundSize long (they reach the horizon in full fog), road width from
+ * ROAD. Motion is faked by scrolling the overlays (road-line
  * texture, procedural grid) at WORLD.speed, so the ground itself never moves.
  *
  * @type {import("../world.js").WorldPartFactory}
@@ -14,9 +15,10 @@ export function createGround({ scene, materials }) {
   const { solid, wire } = materials;
   const flat = (/** @type {THREE.BufferGeometry} */ geometry) => geometry.rotateX(-Math.PI / 2);
 
-  const terrain = flat(new THREE.PlaneGeometry(WORLD.width, WORLD.length));
-  const road = flat(new THREE.BoxGeometry(ROAD.width, WORLD.length, ROAD.thickness));
-  const roadLines = flat(new THREE.PlaneGeometry(ROAD.width - ROAD.lineInset, WORLD.length));
+  const size = WORLD.groundSize;
+  const terrain = flat(new THREE.PlaneGeometry(size, size));
+  const road = flat(new THREE.BoxGeometry(ROAD.width, size, ROAD.thickness));
+  const roadLines = flat(new THREE.PlaneGeometry(ROAD.width - ROAD.lineInset, size));
 
   const meshes = [
     new THREE.Mesh(terrain, solid.terrain),

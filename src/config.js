@@ -95,8 +95,15 @@ export const LAYERS = {
  * from these values, so changing them rescales the scene consistently.
  */
 export const WORLD = {
-  length: 200, // ground length (z); scenery travels from -length/2 to +length/2
-  width: 200, // ground width (x)
+  length: 200, // scenery travels from -length/2 to +length/2; default fog end
+  width: 200, // rock bands fit inside this width
+  /**
+   * Terrain and road are drawn this big (square), past the farthest fog the GUI allows, so the
+   * ground reaches the horizon in full fog color and meets the sky gradient without a seam.
+   */
+  get groundSize() {
+    return 2 * GUI.fogFar[1];
+  },
   cellSize: 4, // units per ground texture tile (terrain grid and road lines)
   speed: 14.4, // units/s at speedMultiplier 1 (v1 ground: 0.06 tiles/frame; scenery was 200/14 = 14.3)
 };
@@ -126,7 +133,8 @@ export const SUN = {
 export const SCENE = {
   renderScale: 0.5, // intentionally blurry 80s look
   maxDelta: 0.1, // seconds; clamps frame delta after stalls
-  background: PALETTE.night,
+  background: PALETTE.night, // sky above the horizon glow
+  skyGlow: 0.3, // horizon glow height (fog color -> sky color), as the sine of the view angle
   fog: {
     color: PALETTE.horizon,
     near: 32.5,
