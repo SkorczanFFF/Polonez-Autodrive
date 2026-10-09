@@ -725,30 +725,71 @@ kbd {
   gap: 14px;
   width: min(92vw, 600px);
   box-sizing: border-box;
-  padding: 16px 24px 22px;
+  padding: 12px 24px 22px;
   text-align: center;
+  /* the scene keeps moving behind the panel: frost it, so the score reads at a glance */
+  background-color: color-mix(in srgb, var(--ui-deep) 90%, transparent);
+  backdrop-filter: blur(6px);
 }
 
 .hud__gameover-title {
   margin: 0;
-  padding: 0 0.2em 0.1em;
+  /* Pacifico's "G" swings out past its glyph box, and background-clip: text paints only inside
+     the padding box: pad wide, or the swash is cut off */
+  padding: 0.05em 0.5em 0.15em;
   font-size: clamp(44px, 5vw, 64px);
   line-height: 1.3;
   white-space: nowrap;
 }
 
-.hud__new-best {
-  margin: 0;
-  color: var(--yellow);
-  letter-spacing: 0.2em;
-  text-shadow: 0 0 10px var(--yellow);
-  animation: blink 0.8s step-end infinite;
+/* score as the headline, the record (or NEW BEST!) under it */
+.hud__final {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+  line-height: 1;
 }
 
-.hud__results {
-  display: flex;
-  align-items: flex-end;
-  gap: 40px;
+.hud__final-label {
+  padding-left: 0.4em; /* balances the trailing letter-spacing */
+  font-size: 18px;
+  letter-spacing: 0.4em;
+  opacity: 0.85;
+}
+
+.hud__final-score {
+  font-size: clamp(88px, 11vw, 128px);
+  color: var(--white);
+  text-shadow:
+    3px 3px 0 var(--ui-deep),
+    0 0 12px var(--pink),
+    0 0 28px var(--pink);
+}
+
+.hud__final-score.is-pop {
+  animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.hud__final-best,
+.hud__new-best {
+  margin: 2px 0 0;
+  padding-left: 0.25em;
+  letter-spacing: 0.25em;
+}
+
+.hud__final-best {
+  text-shadow: 0 0 8px var(--aqua);
+}
+
+.hud__final-best-value {
+  color: var(--white);
+}
+
+.hud__new-best {
+  color: var(--yellow);
+  text-shadow: 0 0 10px var(--yellow);
+  animation: blink 0.8s step-end infinite;
 }
 
 @keyframes pop {

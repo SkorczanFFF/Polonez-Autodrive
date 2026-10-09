@@ -81,16 +81,14 @@
 
       <section class="hud__gameover panel" aria-label="Game over" aria-live="assertive">
         <h2 class="hud__gameover-title sunset-text" data-text="gameOver"></h2>
-        <p class="hud__new-best" data-text="newBest" hidden></p>
-        <div class="hud__results">
-          <div class="stat stat--main">
-            <span class="stat__label" data-text="score"></span
-            ><span class="stat__value" data-final-score></span>
-          </div>
-          <div class="stat">
-            <span class="stat__label" data-text="best"></span
-            ><span class="stat__value" data-best></span>
-          </div>
+        <!-- the score is the headline; the record sits under it, or NEW BEST! when it was beaten -->
+        <div class="hud__final">
+          <span class="hud__final-label" data-text="score"></span>
+          <span class="hud__final-score" data-final-score></span>
+          <p class="hud__new-best" data-text="newBest" hidden></p>
+          <p class="hud__final-best">
+            <span data-text="best"></span> <span class="hud__final-best-value" data-best></span>
+          </p>
         </div>
         <div class="button-grid button-grid--3">
           <button class="button button--primary" type="button" data-action="start">

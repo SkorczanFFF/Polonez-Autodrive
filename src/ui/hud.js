@@ -70,6 +70,7 @@ export function createHud(dispatch, root = document.getElementById("hud")) {
   const level = $("[data-level]");
   const finalScore = $("[data-final-score]");
   const newBest = $(".hud__new-best");
+  const finalBest = $(".hud__final-best");
   const menuBest = $(".hud__best");
   const bestValues = $$("[data-best]");
   const menuToggle = $(".hud__toggle");
@@ -123,7 +124,9 @@ export function createHud(dispatch, root = document.getElementById("hud")) {
      */
     showGameOver(value, isNewBest) {
       show(finalScore, String(value));
+      replay(finalScore, "is-pop");
       newBest.hidden = !isNewBest;
+      finalBest.hidden = isNewBest; // the record is this score
     },
   };
 }
