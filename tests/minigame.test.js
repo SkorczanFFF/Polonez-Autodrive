@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CAR, MINIGAME } from "../src/config.js";
 import { createLanePicker } from "../src/game/minigame.js";
+import { trafficHalfWidth } from "../src/scene/traffic.js";
 
 /** Deterministic pseudo-random sequence. @param {number} seed */
 function rng(seed) {
@@ -9,11 +10,11 @@ function rng(seed) {
 }
 
 describe("lane picker", () => {
-  const halfWidth = MINIGAME.box.size[0] / 2;
+  const halfWidth = trafficHalfWidth();
   const reach = CAR.steer.maxOffset;
 
-  it("keeps boxes inside the steering range and outside the centre safe zone", () => {
-    const next = createLanePicker(rng(1));
+  it("keeps traffic inside the steering range and outside the centre safe zone", () => {
+    const next = createLanePicker(halfWidth, rng(1));
     for (let i = 0; i < 500; i++) {
       const x = next();
       expect(Math.abs(x)).toBeLessThanOrEqual(reach - MINIGAME.outerMargin);
@@ -21,8 +22,8 @@ describe("lane picker", () => {
     }
   });
 
-  it("starts on the left and switches lanes after batches of 1-3 boxes", () => {
-    const next = createLanePicker(rng(7));
+  it("starts on the left and switches lanes after batches of 1-3 cars", () => {
+    const next = createLanePicker(halfWidth, rng(7));
     const sides = Array.from({ length: 300 }, () => Math.sign(next()));
     expect(sides[0]).toBe(-1);
 

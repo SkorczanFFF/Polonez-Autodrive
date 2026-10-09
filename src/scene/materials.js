@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GRID, LAYERS, MINIGAME, ROAD, SCENE, SHADING, SUN, WIRE, WORLD } from "../config.js";
+import { GRID, LAYERS, PALETTE, ROAD, SCENE, SHADING, SUN, WIRE, WORLD } from "../config.js";
 import { createGridMaterial } from "./grid.js";
 import { BasicLineMaterial, PhongLineMaterial } from "./lines.js";
 import { createSunMaterial } from "./sunMaterial.js";
@@ -11,7 +11,7 @@ import { createSunMaterial } from "./sunMaterial.js";
  *   per layer: textured overlay (road), procedural grid (terrain), outline lines or a triangle
  *   wireframe (WIRE.mode)
  * @property {ReturnType<typeof createSunMaterial>} sun
- * @property {THREE.MeshToonMaterial | THREE.MeshPhongMaterial} box minigame obstacle
+ * @property {THREE.MeshBasicMaterial} headlight minigame traffic lamps
  */
 
 /**
@@ -71,9 +71,9 @@ export function createMaterials(textures, anisotropy) {
     glow: SUN.glow,
   });
 
-  const box = shade({ color: MINIGAME.box.color });
+  const headlight = new THREE.MeshBasicMaterial({ color: PALETTE.headlight });
 
-  return { solid, wire, sun, box };
+  return { solid, wire, sun, headlight };
 }
 
 /**
