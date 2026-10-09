@@ -1,21 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Synthwave coloring-book style Three.js animation of a Polonez driving into the sunset, with a minigame."
+    />
     <title>Polonez Autodrive</title>
-    <link rel="stylesheet" href="style.css" />
-    <script type="text/javascript" src="./js/three.js"></script>
-    <script type="text/javascript" src="./js/FBXLoader.js"></script>
-    <script type="text/javascript" src="./js/inflate.min.js"></script>
-    <script
-      type="text/javascript"
-      src="https://unpkg.com/three@0.115.0/examples/js/libs/dat.gui.min.js"
-    ></script>
-    <script src="https://unpkg.com/three@0.115.0/examples/js/controls/OrbitControls.js"></script>
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="./favicon.ico" />
   </head>
   <body>
-    <!-- CRT overlay  -->
-    <div class="crt-overlay"></div>
-    <script type="module" src="js/main.js"></script>
+    <div class="loader" id="loader" role="status" aria-live="polite">
+      <div class="loader__terminal">
+        <div class="loader__header"></div>
+        <div class="loader__content">
+          <div class="loader__text"></div>
+          <div class="loader__progress"></div>
+          <div class="loader__status"></div>
+          <span class="loader__cursor" aria-hidden="true">█</span>
+        </div>
+      </div>
+    </div>
+    <div class="hud" id="hud">
+      <section class="hud__menu" aria-label="Menu">
+        <!-- Like the DISPLAY/OSD button of an 80s remote: hides the menu, keeps the scene. -->
+        <button class="button button--small hud__toggle" type="button" data-action="menu">
+          <svg class="icon hud__toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+            <circle cx="12" cy="12" r="3" />
+            <path class="hud__toggle-slash" d="M3 3l18 18" />
+          </svg>
+          <span class="hud__toggle-label" data-text="hide"></span><kbd data-key="menu"></kbd>
+        </button>
+        <h1 class="logo hud__fade">
+          <span class="logo__script sunset-text" data-text="logoScript"></span>
+          <span class="logo__caps" data-text="logoCaps"></span>
+        </h1>
+        <p class="hud__best hud__fade" hidden>
+          <span data-text="best"></span> <span data-best></span>
+        </p>
+        <!-- equal columns keep both buttons the same width; the steering hint spans both -->
+        <div class="button-grid hud__bottom">
+          <button class="button button--primary hud__fade" type="button" data-action="start">
+            <span data-text="menuStart"></span><kbd data-key="start"></kbd>
+          </button>
+          <button class="button hud__fade" type="button" data-action="free">
+            <span data-text="menuFree"></span><kbd data-key="free"></kbd>
+          </button>
+          <p class="hud__steer hud__fade">
+            <span><kbd data-key="left"></kbd><kbd data-key="right"></kbd></span>
+            <span data-text="steer"></span>
+          </p>
+        </div>
+      </section>
+
+      <div class="hud__corner panel">
+        <span class="hud__tag" data-text="freeRide"></span>
+        <kbd data-key="left"></kbd><kbd data-key="right"></kbd> <span data-text="steer"></span>
+        <span class="hud__dot">·</span>
+        <kbd data-key="exit"></kbd> <span data-text="exit"></span>
+      </div>
+
+      <div class="hud__countdown sunset-text" hidden></div>
+
+      <div class="hud__scoreboard panel" aria-live="polite" hidden>
+        <div class="stat">
+          <span class="stat__label" data-text="best"></span
+          ><span class="stat__value" data-best></span>
+        </div>
+        <div class="stat stat--main">
+          <span class="stat__label" data-text="score"></span
+          ><span class="stat__value" data-score></span>
+        </div>
+        <div class="stat">
+          <span class="stat__label" data-text="level"></span
+          ><span class="stat__value" data-level></span>
+        </div>
+      </div>
+
+      <section class="hud__gameover panel" aria-label="Game over" aria-live="assertive">
+        <h2 class="hud__gameover-title sunset-text" data-text="gameOver"></h2>
+        <p class="hud__new-best" data-text="newBest" hidden></p>
+        <div class="hud__results">
+          <div class="stat stat--main">
+            <span class="stat__label" data-text="score"></span
+            ><span class="stat__value" data-final-score></span>
+          </div>
+          <div class="stat">
+            <span class="stat__label" data-text="best"></span
+            ><span class="stat__value" data-best></span>
+          </div>
+        </div>
+        <div class="button-grid button-grid--3">
+          <button class="button button--primary" type="button" data-action="start">
+            <span data-text="again"></span><kbd data-key="start"></kbd>
+          </button>
+          <button class="button" type="button" data-action="free">
+            <span data-text="menuFree"></span><kbd data-key="free"></kbd>
+          </button>
+          <button class="button" type="button" data-action="exit">
+            <span data-text="menu"></span><kbd data-key="exit"></kbd>
+          </button>
+        </div>
+      </section>
+    </div>
+    <div class="devstats panel" id="devstats" hidden></div>
+    <div class="crt" id="crt" aria-hidden="true"></div>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>

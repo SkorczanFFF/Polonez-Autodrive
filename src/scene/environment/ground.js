@@ -1,0 +1,49 @@
+import * as THREE from "three";
+import { BLOOM, ROAD, WORLD } from "../../config.js";
+
+/** Offsets wrap at 2: one full period for Repeat and MirroredRepeat textures and the grid. */
+const OFFSET_PERIOD = 2;
+
+/**
+ * Terrain and road, WORLD.groundSize long (they reach the horizon in full fog), road width from
+ * ROAD. Motion is faked by scrolling the overlays (road-line
+ * texture, procedural grid) at WORLD.speed, so the ground itself never moves.
+ *
+ * @type {import("../world.js").WorldPartFactory}
+ */
+export function createGround({ scene, materials }) {
+  const { solid, wire } = materials;
+  const flat = (/** @type {THREE.BufferGeometry} */ geometry) => geometry.rotateX(-Math.PI / 2);
+
+  const size = WORLD.groundSize;
+  const terrain = flat(new THREE.PlaneGeometry(size, size));
+  const road = flat(new THREE.BoxGeometry(ROAD.width, size, ROAD.thickness));
+  const roadLines = flat(new THREE.PlaneGeometry(ROAD.width - ROAD.lineInset, size));
+
+  const meshes = [
+    new THREE.Mesh(terrain, solid.terrain),
+    new THREE.Mesh(terrain, wire.terrain),
+    new THREE.Mesh(road, solid.road),
+    new THREE.Mesh(roadLines, wire.road),
+  ];
+  meshes[3].position.y = ROAD.lineY;
+  meshes[1].layers.enable(BLOOM.layer); // the terrain grid glows like the wireframes
+  for (const mesh of meshes) mesh.receiveShadow = true;
+  scene.add(...meshes);
+
+  /** @type {THREE.Vector2[]} */
+  const scrolling = [];
+  for (const material of [wire.terrain, wire.road]) {
+    if ("offset" in material)
+      scrolling.push(material.offset); // procedural grid
+    else if ("map" in material && material.map) scrolling.push(material.map.offset);
+  }
+  const tilesPerSecond = WORLD.speed / WORLD.cellSize;
+
+  return {
+    update(dt, speedMultiplier) {
+      const step = tilesPerSecond * speedMultiplier * dt;
+      for (const offset of scrolling) offset.y = (offset.y + step) % OFFSET_PERIOD;
+    },
+  };
+}
