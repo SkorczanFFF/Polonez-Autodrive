@@ -394,7 +394,6 @@ export const MINIGAME = {
   countdown: 3, // seconds
   trafficStartsAt: 1, // seconds into the countdown
   startLabelDuration: 1, // seconds "START!" stays visible
-  gameOverDuration: 3, // seconds
   interval: [0.6, 1.3], // seconds, divided by the speed multiplier
   batch: [1, 3], // boxes in one lane before switching
   innerGap: 0.9,

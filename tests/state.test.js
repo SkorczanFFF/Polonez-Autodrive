@@ -29,7 +29,7 @@ describe("game state machine", () => {
   it("timers and crashes drive the minigame flow", () => {
     expect(nextState("countdown", "timeout")).toBe("playing");
     expect(nextState("playing", "crash")).toBe("gameover");
-    expect(nextState("gameover", "timeout")).toBe("idle");
+    expect(nextState("gameover", "timeout")).toBeNull(); // waits for the player
   });
 
   it("reports transitions and rejects invalid events", () => {

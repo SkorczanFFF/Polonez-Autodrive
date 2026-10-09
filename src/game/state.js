@@ -5,7 +5,7 @@
  * free      - free ride: steering without obstacles
  * countdown - 3-2-1 before the minigame
  * playing   - minigame running
- * gameover  - crash summary, returns to idle after a while
+ * gameover  - crash summary, stays until the player picks what next
  *
  * @typedef {"idle" | "free" | "countdown" | "playing" | "gameover"} GameState
  * @typedef {"start" | "free" | "exit" | "timeout" | "crash"} GameEvent
@@ -17,7 +17,7 @@ export const TRANSITIONS = {
   free: { start: "countdown", exit: "idle" },
   countdown: { exit: "idle", timeout: "playing" },
   playing: { exit: "idle", crash: "gameover" }, // start is ignored on purpose (v1 bug: reset mid-game)
-  gameover: { start: "countdown", free: "free", exit: "idle", timeout: "idle" },
+  gameover: { start: "countdown", free: "free", exit: "idle" },
 };
 
 /**

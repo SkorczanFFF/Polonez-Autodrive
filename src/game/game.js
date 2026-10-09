@@ -189,10 +189,6 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
           }
           break;
         }
-
-        case "gameover":
-          if (stateTime >= MINIGAME.gameOverDuration) machine.send("timeout");
-          break;
       }
     },
   };
