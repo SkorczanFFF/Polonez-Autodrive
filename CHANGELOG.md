@@ -31,8 +31,10 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 
 ### Added
 
-- New start menu: neon logo, equal MINI GAME / FREE RIDE buttons with keycaps, steering hint,
-  best score, and a HIDE button (**H**) that leaves only a faint eye icon in the corner.
+- New start menu: neon logo in the scene's live colors (the Polonez over the sun, Commodore-style
+  stripes of the scene around AUTODRIVE; recolored by the side panel and "Randomize all"), equal
+  MINI GAME / FREE RIDE buttons with keycaps, steering hint, best score, and a HIDE button (**H**)
+  that leaves only a faint eye icon in the corner.
 - In-game HUD (best, score and level), animated countdown, game over panel (score, best,
   NEW BEST, AGAIN / FREE RIDE / MENU); best score saved in `localStorage`.
 - Self-hosted fonts: VT323 (HUD, terminal, side panel) and Pacifico (logo); the loader switches
@@ -48,7 +50,7 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   - toon shading (three flat bands) and the Retrowave Dusk palette (dark fills, neon lines);
   - procedural, anti-aliased terrain grid and synthwave sun shaders;
   - sky gradient with a glowing horizon; road and terrain reach the horizon inside the fog;
-  - palms, rocks and traffic fade in instead of popping up;
+  - palms, rocks and traffic fade in and out (eased) instead of popping up and vanishing;
   - wireframes drawn by a shader: line width in world units, lines of tiny on-screen triangles
     fade out (per layer), so far palms no longer turn into solid blobs;
   - bloom on the wireframes and the terrain grid, glow strength per layer, **G** to switch it;
@@ -59,6 +61,13 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 ### Changed
 
 - The Polonez sits 4 cm higher (`CAR.lift`), so its tyres no longer look sunk into the road.
+- Side panel: sky and fog in an Environment folder, line width in the Polonez folder, CRT Effect
+  starts closed.
+- The game over panel stays until you pick AGAIN, FREE RIDE or MENU (it used to return to the
+  menu after 3 s). The score is its headline, a big centered number with the record (or
+  NEW BEST!) under it, and the panel is frosted, so the scene behind it no longer competes.
+- Side panel: color fields take a typed or pasted `#hex`; a roomier "Randomize all" button.
+- Crimson fog (`#c70050`) instead of magenta.
 
 ### Removed
 
