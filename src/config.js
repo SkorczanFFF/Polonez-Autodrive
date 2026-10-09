@@ -284,7 +284,8 @@ export const SPEED = {
 export const SPAWN = {
   startZ: -WORLD.length / 2,
   endZ: WORLD.length / 2,
-  fadeIn: 0.5, // seconds spawned objects take to fade in (no popping up in front of the car)
+  fadeIn: 0.8, // seconds spawned objects take to fade in (no popping up in front of the car)
+  fadeOut: 0.8, // seconds (at speed 1) objects take to fade out before endZ (no popping out behind)
   palms: {
     model: "palm",
     interval: 1.5,

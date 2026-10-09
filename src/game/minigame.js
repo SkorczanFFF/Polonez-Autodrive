@@ -63,6 +63,7 @@ export function createMinigame({ scene, car, materials }) {
     speed: SPEED.traffic,
     interval: (roll) => minInterval + roll * (maxInterval - minInterval),
     fadeIn: SPAWN.fadeIn,
+    fadeOut: SPAWN.fadeOut,
     create: () => {
       const car = models[Math.floor(Math.random() * models.length)].clone();
       car.position.set(nextX(), TRAFFIC.y, 0);

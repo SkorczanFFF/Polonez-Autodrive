@@ -43,6 +43,7 @@ export function createScenery({ scene, models, materials }) {
     interval: () => palmCfg.interval,
     minInterval: palmCfg.minInterval,
     fadeIn: SPAWN.fadeIn,
+    fadeOut: SPAWN.fadeOut,
     create: () => palmCfg.x.map((x) => place(palm, x)),
   });
 
@@ -52,6 +53,7 @@ export function createScenery({ scene, models, materials }) {
     interval: () => rockCfg.interval,
     minInterval: rockCfg.minInterval,
     fadeIn: SPAWN.fadeIn,
+    fadeOut: SPAWN.fadeOut,
     create: () => [place(pick(rocks), randomIn(pick(rockCfg.xRanges)), randomIn(rockCfg.scale))],
   });
 

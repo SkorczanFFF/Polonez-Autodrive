@@ -2,25 +2,23 @@ import * as THREE from "three";
 
 /** @typedef {THREE.MeshBasicMaterial | THREE.MeshPhongMaterial | THREE.LineBasicMaterial} ColoredMaterial */
 
+/** @typedef {[THREE.Mesh | THREE.Line, ColoredMaterial, ColoredMaterial][]} Swaps object, shared, own copy */
+
+/** Ease in and out: fades start and settle softly instead of at a constant rate. */
+export const smoothstep = (/** @type {number} */ t) => t * t * (3 - 2 * t);
+
 /**
- * Fades freshly spawned objects in from transparent. Materials are shared between instances, so
- * a fading instance gets its own copies for the duration; they follow the shared material
- * (color and visibility from the GUI) every frame and are swapped back at the end.
+ * Makes objects partly transparent (spawn fade-in, fade-out before removal). Materials are shared
+ * between instances, so a fading instance gets its own copies while it is see-through; they
+ * follow the shared material (color and visibility from the GUI) every frame and are swapped
+ * back once the object is opaque again.
  *
  * Copies are pooled, never disposed: a transparent material is a separate shader variant, and
  * disposing the last copy deletes it, so the next spawn would compile it again (a 40-70 ms
  * hitch every spawn).
- *
- * @param {number} duration seconds; 0 disables fading
  */
-export function createFadeIn(duration) {
-  /**
-   * @typedef {object} Fade
-   * @property {number} age seconds since the object appeared
-   * @property {[THREE.Mesh | THREE.Line, ColoredMaterial, ColoredMaterial][]} swaps object, shared, own copy
-   */
-
-  /** @type {Map<THREE.Object3D, Fade>} */
+export function createFader() {
+  /** @type {Map<THREE.Object3D, Swaps>} */
   const active = new Map();
   /** @type {Map<ColoredMaterial, ColoredMaterial[]>} shared material -> idle copies */
   const pool = new Map();
@@ -32,26 +30,27 @@ export function createFadeIn(duration) {
     return own;
   }
 
-  /**
-   * @param {Fade} fade
-   * @returns {boolean} whether the fade is complete
-   */
-  function apply(fade) {
-    const t = Math.min(fade.age / duration, 1);
-    for (const [, shared, own] of fade.swaps) {
-      own.opacity = shared.opacity * t;
-      own.color.copy(shared.color);
-      own.visible = shared.visible;
-    }
-    return t >= 1;
+  /** @param {THREE.Object3D} object */
+  function swapIn(object) {
+    /** @type {Swaps} */
+    const swaps = [];
+    object.traverse((child) => {
+      const drawable = child instanceof THREE.Mesh || child instanceof THREE.Line; // outlines too
+      if (!drawable || Array.isArray(child.material)) return;
+      const shared = /** @type {ColoredMaterial} */ (child.material);
+      const own = copyOf(shared);
+      child.material = own;
+      swaps.push([child, shared, own]);
+    });
+    active.set(object, swaps);
+    return swaps;
   }
 
-  /**
-   * @param {THREE.Object3D} object
-   * @param {Fade} fade
-   */
-  function finish(object, fade) {
-    for (const [mesh, shared, own] of fade.swaps) {
+  /** @param {THREE.Object3D} object */
+  function release(object) {
+    const swaps = active.get(object);
+    if (!swaps) return;
+    for (const [mesh, shared, own] of swaps) {
       mesh.material = shared;
       const idle = pool.get(shared);
       if (idle) idle.push(own);
@@ -62,46 +61,28 @@ export function createFadeIn(duration) {
 
   return {
     /**
+     * Sets how opaque an object is: 1 hands the shared materials back, below 1 fades it.
+     *
      * @param {THREE.Object3D} object
-     * @param {number} [age] seconds the object is already "late" (spawned within a long frame)
+     * @param {number} opacity 0..1
      */
-    start(object, age = 0) {
-      if (duration <= 0) return;
-      /** @type {Fade["swaps"]} */
-      const swaps = [];
-      object.traverse((child) => {
-        const drawable = child instanceof THREE.Mesh || child instanceof THREE.Line; // outlines too
-        if (!drawable || Array.isArray(child.material)) return;
-        const shared = /** @type {ColoredMaterial} */ (child.material);
-        const own = copyOf(shared);
-        child.material = own;
-        swaps.push([child, shared, own]);
-      });
-      const fade = { age, swaps };
-      active.set(object, fade);
-      if (apply(fade)) finish(object, fade);
-    },
-
-    /** @param {number} dt */
-    update(dt) {
-      for (const [object, fade] of active) {
-        fade.age += dt;
-        if (apply(fade)) finish(object, fade);
+    set(object, opacity) {
+      if (opacity >= 1) {
+        release(object);
+        return;
+      }
+      for (const [, shared, own] of active.get(object) ?? swapIn(object)) {
+        own.opacity = shared.opacity * opacity;
+        own.color.copy(shared.color);
+        own.visible = shared.visible;
       }
     },
 
-    /**
-     * Ends a fade early (object removed before it finished).
-     *
-     * @param {THREE.Object3D} object
-     */
-    stop(object) {
-      const fade = active.get(object);
-      if (fade) finish(object, fade);
-    },
+    /** Restores the shared materials (object removed while fading). */
+    release,
 
     clear() {
-      for (const [object, fade] of active) finish(object, fade);
+      for (const object of [...active.keys()]) release(object);
     },
 
     get size() {

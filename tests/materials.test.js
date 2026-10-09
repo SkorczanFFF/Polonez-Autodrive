@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { LAYERS, SHADING } from "../src/config.js";
-import { createFadeIn } from "../src/scene/fade.js";
+import { createFader } from "../src/scene/fade.js";
 import { createMaterials } from "../src/scene/materials.js";
 
 const materials = () => createMaterials({ [String(LAYERS.road.wireMap)]: new THREE.Texture() }, 1);
@@ -17,7 +17,7 @@ describe("solid materials", () => {
   it("keep flat shading in fade-in copies (same shader program)", () => {
     const shared = materials().solid.rock;
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(), shared);
-    createFadeIn(0.5).start(mesh);
+    createFader().set(mesh, 0.5);
     expect(mesh.material).not.toBe(shared);
     expect(/** @type {any} */ (mesh.material).flatShading).toBe(SHADING.flat);
   });

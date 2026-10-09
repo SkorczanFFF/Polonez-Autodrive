@@ -125,6 +125,42 @@ describe("spawner fade-in", () => {
     expect(meshOf(spawner.objects[1]).material).toBe(own);
   });
 
+  it("eases the fade in and out (smoothstep, not linear)", () => {
+    const shared = new THREE.MeshBasicMaterial();
+    const { spawner } = fadingSetup(shared);
+    run(spawner, 1);
+    run(spawner, 0.1); // linear would be ~0.2
+    const own = /** @type {THREE.MeshBasicMaterial} */ (meshOf(spawner.objects[0]).material);
+    expect(own.opacity).toBeLessThan(0.15);
+  });
+
+  it("fades instances out before endZ and removes them fully transparent", () => {
+    const shared = new THREE.MeshBasicMaterial();
+    // speed 100, 1 s fade-out: the last 100 units of the 200-unit track
+    const { spawner, parent } = setup({
+      speed: 100,
+      interval: () => 10,
+      fadeIn: 0.1,
+      fadeOut: 1,
+      create: () => [new THREE.Group().add(new THREE.Mesh(new THREE.BoxGeometry(), shared))],
+    });
+    run(spawner, 10); // spawned at z -100
+    const object = spawner.objects[0];
+    const mesh = meshOf(object);
+    run(spawner, 0.5); // z -50: opaque, shared material
+    expect(mesh.material).toBe(shared);
+    run(spawner, 1); // z 50: halfway through the fade-out
+    const own = /** @type {THREE.MeshBasicMaterial} */ (mesh.material);
+    expect(own).not.toBe(shared);
+    expect(own.opacity).toBeGreaterThan(0.4);
+    expect(own.opacity).toBeLessThan(0.6);
+    run(spawner, 0.45); // z 95
+    expect(own.opacity).toBeLessThan(0.02);
+    run(spawner, 0.1);
+    expect(parent.children).not.toContain(object);
+    expect(mesh.material).toBe(shared);
+  });
+
   it("restores shared materials when instances are cleared mid-fade", () => {
     const shared = new THREE.MeshBasicMaterial();
     const { spawner } = fadingSetup(shared);
