@@ -363,23 +363,141 @@ kbd {
   line-height: 1;
 }
 
+/* The logo wears the scene's live colors (--scene-*, kept in sync by the scene GUI):
+   "Polonez" is the car over the sun, the stripes around AUTODRIVE a cross-section of the
+   scene from the sun down to the ground grid. Randomize all recolors it along. */
 .logo__script {
+  --logo-shine: hsl(from var(--scene-sun-top) h s min(l * 1.5, 100)); /* sun, +50% brightness */
+  --logo-neon: var(--scene-polonez-wire);
+  --logo-body: var(--scene-polonez-solid);
   /* background-clip: text paints only inside the box; Pacifico's ascenders ("l") rise ~0.2em
      above a line-height: 1 box, so pad the top and pull the box back up */
-  margin-top: -0.3em;
+  margin: -0.3em 0 0.12em; /* bottom: the -6° turn drops the "P" towards AUTODRIVE */
   padding: 0.3em 0.2em 0.15em;
   font-size: clamp(56px, 9vw, 128px);
   transform: rotate(-6deg);
+  /* Layers, top first: a chrome sheen sweeping by now and then; body-colored stripes through
+     the lower half, widening downwards like the sun's (in the fill, so the glow around the
+     letters stays whole); sun to car-line gradient. Longhands only: the `background` shorthand
+     resets the text clip. */
+  background-image:
+    linear-gradient(
+      105deg,
+      transparent 44%,
+      color-mix(in srgb, var(--white) 80%, transparent) 50%,
+      transparent 56%
+    ),
+    linear-gradient(
+      transparent 61%,
+      var(--logo-body) 61% 62.5%,
+      transparent 62.5% 68.5%,
+      var(--logo-body) 68.5% 70.5%,
+      transparent 70.5% 75.5%,
+      var(--logo-body) 75.5% 78.5%,
+      transparent 78.5%
+    ),
+    linear-gradient(var(--logo-shine) 30%, var(--logo-neon) 80%);
+  background-size:
+    250% 100%,
+    100% 100%,
+    100% 100%;
+  background-position:
+    100% 0,
+    0 0,
+    0 0;
+  background-repeat: no-repeat;
+  filter: drop-shadow(3px 3px 0 var(--logo-body)) drop-shadow(0 0 14px var(--logo-neon));
+  animation: logo-sheen 7s ease-in-out 1s infinite;
 }
 
+/* — A U T O D R I V E —: letters in the ground grid's neon, flanked by slanted Commodore-style
+   stripes: sun top, sun bottom, hills, side hills, ground grid */
 .logo__caps {
-  margin-top: -0.1em;
-  padding-left: 0.6em; /* balances the trailing letter-spacing */
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
   font-size: clamp(22px, 2.6vw, 36px);
   letter-spacing: 0.6em;
+  color: var(--scene-terrain-wire);
+  /* VHS colour bleed: sun and side-hill ghosts either side of the glowing letters */
   text-shadow:
-    2px 2px 0 var(--ui-deep),
-    0 0 12px var(--aqua);
+    2px 3px 0 var(--scene-terrain-solid),
+    -2px 0 color-mix(in srgb, var(--scene-sun-bottom) 85%, transparent),
+    2px 0 color-mix(in srgb, var(--scene-side-wire) 85%, transparent),
+    0 0 12px var(--scene-terrain-wire);
+  animation: neon-flicker 9s linear 2s infinite;
+}
+
+.logo__caps::before,
+.logo__caps::after {
+  content: "";
+  flex: none;
+  width: 2.8em;
+  height: 0.62em;
+  background: linear-gradient(
+    var(--scene-sun-top) 0 14%,
+    transparent 14% 21.5%,
+    var(--scene-sun-bottom) 21.5% 35.5%,
+    transparent 35.5% 43%,
+    var(--scene-hills-wire) 43% 57%,
+    transparent 57% 64.5%,
+    var(--scene-side-wire) 64.5% 78.5%,
+    transparent 78.5% 86%,
+    var(--scene-terrain-wire) 86% 100%
+  );
+  mask-image: linear-gradient(to right, transparent, #000 80%);
+  transform: skewX(-35deg);
+  filter: drop-shadow(0 0 5px var(--scene-sun-bottom));
+}
+
+.logo__caps::before {
+  margin-right: 0.6em; /* matches the letter-spacing trailing the last letter */
+}
+
+.logo__caps::after {
+  mask-image: linear-gradient(to left, transparent, #000 80%);
+}
+
+@keyframes logo-sheen {
+  0% {
+    background-position:
+      100% 0,
+      0 0,
+      0 0;
+  }
+  35%,
+  100% {
+    background-position:
+      0% 0,
+      0 0,
+      0 0;
+  }
+}
+
+/* a tired neon tube: mostly steady, two quick stutters per cycle */
+@keyframes neon-flicker {
+  0%,
+  90%,
+  91.5%,
+  93%,
+  96%,
+  100% {
+    opacity: 1;
+  }
+  90.7%,
+  92.2% {
+    opacity: 0.35;
+  }
+  94.5% {
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo__script,
+  .logo__caps {
+    animation: none;
+  }
 }
 
 .hud__best {

@@ -2,6 +2,7 @@ import GUI from "lil-gui";
 import * as THREE from "three";
 import { GUI as RANGES, LAYERS, SCENE, SUN, TEXT } from "../config.js";
 import { BasicLineMaterial, PhongLineMaterial, lineWidth } from "../scene/lines.js";
+import { setSceneColor } from "./theme.js";
 
 /**
  * @typedef {object} SceneGuiDeps
@@ -52,7 +53,10 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     const solid = materials.solid[key];
     const wire = materials.wire[key];
 
-    color(folder, params, "color", L.color, (v) => solid.color.set(v));
+    color(folder, params, "color", L.color, (v) => {
+      solid.color.set(v);
+      setSceneColor(`${key}Solid`, v); // the logo wears the scene colors
+    });
     if (layer.toggleSolid) {
       folder
         .add(params, "showSolid")
@@ -66,7 +70,10 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
         .name(L.density)
         .onChange((v) => (spawner.density = v));
     }
-    color(folder, params, "wire", L.wireColor, (v) => wire.color.set(v));
+    color(folder, params, "wire", L.wireColor, (v) => {
+      wire.color.set(v);
+      setSceneColor(`${key}Wire`, v);
+    });
     folder
       .add(params, "showWire")
       .name(L.showWire)
@@ -85,8 +92,14 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
 
   const sunParams = { top: SUN.top, bottom: SUN.bottom, effect: true };
   const sun = gui.addFolder(L.sun);
-  color(sun, sunParams, "top", L.sunTop, (v) => materials.sun.topColor.set(v));
-  color(sun, sunParams, "bottom", L.sunBottom, (v) => materials.sun.bottomColor.set(v));
+  color(sun, sunParams, "top", L.sunTop, (v) => {
+    materials.sun.topColor.set(v);
+    setSceneColor("sunTop", v);
+  });
+  color(sun, sunParams, "bottom", L.sunBottom, (v) => {
+    materials.sun.bottomColor.set(v);
+    setSceneColor("sunBottom", v);
+  });
   sun
     .add(sunParams, "effect")
     .name(L.sunEffect)
