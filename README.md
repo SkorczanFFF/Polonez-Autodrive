@@ -2,7 +2,7 @@
 
 **Created by:** Maciej Skorus
 
-A synthwave-styled Three.js "coloring book"-like animation with a dodge-the-boxes minigame. A built-in GUI lets you experiment with the scene's models and colors.
+A synthwave-styled Three.js "coloring book"-like animation with a minigame: dodge the oncoming communist-era traffic. A built-in GUI lets you experiment with the scene's models and colors. See [CHANGELOG.md](CHANGELOG.md) for what the app does and how it got here.
 
 All models were created in 3Ds Max 2018, updated in 3Ds Max 2023, and exported as `.fbx` files (some include animations).
 
@@ -23,7 +23,8 @@ All models were created in 3Ds Max 2018, updated in 3Ds Max 2023, and exported a
 | **F** | Free ride: steer without obstacles |
 | **← / →** | Steer (hold to speed up) |
 | **ESC** | Back to the menu |
-| **H** | Hide / show the menu (eye button under FREE RIDE) to enjoy or recolor the scene |
+| **H** | Hide / show the menu (eye button in the top-left corner) to enjoy or recolor the scene |
+| **G** | Glow on the wireframes on / off (also in the side panel) |
 
 All menu and game over buttons are clickable too. Drag with the mouse to orbit the camera outside the minigame.
 
@@ -51,8 +52,8 @@ Press **F10** in the app for the developer stats overlay (FPS, draw calls, trian
 src/
   config.js        single source of truth: palette, layers, world size, gameplay, keys, texts
   main.js          bootstrap
-  core/            renderer, main loop, tweens, asset loading, input
-  scene/           materials, wireframe helpers, car, spawner, world
+  core/            renderer, wireframe bloom, main loop, tweens, asset loading, input
+  scene/           materials, shader wireframes, car, minigame traffic, spawner, world
     environment/   independent world parts: sky, lights, ground, sun, hills, side hills, scenery
   game/            state machine, minigame, game orchestration
   ui/              theme, loader, HUD, scene GUI, CRT overlay, F10 stats
@@ -81,28 +82,13 @@ tests/             Vitest unit tests
 
 ## 🌟 Future Ideas
 
-- Procedurally generated side hills instead of the rotating cylinders
-- Neon glow effects and cleaner "ink" outlines instead of triangle wireframes
+- Procedurally generated roadside (sidewalk, palms, rocks, hills) instead of the rotating cylinders
+- Palette presets: Original 2024, Take On Me, Game Boy, Tron, Vaporwave
+- More communist-era cars in the minigame; springy suspension
 - Touch controls
 
 ---
 
 ## 📝 Changelog
 
-### October 2026
-- Rebuilt on Vite and three.js r186, with the same look and gameplay
-- Single source of truth (`src/config.js`), modular world parts, one main loop
-- Real loading progress, every asset loaded once
-- Free ride mode (**F**); ENTER always starts the minigame
-- Fixed: frame-rate dependent steering, hold-to-accelerate, restart right after game over, ENTER resetting the car mid-game, memory leaks in the minigame and GUI, hitbox larger than the boxes
-
-### May 2025
-- Fixed Polonez 3D model; wheels are now separate from the body
-- Added steering functionality (left/right) after pressing ENTER
-- Introduced retro loading screen
-- CRT effect now adjustable via GUI
-
-### September 2024
-- Added palm trees and road elements
-- Updated color palette
-- Deployed to Vercel
+See [CHANGELOG.md](CHANGELOG.md).
