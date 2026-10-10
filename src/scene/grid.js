@@ -21,11 +21,14 @@ const fragmentShader = /* glsl */ `
   uniform vec2 uOffset;
   uniform float uHalfWidth;
   uniform float uGapHalfWidth;
+  uniform float uOuterHalfWidth;
   varying vec2 vUv;
 
   void main() {
-    // No grid on the centre strip (the road sits there).
-    if (abs(vUv.x - 0.5) * uCells.x < uGapHalfWidth) discard;
+    // No grid on the centre strip (the road sits there), nor past the outer edge (the side
+    // mountains begin there, with their own lines).
+    float across = abs(vUv.x - 0.5) * uCells.x;
+    if (across < uGapHalfWidth || across > uOuterHalfWidth) discard;
 
     vec2 coord = vUv * uCells + uOffset;
     vec2 pixel = fwidth(coord);
@@ -48,10 +51,17 @@ const fragmentShader = /* glsl */ `
  * Procedural, anti-aliased line grid for the terrain overlay (replaces gridline2.png). Exposes
  * `color` like regular materials (the GUI sets it) and `offset` for scrolling, in cells.
  *
- * @param {{ color: THREE.ColorRepresentation, cells: [number, number], halfWidth: number, gapHalfWidth?: number }} options
- *   halfWidth: line half-width in cells; gapHalfWidth: grid-free centre strip, in cells
+ * @param {{ color: THREE.ColorRepresentation, cells: [number, number], halfWidth: number, gapHalfWidth?: number, outerHalfWidth?: number }} options
+ *   halfWidth: line half-width in cells; gapHalfWidth: grid-free centre strip, in cells;
+ *   outerHalfWidth: no grid further out than this, in cells
  */
-export function createGridMaterial({ color, cells, halfWidth, gapHalfWidth = 0 }) {
+export function createGridMaterial({
+  color,
+  cells,
+  halfWidth,
+  gapHalfWidth = 0,
+  outerHalfWidth = 1e9, // no edge
+}) {
   const material = new THREE.ShaderMaterial({
     uniforms: THREE.UniformsUtils.merge([
       THREE.UniformsLib.fog,
@@ -61,6 +71,7 @@ export function createGridMaterial({ color, cells, halfWidth, gapHalfWidth = 0 }
         uOffset: { value: new THREE.Vector2() },
         uHalfWidth: { value: halfWidth },
         uGapHalfWidth: { value: gapHalfWidth },
+        uOuterHalfWidth: { value: outerHalfWidth },
       },
     ]),
     vertexShader,

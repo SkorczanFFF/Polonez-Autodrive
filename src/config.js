@@ -125,6 +125,33 @@ export const GRID = {
   halfWidth: 3 / 512, // line half-width in cells, as in the v1 gridline texture (6 px of 512)
 };
 
+/**
+ * Procedural mountains (scene/mountains.js): ridged noise on cells of the ground grid (every
+ * other line), each cell split into two triangles along its more natural diagonal
+ * (scene/heightField.js). Across the road the ground stays flat up to `start` (palms and rocks
+ * live there), the mountains rise over `ramp` and keep growing to the outer ridge. Along the
+ * road they grow out of the ground as they come closer (`grow`), rising out of the horizon
+ * range instead of cutting through it. height, roughness, start and the seed are live settings
+ * (GUI).
+ */
+export const MOUNTAINS = {
+  minStart: 88, // the side band begins here (past the rock bands); also the lowest `start`
+  start: 88, // |x| where they begin to rise
+  cell: 8, // grid cell of the side band: 2 ground cells, so its lines meet every other grid line
+  ramp: 48, // width over which they rise from the ground
+  outer: 320, // |x| of the outer ridge; the sky is behind it
+  height: 70, // highest peaks
+  roughness: 0.5, // amplitude kept per noise octave: 0 = smooth shapes, 1 = all detail
+  octaves: 4,
+  scale: 90, // feature size: units per noise period
+  chunkRows: 16, // cells per side-band chunk along the road
+  /** Along the road, the side mountains rise from flat ground over `length` from `from`. */
+  grow: { from: -0.6 * WORLD.length, length: 160 }, // from inside the horizon range
+  lift: 0.05, // above the ground, so the flat foot does not z-fight with it
+  /** Line overlay: "triangles" (every edge) or "squares" (the grid cells, like the terrain). */
+  lines: /** @type {"triangles" | "squares"} */ ("triangles"),
+};
+
 export const ROAD = {
   width: 15.95,
   thickness: 0.02,

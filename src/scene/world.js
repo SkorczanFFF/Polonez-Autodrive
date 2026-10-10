@@ -5,17 +5,23 @@ import { createSun } from "./environment/sun.js";
 import { createHills } from "./environment/hills.js";
 import { createSideHills } from "./environment/sideHills.js";
 import { createScenery } from "./environment/scenery.js";
+import { createMountainParams } from "./mountains.js";
 
 /**
- * @typedef {object} WorldContext
+ * @typedef {object} WorldAssets
  * @property {import("three").Scene} scene
  * @property {import("./materials.js").Materials} materials
  * @property {Record<string, import("three").Group>} models
  */
 
 /**
+ * @typedef {WorldAssets & { mountains: import("./mountains.js").MountainParams }} WorldContext
+ *   mountains: live generator settings shared by the side mountains and the horizon range
+ */
+
+/**
  * Every environment part follows this shape; parts are independent and can be swapped
- * (e.g. animated side hills -> procedural ones) without touching the rest.
+ * (e.g. other mountains, a different sky) without touching the rest.
  *
  * @typedef {object} WorldPart
  * @property {(dt: number, speedMultiplier: number) => void} [update]
@@ -27,10 +33,13 @@ import { createScenery } from "./environment/scenery.js";
  * The environment the car drives through. Owns the world speed shared by everything that
  * moves with the ground.
  *
- * @param {WorldContext} context
+ * @param {WorldAssets} assets
  */
-export function createWorld(context) {
-  // Order = update order. Swap a factory to replace a part (e.g. procedural side hills).
+export function createWorld(assets) {
+  /** @type {WorldContext} */
+  const context = { ...assets, mountains: createMountainParams() };
+
+  // Order = update order. Swap a factory to replace a part.
   const parts = {
     sky: createSky(context),
     lights: createLights(context),
@@ -46,6 +55,9 @@ export function createWorld(context) {
   const world = {
     /** Named parts, e.g. parts.scenery.palms.density for the GUI. */
     parts,
+
+    /** Mountain generator settings; the GUI edits them, then calls regenerate() on the parts. */
+    mountains: context.mountains,
 
     /** 1 = base speed; the minigame raises it per tier. */
     speedMultiplier: 1,
