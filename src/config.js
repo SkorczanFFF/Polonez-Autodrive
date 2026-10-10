@@ -31,7 +31,7 @@ export const PALETTE = {
   polonezBody: "#420d59", // the star: stands apart from the road; neon pink lines are its own
   grape: "#2a0a4a", // horizon hills
   plum: "#1e0f4f", // side hills
-  horizon: "#920075", // fog: distant things sink into a magenta glow
+  horizon: "#c70050", // fog: distant things sink into a crimson-magenta glow
   neonPink: "#ff2a6d",
   neonMagenta: "#f706cf",
   neonCyan: "#2de2e6",
