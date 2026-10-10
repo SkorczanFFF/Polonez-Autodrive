@@ -60,6 +60,15 @@ describe("spawner", () => {
     expect(spawner.currentInterval(1)).toBeCloseTo(3);
   });
 
+  it("prewarm lines the whole track, spaced as if it had been running", () => {
+    const warm = setup().spawner; // speed 10, interval 1: one object every 10 units
+    warm.prewarm();
+    const zs = warm.objects.map((o) => o.position.z).sort((a, b) => a - b);
+    expect(zs[0]).toBeLessThan(-90); // a fresh one near startZ (-100)
+    expect(zs.at(-1)).toBeGreaterThan(80); // the oldest within one spacing of endZ (100)
+    for (let i = 1; i < zs.length; i++) expect(zs[i] - zs[i - 1]).toBeCloseTo(10);
+  });
+
   it("clear removes everything", () => {
     const { spawner, parent } = setup();
     run(spawner, 3);

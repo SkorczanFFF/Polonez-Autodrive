@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { SCENE } from "../../config.js";
 
 /** Inside the camera's far plane; drawn first and without depth, so it never hides anything. */
-const DOME_RADIUS = 500;
+const DOME_RADIUS = 0.75 * SCENE.camera.far;
 
 const vertexShader = /* glsl */ `
   varying vec3 vWorld;

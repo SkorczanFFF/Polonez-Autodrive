@@ -107,7 +107,7 @@ export const LAYERS = {
  * from these values, so changing them rescales the scene consistently.
  */
 export const WORLD = {
-  length: 200, // scenery travels from -length/2 to +length/2; default fog end
+  length: 400, // scenery travels from -length/2 to +length/2; default fog end
   width: 200, // rock bands fit inside this width
   /**
    * Terrain and road are drawn this big (square), past the farthest fog the GUI allows, so the
@@ -125,6 +125,45 @@ export const GRID = {
   halfWidth: 3 / 512, // line half-width in cells, as in the v1 gridline texture (6 px of 512)
 };
 
+/**
+ * Procedural mountains (scene/mountains.js): ridged noise on cells of the ground grid (every
+ * other line), each cell split into two triangles along its more natural diagonal
+ * (scene/heightField.js). Across the road the ground stays flat up to `start` (palms and rocks
+ * live there), the mountains rise over `ramp` and keep growing to the outer ridge. Along the
+ * road they grow out of the ground as they come closer (`grow`), rising out of the horizon
+ * range instead of cutting through it. height, roughness, start and the seed are live settings
+ * (GUI).
+ */
+export const MOUNTAINS = {
+  minStart: 88, // the side band begins here (past the rock bands); also the lowest `start`
+  start: 88, // |x| where they begin to rise
+  cell: 8, // grid cell of the side band: 2 ground cells, so its lines meet every other grid line
+  ramp: 48, // width over which they rise from the ground
+  outer: 320, // |x| of the outer ridge; the sky is behind it
+  height: 70, // highest peaks
+  roughness: 0.5, // amplitude kept per noise octave: 0 = smooth shapes, 1 = all detail
+  octaves: 4,
+  scale: 90, // feature size: units per noise period
+  chunkRows: 16, // cells per side-band chunk along the road
+  /** Along the road, the side mountains rise from flat ground over `length` from `from`. */
+  grow: { from: -0.6 * WORLD.length, length: 160 }, // from inside the horizon range
+  lift: 0.05, // above the ground, so the flat foot does not z-fight with it
+  /** Line overlay: "triangles" (every edge) or "squares" (the grid cells, like the terrain). */
+  lines: /** @type {"triangles" | "squares"} */ ("triangles"),
+  /** Static range in the mouth of the valley, in front of the sun (scene/environment/hills.js). */
+  horizon: {
+    front: -0.45 * WORLD.length, // its near edge, where it rises from the ground
+    /** Towards the sun, rising all the way: it ends at its far, highest ridge (its back slope
+     * would never be seen); far, but not so deep in the fog that it melts into the sky. */
+    depth: 128,
+    halfWidth: 336, // past the outer side ridge: no gap on the horizon; tapering ends
+    cell: 16, // big facets: far away, smaller triangles would blur into a mass
+    height: 1, // fraction of `height`
+    pass: 24, // half-width of the flat pass the road runs through (the striped sun shows in it)
+    wall: 20, // width over which the sides rise: steep, like a parted sea
+  },
+};
+
 export const ROAD = {
   width: 15.95,
   thickness: 0.02,
@@ -136,7 +175,9 @@ export const ROAD = {
 export const SUN = {
   top: PALETTE.sunYellow, // color at the top of the disc
   bottom: PALETTE.neonPink, // color at the horizon and of the halo
-  disc: { radius: 200, position: [1, -20, -350] }, // centre on the horizon line
+  /** Centre 40 below the ground, so the ground horizon cuts the disc; 2x the v1 size and
+   * distance, so it looks just as big. */
+  disc: { radius: 400, position: [2, -40, -700] },
   /** Horizontal cuts in the lower part (fractions of the radius), wider towards the horizon. */
   stripes: { count: 6, top: 0.55, gap: [0.08, 0.55] },
   glow: 0.08, // halo falloff as a fraction of the radius
@@ -157,7 +198,7 @@ export const SCENE = {
   camera: {
     fov: 90,
     near: 0.1,
-    far: 1000,
+    far: 1600, // past the sun (SUN.disc) and the sky dome (sky.js)
     position: [0, 3, 7],
     target: [0, 1.8, 0],
     gamePosition: [0, 4, 7], // OrbitControls clamps it to maxDistance -> (0, 3.9, 6.68), as in v1
@@ -227,7 +268,7 @@ export const BLOOM = {
  * Solid surfaces. "toon": flat bands of color like crayon fills; "phong": smooth v1 shading.
  * toonSteps: light multipliers from surfaces facing away from the sun to facing it. The middle
  * band (0.2) keeps flat ground as bright as with Phong under the low sunset light.
- * flat: one shade per triangle. Some models ship smooth normals (all of hills.fbx), which
+ * flat: one shade per triangle. Some models ship smooth normals (the v1 hills did), which
  * would bend the shading across faces so it no longer matches the wireframe lines.
  */
 export const SHADING = {
@@ -435,6 +476,10 @@ export const GUI = {
     return [50, Math.max(400, 2 * WORLD.length)];
   },
   density: [0.1, 2, 0.1],
+  mountainHeight: [0, 150, 1],
+  mountainRoughness: [0, 1, 0.05],
+  mountainStart: [MOUNTAINS.minStart, 200, MOUNTAINS.cell], // whole cells
+
   crtOpacity: [0, 1, 0.05],
   crtSpeed: [0.05, 0.5, 0.01],
   crtIntensity: [0, 2, 0.1],
@@ -464,8 +509,6 @@ export const ASSETS = {
   models: {
     polonez: "models/polonez.fbx",
     wheel: "models/wheel.fbx",
-    hills: "models/hills.fbx",
-    side: "models/side.fbx",
     palm: "models/palm.fbx",
     rockmd: "models/rockmd.fbx",
     rocksm: "models/rocksm.fbx",
@@ -550,6 +593,12 @@ export const TEXT = {
     glow: "Glow",
     randomize: "Randomize all",
     randomizeIcon: "🎨",
+    mountains: "Mountains",
+    mountainHeight: "Height",
+    mountainRoughness: "Roughness",
+    mountainStart: "Start",
+    seed: "Seed",
+    newLandscape: "New landscape",
   },
   statsPanel: {
     title: "SYS.MONITOR",

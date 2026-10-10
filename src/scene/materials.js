@@ -1,5 +1,16 @@
 import * as THREE from "three";
-import { GRID, LAYERS, PALETTE, ROAD, SCENE, SHADING, SUN, WIRE, WORLD } from "../config.js";
+import {
+  GRID,
+  LAYERS,
+  MOUNTAINS,
+  PALETTE,
+  ROAD,
+  SCENE,
+  SHADING,
+  SUN,
+  WIRE,
+  WORLD,
+} from "../config.js";
 import { createGridMaterial } from "./grid.js";
 import { BasicLineMaterial, PhongLineMaterial } from "./lines.js";
 import { createSunMaterial } from "./sunMaterial.js";
@@ -45,6 +56,8 @@ export function createMaterials(textures, anisotropy) {
         cells: [WORLD.groundSize / WORLD.cellSize, WORLD.groundSize / WORLD.cellSize],
         halfWidth: GRID.halfWidth,
         gapHalfWidth: ROAD.width / 2 / WORLD.cellSize, // the road covers the centre
+        // the side mountains begin there, with their own lines (environment/sideHills.js)
+        outerHalfWidth: MOUNTAINS.minStart / WORLD.cellSize - 0.25,
       });
     } else if (layer.wireMap) {
       wire[key] = new THREE.MeshPhongMaterial({

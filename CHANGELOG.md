@@ -16,12 +16,14 @@ lets you recolor and tweak everything.
 - **Minigame (ENTER):** a 3-2-1 countdown, then oncoming communist-era traffic (Fiat 126p, Škoda
   120). Dodge it: every car that passes scores a point, every 20 points the world gets 15% faster.
   A crash ends the game; the best score is kept in the browser.
-- **Scene:** road and scrolling terrain grid, horizon hills and animated side hills, palms and rocks
-  appearing out of the haze, a sky that glows magenta at the horizon, soft sunset shadows, glowing
+- **Scene:** road and scrolling terrain grid that rises into endless procedural mountains on both
+  sides and a range in front of the sun, palms and rocks appearing out of the haze, a sky that
+  glows crimson at the horizon, soft sunset shadows, glowing
   wireframes, a CRT overlay and an intentionally half-resolution, slightly blurry 80s look.
 - **Side panel:** per layer (Polonez, hills, side hills, road, terrain, palms, rocks, traffic) the
   fill and line colors and visibility, line fading and glow, palm and rock density; sun colors and
-  stripes, bloom, CRT, sky and fog, line width, and "Randomize all".
+  stripes, bloom, CRT, sky and fog, mountain height / roughness / start / seed, line width, and
+  "Randomize all".
 - **Keys:** ENTER start, F free ride, ESC menu, ← / → steer, H hide menu, G glow on/off, F10
   developer stats.
 
@@ -55,6 +57,13 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
     fade out (per layer), so far palms no longer turn into solid blobs;
   - bloom on the wireframes and the terrain grid, glow strength per layer, **G** to switch it;
   - optional ink-outline mode (`WIRE.mode: "edges"`).
+- Procedural synthwave mountains instead of the 2020 hill models: ridged noise on the ground
+  grid, low-poly triangles split along the ridges. Both sides of the road roll endlessly towards
+  the camera and grow out of the ground as they come closer (flat strips for palms and rocks
+  stay). A static range in front of the sun rises layer behind layer and is parted like a sea for
+  the road, the striped sun showing in the pass. A new landscape on every visit; a Mountains
+  folder in the side panel sets height, roughness, where they start and the seed, plus a
+  "New landscape" button.
 - Side panel: Glow switch, Bloom folder, line width, per-layer line fade / line min / glow,
   traffic layer, aligned columns with square color previews and `#hex` values.
 
@@ -68,10 +77,14 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   NEW BEST!) under it, and the panel is frosted, so the scene behind it no longer competes.
 - Side panel: color fields take a typed or pasted `#hex`; a roomier "Randomize all" button.
 - Crimson fog (`#c70050`) instead of magenta.
+- The world is twice as long: palms and rocks come from 200 m ahead (the road starts lined with
+  them), the fog reaches 400 m and the sun is twice as far and twice as big (same size on screen).
 
 ### Removed
 
 - `gridline2.png` and `suneffectalt.png` (820 KB), replaced by shaders.
+- `hills.fbx` and `side.fbx` (161 KB), replaced by the procedural mountains; with them the
+  side hills clipping through the horizon hills.
 
 ## [2.0.0] – October 2026
 

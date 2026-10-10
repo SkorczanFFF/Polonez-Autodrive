@@ -57,6 +57,11 @@ export function createScenery({ scene, models, materials }) {
     create: () => [place(pick(rocks), randomIn(pick(rockCfg.xRanges)), randomIn(rockCfg.scale))],
   });
 
+  // The road starts lined with palms and rocks: the first ones would need a whole trip
+  // (SPAWN.startZ to the camera, ~14 s) to arrive.
+  palmSpawner.prewarm();
+  rockSpawner.prewarm();
+
   return {
     palms: palmSpawner,
     rocks: rockSpawner,
