@@ -9,7 +9,7 @@ import { WIRE } from "../config.js";
  *   at least a pixel wide, no shimmer);
  * - lines of triangles that are tiny on screen fade out (WIRE.fade, by the triangle's inradius
  *   in render pixels) down to a per-layer minimum, so dense meshes far away show their fill,
- *   while big triangles (hills) keep their lines at any distance.
+ *   while big triangles (mountains) keep their lines at any distance.
  *
  * `wireEdge` xyz: each vertex's distance to the opposite edge of its triangle (zero for the two
  * edges through it); interpolated, the distance of a fragment to the three edges. w: the

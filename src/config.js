@@ -268,7 +268,7 @@ export const BLOOM = {
  * Solid surfaces. "toon": flat bands of color like crayon fills; "phong": smooth v1 shading.
  * toonSteps: light multipliers from surfaces facing away from the sun to facing it. The middle
  * band (0.2) keeps flat ground as bright as with Phong under the low sunset light.
- * flat: one shade per triangle. Some models ship smooth normals (all of hills.fbx), which
+ * flat: one shade per triangle. Some models ship smooth normals (the v1 hills did), which
  * would bend the shading across faces so it no longer matches the wireframe lines.
  */
 export const SHADING = {
@@ -509,8 +509,6 @@ export const ASSETS = {
   models: {
     polonez: "models/polonez.fbx",
     wheel: "models/wheel.fbx",
-    hills: "models/hills.fbx",
-    side: "models/side.fbx",
     palm: "models/palm.fbx",
     rockmd: "models/rockmd.fbx",
     rocksm: "models/rocksm.fbx",

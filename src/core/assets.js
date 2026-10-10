@@ -25,7 +25,7 @@ export async function loadAssets(manifest, manager = new THREE.LoadingManager())
 /**
  * FBXLoader that splits n-gons into triangle fans (0, i - 1, i), like the loader the models were
  * made with (three r116). Since r15x FBXLoader flattens each n-gon and runs earcut on it, which
- * drops and flips triangles of the non-planar quads in hills.fbx (252 -> 215 triangles), leaving
+ * drops and flips triangles of non-planar quads (the v1 hills lost 37 of their 252), leaving
  * holes with back faces and wire edges showing through. GeometryParser is not exported, so the
  * triangulation is swapped for the duration of the (synchronous) parse.
  */
