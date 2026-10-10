@@ -49,8 +49,8 @@ export function createWorld(assets) {
     sideHills: createSideHills(context),
     scenery: createScenery(context),
   };
-  /** @type {WorldPart[]} */
-  const ordered = Object.values(parts);
+  // parts may expose more (regenerate, densities); the loop only needs update()
+  const ordered = /** @type {WorldPart[]} */ (Object.values(parts));
 
   const world = {
     /** Named parts, e.g. parts.scenery.palms.density for the GUI. */

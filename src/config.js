@@ -150,6 +150,18 @@ export const MOUNTAINS = {
   lift: 0.05, // above the ground, so the flat foot does not z-fight with it
   /** Line overlay: "triangles" (every edge) or "squares" (the grid cells, like the terrain). */
   lines: /** @type {"triangles" | "squares"} */ ("triangles"),
+  /** Static range in the mouth of the valley, in front of the sun (scene/environment/hills.js). */
+  horizon: {
+    front: -0.45 * WORLD.length, // its near edge, where it rises from the ground
+    /** Towards the sun, rising all the way: it ends at its far, highest ridge (its back slope
+     * would never be seen); far, but not so deep in the fog that it melts into the sky. */
+    depth: 128,
+    halfWidth: 336, // past the outer side ridge: no gap on the horizon; tapering ends
+    cell: 16, // big facets: far away, smaller triangles would blur into a mass
+    height: 1, // fraction of `height`
+    pass: 24, // half-width of the flat pass the road runs through (the striped sun shows in it)
+    wall: 20, // width over which the sides rise: steep, like a parted sea
+  },
 };
 
 export const ROAD = {
