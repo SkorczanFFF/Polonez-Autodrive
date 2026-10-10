@@ -23,7 +23,15 @@ export const lineWidth = { value: WIRE.width };
 const geometries = new WeakMap();
 
 /**
+ * Added to an edge distance to hide that edge: the distance stays linear (the shader needs its
+ * screen-space derivatives) but never gets near a line.
+ */
+const HIDDEN = 1e4;
+
+/**
  * The geometry with the `wireEdge` attribute (non-indexed: each triangle needs its own vertices).
+ * A non-indexed geometry that already has `wireEdge` (written by its generator, see
+ * writeWireEdges) is used as is.
  *
  * @param {THREE.BufferGeometry} geometry
  * @returns {THREE.BufferGeometry}
@@ -32,15 +40,43 @@ export function lineGeometry(geometry) {
   let prepared = geometries.get(geometry);
   if (!prepared) {
     prepared = geometry.index ? geometry.toNonIndexed() : geometry;
-    prepared.setAttribute("wireEdge", edgeDistances(prepared.getAttribute("position")));
+    if (geometry.index || !prepared.hasAttribute("wireEdge")) writeWireEdges(prepared);
     geometries.set(geometry, prepared);
   }
   return prepared;
 }
 
-/** @param {THREE.BufferAttribute | THREE.InterleavedBufferAttribute} position */
-function edgeDistances(position) {
-  const distances = new Float32Array(position.count * 4);
+/**
+ * (Re)computes `wireEdge` of a non-indexed geometry, e.g. after its generator moved vertices.
+ * hideDiagonals: the edge opposite the second vertex of every triangle is not drawn, so a mesh
+ * of quads split into two triangles shows a square grid (generators put the diagonal there).
+ *
+ * @param {THREE.BufferGeometry} geometry
+ * @param {{ hideDiagonals?: boolean }} [options]
+ */
+export function writeWireEdges(geometry, { hideDiagonals = false } = {}) {
+  const position = geometry.getAttribute("position");
+  const existing = /** @type {THREE.BufferAttribute | undefined} */ (
+    geometry.getAttribute("wireEdge")
+  );
+  const reuse = existing && existing.count === position.count;
+  const distances = edgeDistances(
+    position,
+    hideDiagonals,
+    reuse ? /** @type {Float32Array} */ (existing.array) : undefined,
+  );
+  if (reuse) existing.needsUpdate = true;
+  else geometry.setAttribute("wireEdge", new THREE.BufferAttribute(distances, 4));
+}
+
+/**
+ * @param {THREE.BufferAttribute | THREE.InterleavedBufferAttribute} position
+ * @param {boolean} hideDiagonals
+ * @param {Float32Array} [target] reused when the topology did not change
+ */
+function edgeDistances(position, hideDiagonals, target) {
+  const distances = target ?? new Float32Array(position.count * 4);
+  distances.fill(0);
   const [a, b, c] = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
   const cross = new THREE.Vector3();
 
@@ -56,9 +92,12 @@ function edgeDistances(position) {
     distances[(i + 1) * 4 + 1] = height(ca);
     distances[(i + 2) * 4 + 2] = height(ab);
     const inradius = height(ab + bc + ca); // 2 * area / perimeter
-    for (let v = 0; v < 3; v++) distances[(i + v) * 4 + 3] = inradius;
+    for (let v = 0; v < 3; v++) {
+      distances[(i + v) * 4 + 3] = inradius;
+      if (hideDiagonals) distances[(i + v) * 4 + 1] += HIDDEN; // edge c-a, opposite the 2nd vertex
+    }
   }
-  return new THREE.BufferAttribute(distances, 4);
+  return distances;
 }
 
 /**
