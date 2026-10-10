@@ -1,4 +1,4 @@
-import GUI from "lil-gui";
+import GUI, { ColorController } from "lil-gui";
 import * as THREE from "three";
 import { GUI as RANGES, LAYERS, SCENE, SUN, TEXT } from "../config.js";
 import { BasicLineMaterial, PhongLineMaterial, lineWidth } from "../scene/lines.js";
@@ -15,6 +15,23 @@ import { setSceneColor } from "./theme.js";
  */
 
 const randomColor = () => `#${new THREE.Color(Math.random() * 0xffffff).getHexString()}`;
+
+/**
+ * lil-gui shows a color as "f749ae" in its text field; show "#f749ae", so a typed or pasted
+ * "#hex" fits the field (lil-gui parses it with or without the "#").
+ *
+ * @param {import("lil-gui").Controller} controller
+ */
+function showHash(controller) {
+  if (!(controller instanceof ColorController)) return;
+  const updateDisplay = controller.updateDisplay.bind(controller);
+  controller.updateDisplay = () => {
+    updateDisplay();
+    if (!controller._textFocused) controller.$text.value = controller.$input.value;
+    return controller;
+  };
+  controller.updateDisplay();
+}
 
 /**
  * Scene manipulation panel, built from config.LAYERS: every layer gets the same controls, and
@@ -38,7 +55,9 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
    * @param {(hex: string) => void} apply
    */
   function color(folder, params, key, label, apply) {
-    colors.push(folder.addColor(params, key).name(label).onChange(apply));
+    const controller = folder.addColor(params, key).name(label).onChange(apply);
+    showHash(controller);
+    colors.push(controller);
   }
 
   for (const [key, layer] of Object.entries(LAYERS)) {
@@ -173,7 +192,14 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     });
   }
 
-  gui.add({ randomize }, "randomize").name(L.randomize);
+  // the emoji gets its own box, so it can sit centered on the label (fonts differ in metrics)
+  const randomizeButton = gui.add({ randomize }, "randomize").name(L.randomize);
+  randomizeButton.domElement.classList.add("gui-randomize");
+  const icon = document.createElement("span");
+  icon.className = "gui-randomize__icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.textContent = L.randomizeIcon;
+  randomizeButton.$name.prepend(icon);
 
   // lil-gui stops key events while one of its controls is focused; give focus back after each
   // edit or folder toggle, so ENTER / F / arrows reach the game without clicking the scene.

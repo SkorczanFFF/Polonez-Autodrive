@@ -548,7 +548,8 @@ export const TEXT = {
     bloomStrength: "Strength",
     bloomRadius: "Radius",
     glow: "Glow",
-    randomize: "🎨 Randomize all",
+    randomize: "Randomize all",
+    randomizeIcon: "🎨",
   },
   statsPanel: {
     title: "SYS.MONITOR",
