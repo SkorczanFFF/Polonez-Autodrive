@@ -8,11 +8,14 @@ import { createRidged } from "../core/noise.js";
  * @typedef {{ seed: number, height: number, roughness: number, start: number }} MountainParams
  */
 
+/** A fresh landscape: every visit drives through a new one. */
+export const randomSeed = () => Math.floor(Math.random() * 1_000_000);
+
 /**
- * @param {number} [seed] random by default, so every visit drives through a new landscape
+ * @param {number} [seed]
  * @returns {MountainParams}
  */
-export function createMountainParams(seed = Math.floor(Math.random() * 1_000_000)) {
+export function createMountainParams(seed = randomSeed()) {
   const { height, roughness, start } = MOUNTAINS;
   return { seed, height, roughness, start };
 }

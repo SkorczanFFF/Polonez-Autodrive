@@ -476,6 +476,10 @@ export const GUI = {
     return [50, Math.max(400, 2 * WORLD.length)];
   },
   density: [0.1, 2, 0.1],
+  mountainHeight: [0, 150, 1],
+  mountainRoughness: [0, 1, 0.05],
+  mountainStart: [MOUNTAINS.minStart, 200, MOUNTAINS.cell], // whole cells
+
   crtOpacity: [0, 1, 0.05],
   crtSpeed: [0.05, 0.5, 0.01],
   crtIntensity: [0, 2, 0.1],
@@ -591,6 +595,12 @@ export const TEXT = {
     glow: "Glow",
     randomize: "Randomize all",
     randomizeIcon: "🎨",
+    mountains: "Mountains",
+    mountainHeight: "Height",
+    mountainRoughness: "Roughness",
+    mountainStart: "Start",
+    seed: "Seed",
+    newLandscape: "New landscape",
   },
   statsPanel: {
     title: "SYS.MONITOR",
