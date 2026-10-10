@@ -2,6 +2,7 @@ import GUI, { ColorController } from "lil-gui";
 import * as THREE from "three";
 import { GUI as RANGES, LAYERS, SCENE, SUN, TEXT } from "../config.js";
 import { BasicLineMaterial, PhongLineMaterial, lineWidth } from "../scene/lines.js";
+import { randomSeed } from "../scene/mountains.js";
 import { setSceneColor } from "./theme.js";
 
 /**
@@ -164,6 +165,38 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     .name(L.fogFar)
     .onChange((v) => (fog.far = v));
   environment.close();
+
+  // A rebuild of all mountains takes ~6 ms: live while dragging; the seed when typed in.
+  const { mountains } = world;
+  const regenerate = () => {
+    world.parts.sideHills.regenerate();
+    world.parts.hills.regenerate();
+  };
+  const mountainFolder = gui.addFolder(L.mountains);
+  mountainFolder
+    .add(mountains, "height", ...RANGES.mountainHeight)
+    .name(L.mountainHeight)
+    .onChange(regenerate);
+  mountainFolder
+    .add(mountains, "roughness", ...RANGES.mountainRoughness)
+    .name(L.mountainRoughness)
+    .onChange(regenerate);
+  mountainFolder
+    .add(mountains, "start", ...RANGES.mountainStart)
+    .name(L.mountainStart)
+    .onChange(regenerate);
+  const seed = mountainFolder
+    .add(mountains, "seed")
+    .step(1)
+    .name(L.seed)
+    .onFinishChange(regenerate);
+  const newLandscape = () => {
+    mountains.seed = randomSeed();
+    seed.updateDisplay();
+    regenerate();
+  };
+  mountainFolder.add({ newLandscape }, "newLandscape").name(L.newLandscape);
+  mountainFolder.close();
 
   gui.add(bloom, "enabled").name(`${L.bloomEnabled} (${TEXT.keys.glow})`).listen(); // G too
 
