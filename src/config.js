@@ -107,7 +107,7 @@ export const LAYERS = {
  * from these values, so changing them rescales the scene consistently.
  */
 export const WORLD = {
-  length: 200, // scenery travels from -length/2 to +length/2; default fog end
+  length: 400, // scenery travels from -length/2 to +length/2; default fog end
   width: 200, // rock bands fit inside this width
   /**
    * Terrain and road are drawn this big (square), past the farthest fog the GUI allows, so the
@@ -136,7 +136,9 @@ export const ROAD = {
 export const SUN = {
   top: PALETTE.sunYellow, // color at the top of the disc
   bottom: PALETTE.neonPink, // color at the horizon and of the halo
-  disc: { radius: 200, position: [1, -20, -350] }, // centre on the horizon line
+  /** Centre 40 below the ground, so the ground horizon cuts the disc; 2x the v1 size and
+   * distance, so it looks just as big. */
+  disc: { radius: 400, position: [2, -40, -700] },
   /** Horizontal cuts in the lower part (fractions of the radius), wider towards the horizon. */
   stripes: { count: 6, top: 0.55, gap: [0.08, 0.55] },
   glow: 0.08, // halo falloff as a fraction of the radius
@@ -157,7 +159,7 @@ export const SCENE = {
   camera: {
     fov: 90,
     near: 0.1,
-    far: 1000,
+    far: 1600, // past the sun (SUN.disc) and the sky dome (sky.js)
     position: [0, 3, 7],
     target: [0, 1.8, 0],
     gamePosition: [0, 4, 7], // OrbitControls clamps it to maxDistance -> (0, 3.9, 6.68), as in v1

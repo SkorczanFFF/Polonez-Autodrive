@@ -110,6 +110,18 @@ export function createSpawner({
       }
     },
 
+    /**
+     * Fast-forwards one whole trip from startZ to endZ at speed 1, so the track starts lined
+     * with objects instead of waiting for the first ones to come from far away. Spacing does
+     * not depend on the step (see update), so big steps are fine.
+     *
+     * @param {number} [step] seconds
+     */
+    prewarm(step = 0.25) {
+      const trip = (endZ - startZ) / speed;
+      for (let time = 0; time < trip; time += step) spawner.update(step, 1);
+    },
+
     /** Removes every instance and restarts the timer. */
     clear() {
       fader.clear();
