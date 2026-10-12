@@ -9,6 +9,15 @@
     />
     <title>Polonez Autodrive</title>
     <link rel="icon" href="./favicon.ico" />
+    <!-- dark browser background from the first paint, not a white flash -->
+    <meta name="color-scheme" content="dark" />
+    <!-- nothing shows until the styles and theme.js colors are in (no unstyled flash); kept
+         inline, as the stylesheet itself arrives later -->
+    <style>
+      :root:not([data-theme]) body {
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
     <div class="loader" id="loader" role="status" aria-live="polite">

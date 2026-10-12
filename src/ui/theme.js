@@ -18,7 +18,7 @@ export function setSceneColor(name, value, root = document.documentElement) {
 /**
  * Exposes PALETTE (`uiDeep` -> `--ui-deep`) and the starting scene colors (see setSceneColor) as
  * CSS custom properties, so stylesheets never hardcode colors. UI stays hidden until this ran
- * (see `:root[data-theme]` in style.css).
+ * (see the inline style in index.html).
  *
  * @param {HTMLElement} [root]
  */

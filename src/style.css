@@ -33,12 +33,6 @@ canvas:active {
   cursor: grabbing;
 }
 
-/* UI waits for theme.js so it never paints without colors. */
-:root:not([data-theme]) .loader,
-:root:not([data-theme]) .hud {
-  visibility: hidden;
-}
-
 /* ---------- loader (80s terminal) ---------- */
 @property --flicker-opacity {
   syntax: "<number>";
