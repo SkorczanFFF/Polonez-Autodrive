@@ -10,7 +10,7 @@
   --z-devstats: 1300;
   --z-crt: 9999;
   --font-terminal: "VT323", monospace;
-  --font-script: "Pacifico", cursive;
+  --font-script: "Yellowtail", cursive;
 }
 
 /* ---------- base ---------- */
@@ -365,18 +365,20 @@ kbd {
   --logo-shine: hsl(from var(--scene-sun-top) h s min(l * 1.5, 100)); /* sun, +50% brightness */
   --logo-neon: var(--scene-polonez-wire);
   --logo-body: var(--scene-polonez-solid);
-  /* background-clip: text paints only inside the box; Pacifico's ascenders ("l") rise ~0.2em
-     above a line-height: 1 box, so pad the top and pull the box back up */
-  margin: -0.3em 0 0.12em; /* bottom: the -6° turn drops the "P" towards AUTODRIVE */
+  /* background-clip: text paints only inside the box: pad it around the letters (room for the
+     glow and the sheen) and pull it back. Bottom: AUTODRIVE tucks in close; the -6° turn drops
+     the "P" ~0.16em towards it, which still clears it. */
+  margin: -0.3em 0 -0.08em;
   padding: 0.3em 0.2em 0.15em;
-  /* full size on wide screens, shrinking with narrow ones; "Polonez" (3.28em wide) never gets
+  /* full size on wide screens, shrinking with narrow ones; "Polonez" (2.78em wide) never gets
      narrower than ~300px */
-  font-size: clamp(92px, 24vw, 128px);
+  font-size: clamp(108px, 28.5vw, 152px);
   transform: rotate(-6deg);
   /* Layers, top first: a chrome sheen sweeping by now and then; body-colored stripes through
-     the lower half, widening downwards like the sun's (in the fill, so the glow around the
-     letters stays whole); sun to car-line gradient. Longhands only: the `background` shorthand
-     resets the text clip. */
+     the lower half of the lowercase letters (x-height at 47% of the box, baseline at 78%),
+     widening downwards like the sun's and leaving the letters a solid foot (in the fill, so the
+     glow around the letters stays whole); sun to car-line gradient. Longhands only: the
+     `background` shorthand resets the text clip. */
   background-image:
     linear-gradient(
       105deg,
@@ -385,13 +387,13 @@ kbd {
       transparent 56%
     ),
     linear-gradient(
-      transparent 61%,
-      var(--logo-body) 61% 62.5%,
-      transparent 62.5% 68.5%,
-      var(--logo-body) 68.5% 70.5%,
-      transparent 70.5% 75.5%,
-      var(--logo-body) 75.5% 78.5%,
-      transparent 78.5%
+      transparent 56.5%,
+      var(--logo-body) 56.5% 57.5%,
+      transparent 57.5% 62.5%,
+      var(--logo-body) 62.5% 64.5%,
+      transparent 64.5% 69%,
+      var(--logo-body) 69% 72%,
+      transparent 72%
     ),
     linear-gradient(var(--logo-shine) 30%, var(--logo-neon) 80%);
   background-size:
@@ -413,7 +415,7 @@ kbd {
   display: flex;
   align-items: center;
   gap: 0.45em;
-  font-size: clamp(18px, 5vw, 36px); /* shrinks with the script; the row fits a phone */
+  font-size: clamp(20px, 5.6vw, 42px); /* shrinks with the script; the row fits a phone */
   letter-spacing: 0.6em;
   color: var(--scene-terrain-wire);
   /* VHS colour bleed: sun and side-hill ghosts either side of the glowing letters */
@@ -777,9 +779,8 @@ kbd {
 }
 
 .hud__gameover-title {
-  /* Pacifico's "G" swings out past its glyph box, and background-clip: text paints only inside
-     the padding box: pad wide, and low enough for the tail of the "G" (0.45em below the
-     baseline, more than the line box leaves), pulling the box back up, or the swash is cut off */
+  /* background-clip: text paints only inside the padding box: pad wide and low, pulling the box
+     back up, so swashes like the tail of the "G" (and their shadow) are never cut off */
   margin: 0 0 -0.25em;
   padding: 0.05em 0.5em 0.4em;
   font-size: clamp(44px, 5vw, 64px);

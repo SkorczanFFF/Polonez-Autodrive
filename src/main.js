@@ -1,4 +1,4 @@
-import "@fontsource/pacifico/latin.css";
+import "@fontsource/yellowtail/latin.css";
 import "@fontsource/vt323/latin.css";
 import "./style.css";
 import { ASSETS, TEXT } from "./config.js";
