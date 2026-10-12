@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { GUI as RANGES, LAYERS, SCENE, SUN, TEXT } from "../config.js";
 import { BasicLineMaterial, PhongLineMaterial, lineWidth } from "../scene/lines.js";
 import { randomSeed } from "../scene/mountains.js";
+import { createRandomPalette } from "./randomPalette.js";
 import { setSceneColor } from "./theme.js";
 
 /**
@@ -14,8 +15,6 @@ import { setSceneColor } from "./theme.js";
  * @property {import("../core/tween.js").Tweens} tweens
  * @property {ReturnType<typeof import("../core/bloom.js").createBloom>} bloom
  */
-
-const randomColor = () => `#${new THREE.Color(Math.random() * 0xffffff).getHexString()}`;
 
 /**
  * lil-gui shows a color as "f749ae" in its text field; show "#f749ae", so a typed or pasted
@@ -49,8 +48,15 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   const touch = window.matchMedia("(pointer: coarse)").matches;
   if (touch) gui.close();
 
+  /**
+   * What "Randomize all" gives a color control (ui/randomPalette.js); a layer's line is picked
+   * against its own fill.
+   *
+   * @typedef {{ role: import("./randomPalette.js").PaletteRole, layer?: string }} ColorRole
+   */
+
   /** Color controllers, in creation order; "Randomize all" animates all of them. */
-  /** @type {import("lil-gui").Controller[]} */
+  /** @type {(ColorRole & { controller: import("lil-gui").Controller })[]} */
   const colors = [];
 
   /**
@@ -58,12 +64,13 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
    * @param {Record<string, any>} params
    * @param {string} key
    * @param {string} label
+   * @param {ColorRole} as
    * @param {(hex: string) => void} apply
    */
-  function color(folder, params, key, label, apply) {
+  function color(folder, params, key, label, as, apply) {
     const controller = folder.addColor(params, key).name(label).onChange(apply);
     showHash(controller);
-    colors.push(controller);
+    colors.push({ ...as, controller });
   }
 
   for (const [key, layer] of Object.entries(LAYERS)) {
@@ -78,7 +85,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     const solid = materials.solid[key];
     const wire = materials.wire[key];
 
-    color(folder, params, "color", L.color, (v) => {
+    color(folder, params, "color", L.color, { role: "solid", layer: key }, (v) => {
       solid.color.set(v);
       setSceneColor(`${key}Solid`, v); // the logo wears the scene colors
     });
@@ -95,7 +102,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
         .name(L.density)
         .onChange((v) => (spawner.density = v));
     }
-    color(folder, params, "wire", L.wireColor, (v) => {
+    color(folder, params, "wire", L.wireColor, { role: "wire", layer: key }, (v) => {
       wire.color.set(v);
       setSceneColor(`${key}Wire`, v);
     });
@@ -117,11 +124,11 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
 
   const sunParams = { top: SUN.top, bottom: SUN.bottom, effect: true };
   const sun = gui.addFolder(L.sun);
-  color(sun, sunParams, "top", L.sunTop, (v) => {
+  color(sun, sunParams, "top", L.sunTop, { role: "sunTop" }, (v) => {
     materials.sun.topColor.set(v);
     setSceneColor("sunTop", v);
   });
-  color(sun, sunParams, "bottom", L.sunBottom, (v) => {
+  color(sun, sunParams, "bottom", L.sunBottom, { role: "sunBottom" }, (v) => {
     materials.sun.bottomColor.set(v);
     setSceneColor("sunBottom", v);
   });
@@ -139,7 +146,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   const c = crt.state;
   const crtFolder = gui.addFolder(L.crt);
   crtFolder.add(c, "enabled").name(L.crtEnabled).onChange(crt.apply);
-  color(crtFolder, c, "lineColor", L.crtLineColor, crt.apply);
+  color(crtFolder, c, "lineColor", L.crtLineColor, { role: "crt" }, crt.apply);
   crtFolder
     .add(c, "lineOpacity", ...RANGES.crtOpacity)
     .name(L.crtLineOpacity)
@@ -159,8 +166,8 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   const background = /** @type {THREE.Color} */ (scene.background);
   const sceneParams = { ...SCENE.fog, sky: SCENE.background };
   const environment = gui.addFolder(L.environment);
-  color(environment, sceneParams, "sky", L.sky, (v) => background.set(v));
-  color(environment, sceneParams, "color", L.fogColor, (v) => fog.color.set(v));
+  color(environment, sceneParams, "sky", L.sky, { role: "sky" }, (v) => background.set(v));
+  color(environment, sceneParams, "color", L.fogColor, { role: "fog" }, (v) => fog.color.set(v));
   environment
     .add(sceneParams, "near", ...RANGES.fogNear)
     .name(L.fogNear)
@@ -212,13 +219,24 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   const to = new THREE.Color();
   const mixed = new THREE.Color();
 
-  /** Blends every color control to a random color; the controllers' onChange applies it. */
+  /**
+   * Blends every color control to a fresh random palette (night, day or mixed, lines always
+   * readable against their fill, see ui/randomPalette.js); the controllers' onChange applies it.
+   */
   function randomize() {
     if (randomizing?.isActive()) return;
-    const targets = colors.map((controller) => ({
+    const palette = createRandomPalette();
+    /** @type {Record<string, string>} new fill per layer, for its line */
+    const fills = {};
+    const targets = colors.map(({ controller, role, layer = "" }) => ({
       controller,
       from: /** @type {string} */ (controller.getValue()),
-      to: randomColor(),
+      to:
+        role === "wire"
+          ? palette.wire(fills[layer])
+          : role === "solid"
+            ? (fills[layer] = palette.solid())
+            : palette[role](),
     }));
     randomizing = tweens.add({
       duration: RANGES.randomizeDuration,
