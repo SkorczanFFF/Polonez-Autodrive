@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import { contrast, hsl, hueDistance, hueOf, luminance } from "./color.js";
 
 /**
  * Hue schemes for "Randomize all", as offsets from a random base hue (in turns): complementary,
@@ -22,33 +22,6 @@ export const MIN_LINE_CONTRAST = 3;
 /** Lines are brightened (or darkened) up to these lightnesses to reach it, staying colorful. */
 const MAX_LINE_LIGHTNESS = 0.85;
 const MIN_LINE_LIGHTNESS = 0.12;
-
-/** @param {THREE.ColorRepresentation} color */
-const luminance = (color) => {
-  const { r, g, b } = new THREE.Color(color); // linear components
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
-
-/**
- * WCAG contrast ratio, 1 (same) to 21 (black on white).
- *
- * @param {THREE.ColorRepresentation} a
- * @param {THREE.ColorRepresentation} b
- */
-export function contrast(a, b) {
-  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (light + 0.05) / (dark + 0.05);
-}
-
-/** Distance between two hues around the color wheel, in turns (0 to 0.5). */
-export const hueDistance = (/** @type {number} */ a, /** @type {number} */ b) => {
-  const d = Math.abs(a - b) % 1;
-  return Math.min(d, 1 - d);
-};
-
-/** @param {THREE.ColorRepresentation} color */
-export const hueOf = (color) =>
-  new THREE.Color(color).getHSL({ h: 0, s: 0, l: 0 }, THREE.SRGBColorSpace).h;
 
 /**
  * Palette moods, with their odds: "night" is the default look (dark fills, neon lines, dark sky);
@@ -89,9 +62,6 @@ export function createRandomPalette(random = Math.random) {
   const pick = (list = hues) => list[Math.floor(random() * list.length)];
   const jitter = (/** @type {number} */ hue, /** @type {number} */ amount) =>
     (hue + between(-amount, amount) + 1) % 1;
-  const hsl = (/** @type {number} */ h, /** @type {number} */ s, /** @type {number} */ l) =>
-    // HSL as seen on screen (sRGB); three.js would read it as linear by default
-    `#${new THREE.Color().setHSL(h, s, l, THREE.SRGBColorSpace).getHexString()}`;
 
   const darkFill = () => hsl(jitter(pick(), 0.04), between(0.45, 0.85), between(0.05, 0.13));
   const lightFill = () => hsl(jitter(pick(), 0.04), between(0.45, 0.8), between(0.72, 0.88));

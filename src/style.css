@@ -747,9 +747,9 @@ kbd {
   background:
     repeating-linear-gradient(
       transparent 0 6px,
-      color-mix(in srgb, var(--neon-cyan) 35%, transparent) 6px 9px
+      color-mix(in srgb, var(--aqua) 35%, transparent) 6px 9px
     ),
-    radial-gradient(circle at 50% 60%, var(--white), var(--neon-pink) 45%, var(--ui-deep));
+    radial-gradient(circle at 50% 60%, var(--white), var(--red) 45%, var(--ui-deep));
   mix-blend-mode: screen;
   opacity: 0;
   animation: crash-flash 0.5s steps(10, end);

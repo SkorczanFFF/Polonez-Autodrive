@@ -2,13 +2,10 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { LAYERS } from "../src/config.js";
 import { mulberry32 } from "../src/core/noise.js";
-import {
-  MIN_LINE_CONTRAST,
-  contrast,
-  createRandomPalette,
-  hueDistance,
-  hueOf,
-} from "../src/ui/randomPalette.js";
+import { contrast, hueDistance, hueOf } from "../src/ui/color.js";
+import { MIN_LINE_CONTRAST, createRandomPalette } from "../src/ui/randomPalette.js";
+
+THREE.ColorManagement.enabled = false; // as in the app (core/renderer.js)
 
 /** Many palettes from fixed seeds, every layer's fill and line from each. */
 function samples(count = 300) {
