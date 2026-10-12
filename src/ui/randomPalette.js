@@ -106,6 +106,10 @@ export function createRandomPalette(random = Math.random) {
     sunTop: () =>
       hsl(jitter(pick(), 0.05), between(0.9, 1), day ? between(0.55, 0.65) : between(0.6, 0.72)),
     sunBottom: () => hsl(pick(), between(0.9, 1), day ? between(0.42, 0.52) : between(0.5, 0.6)),
+    // the night behind the car stays night in every mood, with pale stars and moon
+    night: () => hsl(jitter(hues[0], 0.05), between(0.5, 0.8), between(0.03, 0.07)),
+    stars: () => hsl(pick(), between(0.2, 0.5), between(0.86, 0.95)),
+    moon: () => hsl(pick(), between(0.3, 0.6), between(0.8, 0.9)),
     // faint scan lines: light at night, dark by day
     crt: () => hsl(pick(), between(0.5, 0.8), day ? between(0.3, 0.4) : between(0.75, 0.85)),
   };

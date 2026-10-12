@@ -25,6 +25,9 @@ export const PALETTE = {
   crtLine: "#eba2a2",
   // "Retrowave Dusk" scene palette (default): dark fills, neon lines
   night: "#1b0b3b", // sky
+  midnight: "#08041a", // the night sky behind the car
+  starlight: "#f4f1ff",
+  moonlight: "#fff3d6",
   void: "#0d0221", // ground, palm silhouettes
   dusk: "#261447", // road
   deepTeal: "#13304a", // rocks
@@ -191,6 +194,24 @@ export const SUN = {
   /** Horizontal cuts in the lower part (fractions of the radius), wider towards the horizon. */
   stripes: { count: 6, top: 0.55, gap: [0.08, 0.55] },
   glow: 0.08, // halo falloff as a fraction of the radius
+};
+
+/**
+ * The sky behind the car (scene/environment/sky.js): driving into the sunset, the night falls
+ * behind, with stars and a moon. Live settings (GUI).
+ */
+export const NIGHT = {
+  color: PALETTE.midnight,
+  reach: 0.5, // how far round the sky the night reaches: 0 none, 0.5 the back half, 1 all of it
+  blend: 1, // how wide the dusk between sunset and night is (0.1 sharp, 1 very soft)
+  stars: 0.35, // 0 none, 1 densest
+  starColor: PALETTE.starlight,
+  moon: {
+    show: true,
+    color: PALETTE.moonlight,
+    size: 0.08, // angular radius, radians
+    direction: [-0.4, 0.45, 1], // behind the car, a little to the left, above the palms
+  },
 };
 
 export const SCENE = {
@@ -510,6 +531,10 @@ export const GUI = {
   mountainHeight: [0, 150, 1],
   mountainRoughness: [0, 1, 0.05],
   mountainStart: [MOUNTAINS.minStart, 200, MOUNTAINS.cell], // whole cells
+  nightReach: [0, 1, 0.05],
+  nightBlend: [0.1, 1, 0.05],
+  stars: [0, 1, 0.05],
+  moonSize: [0.02, 0.2, 0.01],
 
   crtOpacity: [0, 1, 0.05],
   crtSpeed: [0.05, 0.5, 0.01],
@@ -630,6 +655,15 @@ export const TEXT = {
     mountainStart: "Start",
     seed: "Seed",
     newLandscape: "New landscape",
+    night: "Night sky",
+    nightColor: "Night color",
+    nightReach: "Night reach",
+    nightBlend: "Night blend",
+    stars: "Stars",
+    starColor: "Star color",
+    moon: "Show moon",
+    moonColor: "Moon color",
+    moonSize: "Moon size",
   },
   statsPanel: {
     title: "SYS.MONITOR",

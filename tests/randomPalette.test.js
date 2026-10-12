@@ -23,7 +23,9 @@ function samples(count = 300) {
 describe("random palette", () => {
   it("gives valid hex colors", () => {
     const palette = createRandomPalette(mulberry32(1));
-    for (const color of [palette.solid(), palette.sky(), palette.fog(), palette.crt()]) {
+    const roles = [palette.solid(), palette.sky(), palette.fog(), palette.crt()];
+    roles.push(palette.night(), palette.stars(), palette.moon());
+    for (const color of roles) {
       expect(color).toMatch(/^#[0-9a-f]{6}$/);
     }
   });

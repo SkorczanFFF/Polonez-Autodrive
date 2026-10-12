@@ -1,6 +1,6 @@
 import GUI, { ColorController } from "lil-gui";
 import * as THREE from "three";
-import { GUI as RANGES, LAYERS, SCENE, SUN, TEXT } from "../config.js";
+import { GUI as RANGES, LAYERS, NIGHT, SCENE, SUN, TEXT } from "../config.js";
 import { BasicLineMaterial, PhongLineMaterial, lineWidth } from "../scene/lines.js";
 import { randomSeed } from "../scene/mountains.js";
 import { createRandomPalette } from "./randomPalette.js";
@@ -177,6 +177,33 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     .name(L.fogFar)
     .onChange((v) => (fog.far = v));
   environment.close();
+
+  const { night } = world.parts.sky;
+  const nightParams = {
+    color: NIGHT.color,
+    starColor: NIGHT.starColor,
+    moon: NIGHT.moon.show,
+    moonColor: NIGHT.moon.color,
+  };
+  const nightFolder = gui.addFolder(L.night);
+  color(nightFolder, nightParams, "color", L.nightColor, { role: "night" }, (v) =>
+    night.color.value.set(v),
+  );
+  nightFolder.add(night.reach, "value", ...RANGES.nightReach).name(L.nightReach);
+  nightFolder.add(night.blend, "value", ...RANGES.nightBlend).name(L.nightBlend);
+  nightFolder.add(night.stars, "value", ...RANGES.stars).name(L.stars);
+  color(nightFolder, nightParams, "starColor", L.starColor, { role: "stars" }, (v) =>
+    night.starColor.value.set(v),
+  );
+  nightFolder
+    .add(nightParams, "moon")
+    .name(L.moon)
+    .onChange((v) => (night.moon.value = v ? 1 : 0));
+  color(nightFolder, nightParams, "moonColor", L.moonColor, { role: "moon" }, (v) =>
+    night.moonColor.value.set(v),
+  );
+  nightFolder.add(night.moonSize, "value", ...RANGES.moonSize).name(L.moonSize);
+  nightFolder.close();
 
   // A rebuild of all mountains takes ~6 ms: live while dragging; the seed when typed in.
   const { mountains } = world;
