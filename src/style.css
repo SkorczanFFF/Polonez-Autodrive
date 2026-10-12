@@ -777,10 +777,11 @@ kbd {
 }
 
 .hud__gameover-title {
-  margin: 0;
   /* Pacifico's "G" swings out past its glyph box, and background-clip: text paints only inside
-     the padding box: pad wide, or the swash is cut off */
-  padding: 0.05em 0.5em 0.15em;
+     the padding box: pad wide, and low enough for the tail of the "G" (0.45em below the
+     baseline, more than the line box leaves), pulling the box back up, or the swash is cut off */
+  margin: 0 0 -0.25em;
+  padding: 0.05em 0.5em 0.4em;
   font-size: clamp(44px, 5vw, 64px);
   line-height: 1.3;
   white-space: nowrap;
