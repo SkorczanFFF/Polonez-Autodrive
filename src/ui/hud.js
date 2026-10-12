@@ -1,4 +1,4 @@
-import { TEXT } from "../config.js";
+import { MINIGAME, TEXT } from "../config.js";
 import { ICONS, KEY_ICONS } from "./icons.js";
 
 /** @typedef {import("../core/input.js").Action} Action */
@@ -45,6 +45,7 @@ export function createHud(dispatch, root = document.getElementById("hud")) {
     /** @type {HTMLElement[]} */ ([...root.querySelectorAll(selector)]);
 
   for (const element of $$("[data-text]")) element.textContent = TEXT[element.dataset.text];
+  root.style.setProperty("--crash-lock", `${MINIGAME.crash.lock}s`); // game over panel delay
   for (const element of $$("[data-key]")) {
     const key = /** @type {Action} */ (element.dataset.key);
     const icon = KEY_ICONS[key];

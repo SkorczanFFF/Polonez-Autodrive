@@ -244,7 +244,8 @@ canvas:active {
 [data-state="countdown"] .hud__corner,
 [data-state="playing"] .hud__corner,
 [data-state="countdown"] .hud__countdown:not([hidden]),
-[data-state="playing"] .hud__countdown:not([hidden]) {
+[data-state="playing"] .hud__countdown:not([hidden]),
+[data-state="gameover"] .hud__flash {
   display: block !important;
 }
 
@@ -727,9 +728,56 @@ kbd {
   box-sizing: border-box;
   padding: 12px 24px 22px;
   text-align: center;
-  /* the scene keeps moving behind the panel: frost it, so the score reads at a glance */
+  /* the crash scene stays behind the panel: frost it, so the score reads at a glance */
   background-color: color-mix(in srgb, var(--ui-deep) 90%, transparent);
   backdrop-filter: blur(6px);
+  /* shows up once game over takes keys and clicks (--crash-lock, set by ui/hud.js) */
+  animation: panel-in 0.3s ease-out var(--crash-lock, 0s) backwards;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+
+/* the crash: a neon flash with a CRT glitch, once on entering game over */
+.hud__flash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-hud);
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      transparent 0 6px,
+      color-mix(in srgb, var(--neon-cyan) 35%, transparent) 6px 9px
+    ),
+    radial-gradient(circle at 50% 60%, var(--white), var(--neon-pink) 45%, var(--ui-deep));
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: crash-flash 0.5s steps(10, end);
+}
+
+@keyframes crash-flash {
+  0% {
+    opacity: 0.85;
+  }
+  20% {
+    opacity: 0.55;
+    translate: 0 -6px;
+  }
+  40% {
+    opacity: 0.7;
+    translate: 0 4px;
+  }
+  60% {
+    opacity: 0.3;
+    translate: 0 -2px;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .hud__gameover-title {
@@ -768,7 +816,7 @@ kbd {
 }
 
 .hud__final-score.is-pop {
-  animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+  animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) var(--crash-lock, 0s) backwards;
 }
 
 .hud__final-best,

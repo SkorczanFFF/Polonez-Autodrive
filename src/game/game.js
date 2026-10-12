@@ -43,6 +43,11 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
 
   /** @type {import("../core/tween.js").TweenHandle | null} */
   let cameraTween = null;
+  /** @type {import("../core/tween.js").TweenHandle | null} */
+  let brakeTween = null;
+  /** @type {THREE.Vector3 | null} camera position the crash shake jitters around */
+  let shakeFrom = null;
+  const shakeOffset = new THREE.Vector3();
   let stateTime = 0;
   let best = loadNumber(STORAGE.bestScore);
 
@@ -77,7 +82,40 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
     });
   }
 
+  /** Ends the crash effects (brake, shake) early, e.g. AGAIN right after the lock. */
+  function stopCrash() {
+    brakeTween?.cancel();
+    if (shakeFrom) camera.position.copy(shakeFrom);
+    shakeFrom = null;
+  }
+
+  /** The world brakes to a halt (traffic stays where it hit) and the camera starts shaking. */
+  function crash() {
+    const from = world.speedMultiplier;
+    brakeTween = tweens.add({
+      duration: MINIGAME.crash.stop,
+      ease: (t) => 1 - (1 - t) ** 2, // hard at first, settling softly
+      onUpdate: (t) => (world.speedMultiplier = from * (1 - t)),
+    });
+    shakeFrom = camera.position.clone();
+  }
+
+  /** @param {number} time seconds since the crash */
+  function shake(time) {
+    if (!shakeFrom) return;
+    const { shake: duration, shakeAmount } = MINIGAME.crash;
+    const left = 1 - time / duration;
+    if (left <= 0) {
+      stopCrash();
+      return;
+    }
+    const random = () => Math.random() * 2 - 1;
+    shakeOffset.set(random(), random(), 0).multiplyScalar(shakeAmount * left * left);
+    camera.position.copy(shakeFrom).add(shakeOffset);
+  }
+
   function leaveMinigame() {
+    stopCrash();
     minigame.reset();
     world.speedMultiplier = 1;
     moveCamera(homePosition, () => (controls.enabled = true));
@@ -94,6 +132,7 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
 
     switch (next) {
       case "countdown":
+        stopCrash();
         car.steering = false;
         car.reset(tweens);
         minigame.reset();
@@ -111,21 +150,21 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
         break;
 
       case "gameover":
+        // the scene stays as it was hit; the camera and the scene GUI return on leaving
         car.steering = false;
         hud.showGameOver(minigame.score, recordScore());
-        leaveMinigame();
+        crash();
         break;
 
       case "idle":
         car.steering = false;
         car.reset(tweens);
-        if (previous === "countdown" || previous === "playing") {
-          recordScore();
-          leaveMinigame();
-        }
+        if (previous === "countdown" || previous === "playing") recordScore();
+        if (previous !== "free") leaveMinigame();
         break;
 
       case "free":
+        if (previous === "gameover") leaveMinigame();
         car.steering = true;
         break;
     }
@@ -134,7 +173,9 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
   const machine = createStateMachine("idle", enter);
 
   input.onPress((action) => {
-    if (action === "start" || action === "free" || action === "exit") machine.send(action);
+    if (action !== "start" && action !== "free" && action !== "exit") return;
+    if (machine.state === "gameover" && stateTime < MINIGAME.crash.lock) return; // see config
+    machine.send(action);
   });
   input.onRelease((action) => {
     if (action === "left" || action === "right") car.release();
@@ -189,6 +230,10 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
           }
           break;
         }
+
+        case "gameover":
+          shake(stateTime);
+          break;
       }
     },
   };

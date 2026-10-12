@@ -440,6 +440,17 @@ export const MINIGAME = {
   innerGap: 0.9,
   outerMargin: 0.5,
   safeZone: 0.1,
+  /**
+   * The crash: the world brakes to a halt with the traffic still on the road, the camera shakes,
+   * the screen flashes; the game over panel shows up once keys and buttons unlock, so a key still
+   * held from steering or a quick ENTER does not restart by accident.
+   */
+  crash: {
+    stop: 0.35, // seconds to brake to a halt
+    shake: 0.45, // seconds of camera shake, fading out
+    shakeAmount: 0.3, // largest camera offset, units
+    lock: 0.6, // seconds before game over takes keys and clicks (and its panel shows)
+  },
 };
 
 export const CRT = {
