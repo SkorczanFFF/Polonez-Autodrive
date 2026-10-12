@@ -46,6 +46,14 @@ describe("horizon range height", () => {
     expect(walls).toBeGreaterThan(ends);
   });
 
+  it("has a ragged foot, not an even ramp: near the front, ground here and rock there", () => {
+    const heightAt = createHorizonHeight(createMountainParams(3));
+    const near = [];
+    for (let x = 60; x < halfWidth - 80; x += 4) near.push(heightAt(x, depth * 0.85));
+    expect(Math.min(...near)).toBeLessThan(MOUNTAINS.lift + 2);
+    expect(Math.max(...near)).toBeGreaterThan(0.3 * MOUNTAINS.height);
+  });
+
   it("rises from the ground at its front edge to its highest at the far ridge", () => {
     const heightAt = createHorizonHeight(createMountainParams(3));
     for (const x of [-100, 0, 77]) expect(heightAt(x, depth)).toBeCloseTo(MOUNTAINS.lift);

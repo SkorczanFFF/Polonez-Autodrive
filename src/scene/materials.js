@@ -17,7 +17,8 @@ import { createSunMaterial } from "./sunMaterial.js";
 
 /**
  * @typedef {object} Materials
- * @property {Record<string, THREE.MeshToonMaterial | THREE.MeshPhongMaterial>} solid per layer (SHADING.mode)
+ * @property {Record<string, THREE.MeshToonMaterial | THREE.MeshPhongMaterial | THREE.MeshBasicMaterial>} solid
+ *   per layer: SHADING.mode, or unlit (Layer.unlit)
  * @property {Record<string, THREE.MeshPhongMaterial | THREE.MeshBasicMaterial | THREE.LineBasicMaterial | ReturnType<typeof createGridMaterial>>} wire
  *   per layer: textured overlay (road), procedural grid (terrain), outline lines or a triangle
  *   wireframe (WIRE.mode)
@@ -43,12 +44,13 @@ export function createMaterials(textures, anisotropy) {
   const wire = {};
 
   for (const [key, layer] of Object.entries(LAYERS)) {
-    solid[key] = shade({
+    const surface = {
       color: layer.solid,
       polygonOffset: enabled,
       polygonOffsetFactor: factor,
       polygonOffsetUnits: units,
-    });
+    };
+    solid[key] = layer.unlit ? new THREE.MeshBasicMaterial(surface) : shade(surface);
 
     if (layer.wireGrid) {
       wire[key] = createGridMaterial({
@@ -75,6 +77,8 @@ export function createMaterials(textures, anisotropy) {
       lines.userData.glow = layer.glow ?? 1; // core/bloom.js; clones (fade-in) copy userData
       wire[key] = lines;
     }
+
+    if (layer.fog === false) solid[key].fog = wire[key].fog = false;
   }
 
   const sun = createSunMaterial({

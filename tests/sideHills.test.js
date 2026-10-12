@@ -54,16 +54,35 @@ describe("side mountains", () => {
     expect(chunk.position.z - z).toBeCloseTo(WORLD.speed * 2 * 0.5);
   });
 
-  it("recycle a chunk that leaves behind to the far end, with the next landscape", () => {
+  it("recycle a chunk that leaves behind to the far end; the landscape rolls on", () => {
     const { hills } = setup();
-    const before = rightSide(hills.meshes);
-    const nearest = /** @type {THREE.Mesh} */ (before.at(-1));
-    const heights = rowHeights(nearest, length);
+    const nearest = /** @type {THREE.Mesh} */ (rightSide(hills.meshes).at(-1));
     hills.update(1 / WORLD.speed, 1); // one unit: the nearest chunk moves out
     const after = rightSide(hills.meshes);
     expect(after[0]).toBe(nearest); // now the farthest
     expect(after[0].position.z).toBeLessThan(-WORLD.length);
-    expect(rowHeights(nearest, length)).not.toEqual(heights);
+
+    // a full-grown row of the landscape is one chunk further on after rolling one chunk length
+    const at = (/** @type {number} */ z) =>
+      rightSide(hills.meshes).find((mesh) => Math.abs(mesh.position.z - z) < 1e-6);
+    const z =
+      rightSide(hills.meshes).find(
+        (mesh) => mesh.position.z > MOUNTAINS.grow.from + MOUNTAINS.grow.length,
+      )?.position.z ?? 0;
+    const coming = rowHeights(/** @type {THREE.Mesh} */ (at(z - length)), length);
+    hills.update(length / WORLD.speed, 1);
+    expect(rowHeights(/** @type {THREE.Mesh} */ (at(z)), length)).toEqual(coming);
+  });
+
+  it("sink back into flat ground before they leave behind the car", () => {
+    const { hills } = setup();
+    for (let k = 1; k <= 3; k++) {
+      // just before the nearest chunk is recycled, its near edge is at the end of the conveyor
+      hills.update((length - 0.01) / WORLD.speed, 1);
+      const last = /** @type {THREE.Mesh} */ (rightSide(hills.meshes).at(-1));
+      for (const [, y] of rowHeights(last, length)) expect(y).toBeCloseTo(MOUNTAINS.lift, 2);
+      hills.update(0.01 / WORLD.speed, 1);
+    }
   });
 
   it("match at the seams: neighbours share their boundary row", () => {

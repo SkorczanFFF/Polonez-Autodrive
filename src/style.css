@@ -10,7 +10,7 @@
   --z-devstats: 1300;
   --z-crt: 9999;
   --font-terminal: "VT323", monospace;
-  --font-script: "Pacifico", cursive;
+  --font-script: "Yellowtail", cursive;
 }
 
 /* ---------- base ---------- */
@@ -33,12 +33,6 @@ canvas:active {
   cursor: grabbing;
 }
 
-/* UI waits for theme.js so it never paints without colors. */
-:root:not([data-theme]) .loader,
-:root:not([data-theme]) .hud {
-  visibility: hidden;
-}
-
 /* ---------- loader (80s terminal) ---------- */
 @property --flicker-opacity {
   syntax: "<number>";
@@ -55,7 +49,8 @@ canvas:active {
   align-items: center;
   background-color: var(--ui-loader-bg);
   font-family: var(--font-terminal);
-  font-size: 22px;
+  /* shrinks with phones, so the longest line (the 100% progress bar, ~14.5em) still fits */
+  font-size: clamp(15px, 5.2vw, 22px);
   animation: loader-flicker 8s linear infinite;
 }
 
@@ -73,8 +68,7 @@ canvas:active {
 
 .loader__terminal {
   position: relative;
-  width: 80%;
-  max-width: 650px;
+  width: min(650px, 100% - 32px); /* 16px gutters on phones */
   overflow: hidden;
   color: var(--aqua);
   background-color: var(--ui-deep);
@@ -96,7 +90,7 @@ canvas:active {
 .loader__content {
   position: relative;
   min-height: 200px;
-  padding: 20px;
+  padding: clamp(12px, 4vw, 20px);
 }
 
 .loader__text,
@@ -244,7 +238,8 @@ canvas:active {
 [data-state="countdown"] .hud__corner,
 [data-state="playing"] .hud__corner,
 [data-state="countdown"] .hud__countdown:not([hidden]),
-[data-state="playing"] .hud__countdown:not([hidden]) {
+[data-state="playing"] .hud__countdown:not([hidden]),
+[data-state="gameover"] .hud__flash {
   display: block !important;
 }
 
@@ -370,16 +365,20 @@ kbd {
   --logo-shine: hsl(from var(--scene-sun-top) h s min(l * 1.5, 100)); /* sun, +50% brightness */
   --logo-neon: var(--scene-polonez-wire);
   --logo-body: var(--scene-polonez-solid);
-  /* background-clip: text paints only inside the box; Pacifico's ascenders ("l") rise ~0.2em
-     above a line-height: 1 box, so pad the top and pull the box back up */
-  margin: -0.3em 0 0.12em; /* bottom: the -6° turn drops the "P" towards AUTODRIVE */
+  /* background-clip: text paints only inside the box: pad it around the letters (room for the
+     glow and the sheen) and pull it back. Bottom: AUTODRIVE tucks in close; the -6° turn drops
+     the "P" ~0.16em towards it, which still clears it. */
+  margin: -0.3em 0 -0.08em;
   padding: 0.3em 0.2em 0.15em;
-  font-size: clamp(56px, 9vw, 128px);
+  /* full size on wide screens, shrinking with narrow ones; "Polonez" (2.78em wide) never gets
+     narrower than ~300px */
+  font-size: clamp(108px, 28.5vw, 152px);
   transform: rotate(-6deg);
   /* Layers, top first: a chrome sheen sweeping by now and then; body-colored stripes through
-     the lower half, widening downwards like the sun's (in the fill, so the glow around the
-     letters stays whole); sun to car-line gradient. Longhands only: the `background` shorthand
-     resets the text clip. */
+     the lower half of the lowercase letters (x-height at 47% of the box, baseline at 78%),
+     widening downwards like the sun's and leaving the letters a solid foot (in the fill, so the
+     glow around the letters stays whole); sun to car-line gradient. Longhands only: the
+     `background` shorthand resets the text clip. */
   background-image:
     linear-gradient(
       105deg,
@@ -388,13 +387,13 @@ kbd {
       transparent 56%
     ),
     linear-gradient(
-      transparent 61%,
-      var(--logo-body) 61% 62.5%,
-      transparent 62.5% 68.5%,
-      var(--logo-body) 68.5% 70.5%,
-      transparent 70.5% 75.5%,
-      var(--logo-body) 75.5% 78.5%,
-      transparent 78.5%
+      transparent 56.5%,
+      var(--logo-body) 56.5% 57.5%,
+      transparent 57.5% 62.5%,
+      var(--logo-body) 62.5% 64.5%,
+      transparent 64.5% 69%,
+      var(--logo-body) 69% 72%,
+      transparent 72%
     ),
     linear-gradient(var(--logo-shine) 30%, var(--logo-neon) 80%);
   background-size:
@@ -416,7 +415,7 @@ kbd {
   display: flex;
   align-items: center;
   gap: 0.45em;
-  font-size: clamp(22px, 2.6vw, 36px);
+  font-size: clamp(20px, 5.6vw, 42px); /* shrinks with the script; the row fits a phone */
   letter-spacing: 0.6em;
   color: var(--scene-terrain-wire);
   /* VHS colour bleed: sun and side-hill ghosts either side of the glowing letters */
@@ -727,16 +726,63 @@ kbd {
   box-sizing: border-box;
   padding: 12px 24px 22px;
   text-align: center;
-  /* the scene keeps moving behind the panel: frost it, so the score reads at a glance */
+  /* the crash scene stays behind the panel: frost it, so the score reads at a glance */
   background-color: color-mix(in srgb, var(--ui-deep) 90%, transparent);
   backdrop-filter: blur(6px);
+  /* shows up once game over takes keys and clicks (--crash-lock, set by ui/hud.js) */
+  animation: panel-in 0.3s ease-out var(--crash-lock, 0s) backwards;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+
+/* the crash: a neon flash with a CRT glitch, once on entering game over */
+.hud__flash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-hud);
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      transparent 0 6px,
+      color-mix(in srgb, var(--aqua) 35%, transparent) 6px 9px
+    ),
+    radial-gradient(circle at 50% 60%, var(--white), var(--red) 45%, var(--ui-deep));
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: crash-flash 0.5s steps(10, end);
+}
+
+@keyframes crash-flash {
+  0% {
+    opacity: 0.85;
+  }
+  20% {
+    opacity: 0.55;
+    translate: 0 -6px;
+  }
+  40% {
+    opacity: 0.7;
+    translate: 0 4px;
+  }
+  60% {
+    opacity: 0.3;
+    translate: 0 -2px;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .hud__gameover-title {
-  margin: 0;
-  /* Pacifico's "G" swings out past its glyph box, and background-clip: text paints only inside
-     the padding box: pad wide, or the swash is cut off */
-  padding: 0.05em 0.5em 0.15em;
+  /* background-clip: text paints only inside the padding box: pad wide and low, pulling the box
+     back up, so swashes like the tail of the "G" (and their shadow) are never cut off */
+  margin: 0 0 -0.25em;
+  padding: 0.05em 0.5em 0.4em;
   font-size: clamp(44px, 5vw, 64px);
   line-height: 1.3;
   white-space: nowrap;
@@ -767,8 +813,42 @@ kbd {
     0 0 28px var(--pink);
 }
 
-.hud__final-score.is-pop {
-  animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+/* counting up: every new number ticks */
+.hud__final-score.is-tick {
+  animation: score-tick 0.12s ease-out;
+}
+
+/* counted: an arcade flash, then the score keeps pulsing like a neon sign */
+.hud__final-score.is-final {
+  animation:
+    score-flash 0.18s steps(1) 6,
+    score-pulse 1.4s ease-in-out 1.08s infinite; /* the pulse starts after the 6 flashes */
+}
+
+@keyframes score-tick {
+  from {
+    scale: 1.15;
+  }
+}
+
+@keyframes score-flash {
+  50% {
+    color: var(--yellow);
+    text-shadow:
+      3px 3px 0 var(--ui-deep),
+      0 0 16px var(--yellow),
+      0 0 40px var(--yellow);
+  }
+}
+
+@keyframes score-pulse {
+  50% {
+    scale: 1.06;
+    text-shadow:
+      3px 3px 0 var(--ui-deep),
+      0 0 18px var(--pink),
+      0 0 48px var(--pink);
+  }
 }
 
 .hud__final-best,
@@ -1043,6 +1123,36 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   text-shadow: 0 0 6px var(--aqua);
+}
+
+/* ---------- narrow screens (phones) ---------- */
+@media (max-width: 560px) {
+  /* the logo starts below the HIDE toggle in the corner */
+  .hud__menu {
+    padding-top: 64px;
+  }
+
+  /* the folded scene panel is just its title, clear of the HIDE toggle; full width when open */
+  .lil-gui.lil-root.lil-closed {
+    width: auto;
+  }
+
+  /* buttons stack: side by side they run off the screen */
+  .button-grid,
+  .button-grid--3 {
+    --columns: 1;
+  }
+}
+
+/* ---------- touch screens (no keyboard) ----------
+   A scene to look at, orbit (one finger, pinch to zoom) and recolor; the minigame and free ride
+   need the arrow keys, so they wait for touch steering. */
+@media (pointer: coarse) {
+  .hud__best,
+  .hud__bottom,
+  .hud__toggle kbd {
+    display: none !important;
+  }
 }
 
 /* ---------- reduced motion ---------- */

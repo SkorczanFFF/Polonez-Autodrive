@@ -9,6 +9,15 @@
     />
     <title>Polonez Autodrive</title>
     <link rel="icon" href="./favicon.ico" />
+    <!-- dark browser background from the first paint, not a white flash -->
+    <meta name="color-scheme" content="dark" />
+    <!-- nothing shows until the styles and theme.js colors are in (no unstyled flash); kept
+         inline, as the stylesheet itself arrives later -->
+    <style>
+      :root:not([data-theme]) body {
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
     <div class="loader" id="loader" role="status" aria-live="polite">
@@ -78,6 +87,8 @@
           ><span class="stat__value" data-level></span>
         </div>
       </div>
+
+      <div class="hud__flash" aria-hidden="true"></div>
 
       <section class="hud__gameover panel" aria-label="Game over" aria-live="assertive">
         <h2 class="hud__gameover-title sunset-text" data-text="gameOver"></h2>

@@ -7,9 +7,11 @@ import { createMaterials } from "../src/scene/materials.js";
 const materials = () => createMaterials({ [String(LAYERS.road.wireMap)]: new THREE.Texture() }, 1);
 
 describe("solid materials", () => {
-  it("are flat shaded per SHADING.flat", () => {
-    for (const material of Object.values(materials().solid)) {
-      expect(/** @type {any} */ (material).flatShading).toBe(SHADING.flat);
+  it("are flat shaded per SHADING.flat, unlit layers unlit", () => {
+    const { solid } = materials();
+    for (const [key, material] of Object.entries(solid)) {
+      if (LAYERS[key].unlit) expect(material).toBeInstanceOf(THREE.MeshBasicMaterial);
+      else expect(/** @type {any} */ (material).flatShading).toBe(SHADING.flat);
     }
   });
 

@@ -5,6 +5,7 @@ import { createSun } from "./environment/sun.js";
 import { createHills } from "./environment/hills.js";
 import { createSideHills } from "./environment/sideHills.js";
 import { createScenery } from "./environment/scenery.js";
+import { createCity } from "./environment/city.js";
 import { createMountainParams } from "./mountains.js";
 
 /**
@@ -48,6 +49,7 @@ export function createWorld(assets) {
     hills: createHills(context),
     sideHills: createSideHills(context),
     scenery: createScenery(context),
+    city: createCity(context),
   };
   // parts may expose more (regenerate, densities); the loop only needs update()
   const ordered = /** @type {WorldPart[]} */ (Object.values(parts));

@@ -1,4 +1,4 @@
-import { TEXT } from "../config.js";
+import { MINIGAME, TEXT } from "../config.js";
 import { ICONS, KEY_ICONS } from "./icons.js";
 
 /** @typedef {import("../core/input.js").Action} Action */
@@ -45,6 +45,7 @@ export function createHud(dispatch, root = document.getElementById("hud")) {
     /** @type {HTMLElement[]} */ ([...root.querySelectorAll(selector)]);
 
   for (const element of $$("[data-text]")) element.textContent = TEXT[element.dataset.text];
+  root.style.setProperty("--crash-lock", `${MINIGAME.crash.lock}s`); // game over panel delay
   for (const element of $$("[data-key]")) {
     const key = /** @type {Action} */ (element.dataset.key);
     const icon = KEY_ICONS[key];
@@ -69,6 +70,8 @@ export function createHud(dispatch, root = document.getElementById("hud")) {
   const score = $("[data-score]");
   const level = $("[data-level]");
   const finalScore = $("[data-final-score]");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let gameOverScore = 0;
   const newBest = $(".hud__new-best");
   const finalBest = $(".hud__final-best");
   const menuBest = $(".hud__best");
@@ -123,10 +126,27 @@ export function createHud(dispatch, root = document.getElementById("hud")) {
      * @param {boolean} isNewBest
      */
     showGameOver(value, isNewBest) {
-      show(finalScore, String(value));
-      replay(finalScore, "is-pop");
+      gameOverScore = value;
+      finalScore.classList.remove("is-final");
+      show(finalScore, "0");
       newBest.hidden = !isNewBest;
       finalBest.hidden = isNewBest; // the record is this score
+    },
+
+    /**
+     * Counts the game over score up, every new number ticking; once there, it flashes and keeps
+     * pulsing (CSS). Called every frame by the game.
+     *
+     * @param {number} progress 0..1
+     */
+    countGameOver(progress) {
+      const done = progress >= 1 || reducedMotion.matches;
+      const shown = done ? gameOverScore : Math.floor(gameOverScore * progress);
+      if (show(finalScore, String(shown))) replay(finalScore, "is-tick");
+      if (done && !finalScore.classList.contains("is-final")) {
+        finalScore.classList.remove("is-tick");
+        finalScore.classList.add("is-final");
+      }
     },
   };
 }

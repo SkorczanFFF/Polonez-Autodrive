@@ -39,8 +39,8 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   that leaves only a faint eye icon in the corner.
 - In-game HUD (best, score and level), animated countdown, game over panel (score, best,
   NEW BEST, AGAIN / FREE RIDE / MENU); best score saved in `localStorage`.
-- Self-hosted fonts: VT323 (HUD, terminal, side panel) and Pacifico (logo); the loader switches
-  off like a CRT; `prefers-reduced-motion` turns UI animations and the CRT flicker off.
+- Self-hosted fonts: VT323 (HUD, terminal, side panel) and Yellowtail (logo, titles); the loader
+  switches off like a CRT; `prefers-reduced-motion` turns UI animations and the CRT flicker off.
 - F10 developer stats restyled as a SYS.MONITOR terminal panel.
 - Car handling: the body rolls outwards on its own pivot while the wheels stay on the road, the
   front wheels steer (5°) and the car yaws with its sideways speed.
@@ -79,6 +79,51 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 - Crimson fog (`#c70050`) instead of magenta.
 - The world is twice as long: palms and rocks come from 200 m ahead (the road starts lined with
   them), the fog reaches 400 m and the sun is twice as far and twice as big (same size on screen).
+- Game over counts the score up arcade style once its panel is in, then flashes it and keeps it
+  pulsing like a neon sign; the tail of the big "G" in "Game Over" is no longer cut off.
+- A crash no longer cuts straight to the menu: the world brakes to a halt with the traffic still on
+  the road, the camera shakes and the screen flashes; the game over panel shows up 0.6 s later,
+  when keys and buttons work again (no accidental restart). The camera and the side panel come
+  back only when you leave game over.
+- Menu, game over and the loading screen fit phone screens: the buttons stack, the loader's
+  terminal and text shrink to the width, and the logo shrinks smoothly with narrow screens
+  ("Polonez" never under ~300 px) instead of jumping between sizes.
+- Touch screens (phones, tablets without a keyboard) get the scene to look at: a bigger logo,
+  HIDE, the side panel (starting folded) and the camera orbiting with one finger, pinch to zoom.
+  The minigame and free ride need the arrow keys, so they are hidden until touch steering.
+- Side panel: the hill layers are now "Horizon range" and "Side mountains"; "Line width (all)"
+  says that it sets every line.
+- "Randomize all" picks a palette instead of unrelated random colors: a few related hues, and
+  lines in another hue than their model that always stand out from it (at least 3:1 contrast),
+  so they no longer vanish into a fill of a similar color. Three moods: night (dark fills, neon
+  lines, dark sky, glowing fog), day (pastel fills, dark lines, light sky) and mixed, where every
+  layer goes dark or light on its own.
+- The interface wears the scene's palette: panels, buttons, the loader, the HUD and the side
+  panel take their hue from the ground grid, the Polonez lines and the sun, keeping their
+  brightness, so a recolored or randomized scene no longer sits under a blue UI and every text
+  stays as readable as with the default colors.
+- No flash of unstyled buttons on a white page before the app loads: the page stays dark and
+  empty until its styles and colors are in, then the loader appears.
+- Behind the car: night falls over the back of the sky, with stars and a crescent moon striped
+  like the sun, blending softly into the sunset (only under a dark sky: a light, daytime sky stays
+  without stars). Far away stands the neon metropolis we drive away from, far wider than the
+  valley: a ragged skyline bending away like a banana, its tall, dense downtown nearest, the lower
+  outskirts further back, its towers rising over the side mountains out of a haze in the fog
+  color, outlined in neon with lit windows (whole floors, columns or single ones, different per
+  tower). A Night sky folder sets the night color, how far round the sky it reaches and how soft
+  the dusk is, the stars and the moon; the City layer sets the number of towers, their height,
+  lit windows and the haze. "New landscape" moves the city too.
+- Behind the car the side mountains sink back into the ground before they leave, opening onto
+  the city, instead of vanishing in big chunks in front of it.
+- The horizon range no longer starts with an even, flat ramp: its foot is ragged, the rock
+  beginning further back in some places than in others, rising in steep faces, with loose crags
+  in front.
+- Side panel in thematic order: the cars and the sun, the road and its sides, the landscape
+  (mountains, horizon range, side mountains, city), the night sky and the environment (with the
+  landscape seed and "New landscape"), the effects, then the switches; the glow switch is now
+  "Wireframe glow (G)".
+- Shadows are drawn only for things near the car, not for the palms and rocks far behind it
+  (about 18% fewer triangles and 29% fewer draw calls per frame).
 
 ### Removed
 

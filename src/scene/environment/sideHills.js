@@ -24,8 +24,10 @@ import { dress } from "../wire.js";
  * same boundary row, so the seams match.
  *
  * Far away the chunks lie flat; over `MOUNTAINS.grow` they rise to full height as they come
- * closer, so the mountains rise out of the horizon range instead of cutting through it. Only the
- * y of the chunks inside that zone is rewritten each frame; their line edges and bounds stay
+ * closer, so the mountains rise out of the horizon range instead of cutting through it. Behind
+ * the car they sink back into the ground over `MOUNTAINS.shrink` before the end of the conveyor,
+ * so a chunk leaves flat instead of vanishing in one piece (in front of the city, which the fog
+ * does not hide). Only the y of the chunks inside those zones is rewritten each frame; their line edges and bounds stay
  * those of the full-grown shape (lines stay on the edges, and the flat shading comes from
  * screen-space derivatives).
  *
@@ -41,6 +43,12 @@ export function createSideHills({ scene, materials, mountains }) {
   const count = Math.ceil((2 * WORLD.length) / length) + 1; // one spare: the ends stay in fog
   const growFrom = MOUNTAINS.grow.from;
   const growTo = growFrom + MOUNTAINS.grow.length;
+  const shrinkTo = far + count * length; // the end of the conveyor
+  const shrinkFrom = shrinkTo - MOUNTAINS.shrink;
+
+  /** @param {number} z */
+  const growthAt = (z) =>
+    smoothstep(growFrom, growTo, z) * (1 - smoothstep(shrinkFrom, shrinkTo, z));
 
   /** @type {Chunk[]} */
   const chunks = [];
@@ -76,20 +84,20 @@ export function createSideHills({ scene, materials, mountains }) {
   }
 
   /**
-   * Scales the chunk's heights by how far it has come through the growth zone.
+   * Scales the chunk's heights by where it is: growing in front, sinking behind (growthAt).
    *
    * @param {Chunk} chunk
    */
   function grow(chunk) {
     const { mesh, heights } = chunk;
     const z = mesh.position.z; // far edge
-    const growth = z + length <= growFrom ? 0 : z >= growTo ? 1 : NaN;
+    const growth = z + length <= growFrom ? 0 : z >= growTo && z + length <= shrinkFrom ? 1 : NaN;
     if (growth === chunk.growth) return; // flat or full-grown, already applied
     chunk.growth = growth;
     const position = mesh.geometry.getAttribute("position");
     const array = position.array;
     for (let v = 0; v < heights.length; v++) {
-      const g = Number.isNaN(growth) ? smoothstep(growFrom, growTo, z + array[v * 3 + 2]) : growth;
+      const g = Number.isNaN(growth) ? growthAt(z + array[v * 3 + 2]) : growth;
       array[v * 3 + 1] = lift + (heights[v] - lift) * g;
     }
     position.needsUpdate = true;

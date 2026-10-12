@@ -25,12 +25,16 @@ export const PALETTE = {
   crtLine: "#eba2a2",
   // "Retrowave Dusk" scene palette (default): dark fills, neon lines
   night: "#1b0b3b", // sky
+  midnight: "#08041a", // the night sky behind the car
+  starlight: "#f4f1ff",
+  moonlight: "#fff3d6",
+  cityBody: "#140b33", // towers against the night
   void: "#0d0221", // ground, palm silhouettes
   dusk: "#261447", // road
   deepTeal: "#13304a", // rocks
   polonezBody: "#420d59", // the star: stands apart from the road; neon pink lines are its own
-  grape: "#2a0a4a", // horizon hills
-  plum: "#1e0f4f", // side hills
+  grape: "#2a0a4a", // horizon range
+  plum: "#1e0f4f", // side mountains
   horizon: "#c70050", // fog: distant things sink into a crimson-magenta glow
   neonPink: "#ff2a6d",
   neonMagenta: "#f706cf",
@@ -57,6 +61,8 @@ export const PALETTE = {
  * @property {number} [lineFade] WIRE.fade for this layer (lower: lines stay visible further)
  * @property {number} [lineMin] visibility (0..1) lines fade down to on tiny triangles (default 0)
  * @property {number} [glow] bloom on this layer's lines, 0..1 (default 1)
+ * @property {boolean} [fog] false: the layer ignores the fog (default true)
+ * @property {boolean} [unlit] true: its fill keeps its color whatever the light (default false)
  * @property {"palms" | "rocks"} [density] GUI exposes a density slider for this spawner
  */
 
@@ -71,8 +77,18 @@ export const LAYERS = {
     lineMin: 0.2, // the far end of the car keeps a hint of its lines
     glow: 0.3, // its dense lines would blow out to white at full bloom
   },
-  hills: { label: "Hills", solid: PALETTE.grape, wire: PALETTE.neonMagenta, toggleSolid: true },
-  side: { label: "Side hills", solid: PALETTE.plum, wire: PALETTE.neonViolet, toggleSolid: true },
+  hills: {
+    label: "Horizon range",
+    solid: PALETTE.grape,
+    wire: PALETTE.neonMagenta,
+    toggleSolid: true,
+  },
+  side: {
+    label: "Side mountains",
+    solid: PALETTE.plum,
+    wire: PALETTE.neonViolet,
+    toggleSolid: true,
+  },
   road: { label: "Road", solid: PALETTE.dusk, wire: PALETTE.sunYellow, wireMap: "roadline" },
   terrain: { label: "Terrain", solid: PALETTE.void, wire: PALETTE.neonCyan, wireGrid: true },
   palm: {
@@ -92,6 +108,15 @@ export const LAYERS = {
     toggleSolid: true,
     wireType: "basic",
     density: "rocks",
+  },
+  city: {
+    label: "City",
+    solid: PALETTE.cityBody,
+    wire: PALETTE.sunYellow, // lit windows
+    toggleSolid: true,
+    fog: false, // the scene fog ends long before the city: it has its own haze (CITY)
+    unlit: true, // a dark skyline at night: the low sun must not light up the towers
+    glow: 0.4, // far away, its lines and windows would blur into one bright blob
   },
   traffic: {
     label: "Traffic",
@@ -147,6 +172,8 @@ export const MOUNTAINS = {
   chunkRows: 16, // cells per side-band chunk along the road
   /** Along the road, the side mountains rise from flat ground over `length` from `from`. */
   grow: { from: -0.6 * WORLD.length, length: 160 }, // from inside the horizon range
+  /** Behind the car, they sink back into the ground over this before the conveyor ends. */
+  shrink: 192,
   lift: 0.05, // above the ground, so the flat foot does not z-fight with it
   /** Line overlay: "triangles" (every edge) or "squares" (the grid cells, like the terrain). */
   lines: /** @type {"triangles" | "squares"} */ ("triangles"),
@@ -161,6 +188,7 @@ export const MOUNTAINS = {
     height: 1, // fraction of `height`
     pass: 24, // half-width of the flat pass the road runs through (the striped sun shows in it)
     wall: 20, // width over which the sides rise: steep, like a parted sea
+    foot: 0.4, // where the rock begins varies across its front, up to this share of its depth
   },
 };
 
@@ -183,6 +211,52 @@ export const SUN = {
   glow: 0.08, // halo falloff as a fraction of the radius
 };
 
+/**
+ * The neon city we drive away from (scene/environment/city.js): a skyline far behind the car,
+ * past the end of the side mountains' conveyor (~1.3 * WORLD.length behind), so they pass in
+ * front of it. buildings, height, lit, haze and hazeHeight are live settings (GUI).
+ */
+export const CITY = {
+  near: 2.3 * WORLD.length, // its front in the middle: far, for depth
+  /** The front bends this much further back at the far ends (a banana, the middle nearest). */
+  bend: 520,
+  depth: 320, // towers stand up to this far behind the front
+  sink: 30, // their feet this far below the ground: a lower skyline, its feet deep in the haze
+  halfWidth: 1400, // a metropolis far wider than the valley: its towers rise over the mountains
+  // (the far ends are near + bend + depth away: within SCENE.camera.far)
+  roadGap: 24, // half-width kept free for the road into the city
+  buildings: 175,
+  height: 460, // the tallest towers
+  width: [16, 48], // footprint sides
+  cell: 10, // floors and bays of the window grid
+  window: 0.5, // a window's share of its cell
+  lit: 0.6, // share of lit windows, varied per tower
+  /**
+   * The scene fog ends long before the city, so it has its own haze in the fog color: `haze` at
+   * the ground, thinning out up to `hazeHeight`, so the towers rise out of the mist.
+   */
+  haze: 0.8,
+  hazeHeight: 480,
+};
+
+/**
+ * The sky behind the car (scene/environment/sky.js): driving into the sunset, the night falls
+ * behind, with stars and a moon. Live settings (GUI).
+ */
+export const NIGHT = {
+  color: PALETTE.midnight,
+  reach: 0.5, // how far round the sky the night reaches: 0 none, 0.5 the back half, 1 all of it
+  blend: 1, // how wide the dusk between sunset and night is (0.1 sharp, 1 very soft)
+  stars: 0.35, // 0 none, 1 densest
+  starColor: PALETTE.starlight,
+  moon: {
+    show: true,
+    color: PALETTE.moonlight,
+    size: 0.08, // angular radius, radians
+    direction: [-0.4, 0.45, 1], // behind the car, a little to the left, above the palms
+  },
+};
+
 export const SCENE = {
   renderScale: 0.5, // intentionally blurry 80s look
   maxDelta: 0.1, // seconds; clamps frame delta after stalls
@@ -198,7 +272,7 @@ export const SCENE = {
   camera: {
     fov: 90,
     near: 0.1,
-    far: 1600, // past the sun (SUN.disc) and the sky dome (sky.js)
+    far: 2400, // past the sun (SUN.disc), the sky dome (sky.js) and the sides of the city (CITY)
     position: [0, 3, 7],
     target: [0, 1.8, 0],
     gamePosition: [0, 4, 7], // OrbitControls clamps it to maxDistance -> (0, 3.9, 6.68), as in v1
@@ -226,7 +300,12 @@ export const SCENE = {
       intensity: 1.6, // total of all samples (v1: 1.3 from higher up)
       distance: 53, // light distance from the scene origin (shadow camera placement)
     },
-    shadow: { mapSize: 1024, near: 1, far: 500, extent: 50, bias: 0, radius: 3 },
+    /**
+     * far: the shadow camera starts at the light (sun.distance ahead) and ends ~70 behind the car:
+     * farther casters only shade the ground behind them, out of view, yet each would be drawn
+     * into every sample's shadow map.
+     */
+    shadow: { mapSize: 1024, near: 1, far: 120, extent: 50, bias: 0, radius: 3 },
     /** three >= r155 dropped the implicit PI factor of "legacy" lights; restores the v1 brightness. */
     legacyScale: Math.PI,
   },
@@ -440,6 +519,22 @@ export const MINIGAME = {
   innerGap: 0.9,
   outerMargin: 0.5,
   safeZone: 0.1,
+  /**
+   * The crash: the world brakes to a halt with the traffic still on the road, the camera shakes,
+   * the screen flashes; the game over panel shows up once keys and buttons unlock, so a key still
+   * held from steering or a quick ENTER does not restart by accident.
+   */
+  crash: {
+    stop: 0.35, // seconds to brake to a halt
+    shake: 0.45, // seconds of camera shake, fading out
+    shakeAmount: 0.3, // largest camera offset, units
+    lock: 0.6, // seconds before game over takes keys and clicks (and its panel shows)
+  },
+  /** Game over score, arcade style: counts up once the panel is in, then flashes and pulses. */
+  scoreCount: {
+    perPoint: 0.06, // seconds per point
+    max: 1.2, // seconds at most, however big the score
+  },
 };
 
 export const CRT = {
@@ -479,6 +574,15 @@ export const GUI = {
   mountainHeight: [0, 150, 1],
   mountainRoughness: [0, 1, 0.05],
   mountainStart: [MOUNTAINS.minStart, 200, MOUNTAINS.cell], // whole cells
+  nightReach: [0, 1, 0.05],
+  nightBlend: [0.1, 1, 0.05],
+  stars: [0, 1, 0.05],
+  moonSize: [0.02, 0.2, 0.01],
+  cityBuildings: [0, 800, 1],
+  cityHeight: [40, 900, 10],
+  cityLit: [0, 1, 0.05],
+  cityHaze: [0, 1, 0.05],
+  cityHazeHeight: [0, 800, 10],
 
   crtOpacity: [0, 1, 0.05],
   crtSpeed: [0.05, 0.5, 0.01],
@@ -583,11 +687,11 @@ export const TEXT = {
     fogColor: "Fog color",
     fogNear: "Fog near",
     fogFar: "Fog far",
-    lineWidth: "Line width",
+    lineWidth: "Line width (all)", // one shared uniform for every line material
     lineFade: "Line fade",
     lineMin: "Line min",
     bloom: "Bloom",
-    bloomEnabled: "Glow",
+    bloomEnabled: "Wireframe glow",
     bloomStrength: "Strength",
     bloomRadius: "Radius",
     glow: "Glow",
@@ -599,6 +703,20 @@ export const TEXT = {
     mountainStart: "Start",
     seed: "Seed",
     newLandscape: "New landscape",
+    night: "Night sky",
+    nightColor: "Night color",
+    nightReach: "Night reach",
+    nightBlend: "Night blend",
+    stars: "Stars",
+    starColor: "Star color",
+    moon: "Show moon",
+    moonColor: "Moon color",
+    moonSize: "Moon size",
+    cityBuildings: "Buildings",
+    cityHeight: "Height",
+    cityLit: "Lit windows",
+    cityHaze: "Haze",
+    cityHazeHeight: "Haze height",
   },
   statsPanel: {
     title: "SYS.MONITOR",
