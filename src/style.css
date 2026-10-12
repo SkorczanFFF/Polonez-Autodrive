@@ -1093,6 +1093,30 @@ kbd {
   text-shadow: 0 0 6px var(--aqua);
 }
 
+/* ---------- narrow screens (phones) ---------- */
+@media (max-width: 560px) {
+  /* the logo starts below the HIDE toggle in the corner */
+  .hud__menu {
+    padding-top: 64px;
+  }
+
+  /* AUTODRIVE and its stripes fit the width */
+  .logo__caps {
+    font-size: 18px;
+  }
+
+  .logo__caps::before,
+  .logo__caps::after {
+    width: 1.6em;
+  }
+
+  /* buttons stack: side by side they run off the screen */
+  .button-grid,
+  .button-grid--3 {
+    --columns: 1;
+  }
+}
+
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   .loader,
