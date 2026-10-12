@@ -226,7 +226,12 @@ export const SCENE = {
       intensity: 1.6, // total of all samples (v1: 1.3 from higher up)
       distance: 53, // light distance from the scene origin (shadow camera placement)
     },
-    shadow: { mapSize: 1024, near: 1, far: 500, extent: 50, bias: 0, radius: 3 },
+    /**
+     * far: the shadow camera starts at the light (sun.distance ahead) and ends ~70 behind the car:
+     * farther casters only shade the ground behind them, out of view, yet each would be drawn
+     * into every sample's shadow map.
+     */
+    shadow: { mapSize: 1024, near: 1, far: 120, extent: 50, bias: 0, radius: 3 },
     /** three >= r155 dropped the implicit PI factor of "legacy" lights; restores the v1 brightness. */
     legacyScale: Math.PI,
   },
