@@ -28,6 +28,8 @@ The Polonez, its wheels, the palms and the rocks were modeled in 3Ds Max 2018, u
 
 All menu and game over buttons are clickable too. Drag with the mouse to orbit the camera outside the minigame.
 
+On touch screens (phones, tablets without a keyboard) the app is a scene to look at: orbit with one finger, pinch to zoom, recolor it in the side panel. The minigame and free ride need the arrow keys, so they are hidden there until touch steering.
+
 ---
 
 ## 🛠️ Development

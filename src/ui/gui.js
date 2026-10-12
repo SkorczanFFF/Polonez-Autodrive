@@ -42,7 +42,12 @@ function showHash(controller) {
  */
 export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) {
   const L = TEXT.gui;
-  const gui = new GUI({ title: L.title });
+  // touchStyles: lil-gui would make every row taller and its font smaller on touch screens;
+  // the compact terminal look reads better there too (its typings say number, it is a boolean)
+  const gui = new GUI({ title: L.title, touchStyles: /** @type {any} */ (false) });
+  // touch screens (phones): no keys to hint at; start folded, open it covers most of the screen
+  const touch = window.matchMedia("(pointer: coarse)").matches;
+  if (touch) gui.close();
 
   /** Color controllers, in creation order; "Randomize all" animates all of them. */
   /** @type {import("lil-gui").Controller[]} */
@@ -198,7 +203,8 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   mountainFolder.add({ newLandscape }, "newLandscape").name(L.newLandscape);
   mountainFolder.close();
 
-  gui.add(bloom, "enabled").name(`${L.bloomEnabled} (${TEXT.keys.glow})`).listen(); // G too
+  const glowName = touch ? L.bloomEnabled : `${L.bloomEnabled} (${TEXT.keys.glow})`;
+  gui.add(bloom, "enabled").name(glowName).listen(); // G too
 
   /** @type {import("../core/tween.js").TweenHandle | null} */
   let randomizing = null;

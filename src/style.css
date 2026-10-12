@@ -375,7 +375,9 @@ kbd {
      above a line-height: 1 box, so pad the top and pull the box back up */
   margin: -0.3em 0 0.12em; /* bottom: the -6° turn drops the "P" towards AUTODRIVE */
   padding: 0.3em 0.2em 0.15em;
-  font-size: clamp(56px, 9vw, 128px);
+  /* full size on wide screens, shrinking with narrow ones; "Polonez" (3.28em wide) never gets
+     narrower than ~300px */
+  font-size: clamp(92px, 24vw, 128px);
   transform: rotate(-6deg);
   /* Layers, top first: a chrome sheen sweeping by now and then; body-colored stripes through
      the lower half, widening downwards like the sun's (in the fill, so the glow around the
@@ -417,7 +419,7 @@ kbd {
   display: flex;
   align-items: center;
   gap: 0.45em;
-  font-size: clamp(22px, 2.6vw, 36px);
+  font-size: clamp(18px, 5vw, 36px); /* shrinks with the script; the row fits a phone */
   letter-spacing: 0.6em;
   color: var(--scene-terrain-wire);
   /* VHS colour bleed: sun and side-hill ghosts either side of the glowing letters */
@@ -1100,20 +1102,26 @@ kbd {
     padding-top: 64px;
   }
 
-  /* AUTODRIVE and its stripes fit the width */
-  .logo__caps {
-    font-size: 18px;
-  }
-
-  .logo__caps::before,
-  .logo__caps::after {
-    width: 1.6em;
+  /* the folded scene panel is just its title, clear of the HIDE toggle; full width when open */
+  .lil-gui.lil-root.lil-closed {
+    width: auto;
   }
 
   /* buttons stack: side by side they run off the screen */
   .button-grid,
   .button-grid--3 {
     --columns: 1;
+  }
+}
+
+/* ---------- touch screens (no keyboard) ----------
+   A scene to look at, orbit (one finger, pinch to zoom) and recolor; the minigame and free ride
+   need the arrow keys, so they wait for touch steering. */
+@media (pointer: coarse) {
+  .hud__best,
+  .hud__bottom,
+  .hud__toggle kbd {
+    display: none !important;
   }
 }
 
