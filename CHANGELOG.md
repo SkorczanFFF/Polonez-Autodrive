@@ -104,6 +104,24 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   stays as readable as with the default colors.
 - No flash of unstyled buttons on a white page before the app loads: the page stays dark and
   empty until its styles and colors are in, then the loader appears.
+- Behind the car: night falls over the back of the sky, with stars and a crescent moon striped
+  like the sun, blending softly into the sunset (only under a dark sky: a light, daytime sky stays
+  without stars). Far away stands the neon metropolis we drive away from, far wider than the
+  valley: a ragged skyline bending away like a banana, its tall, dense downtown nearest, the lower
+  outskirts further back, its towers rising over the side mountains out of a haze in the fog
+  color, outlined in neon with lit windows (whole floors, columns or single ones, different per
+  tower). A Night sky folder sets the night color, how far round the sky it reaches and how soft
+  the dusk is, the stars and the moon; the City layer sets the number of towers, their height,
+  lit windows and the haze. "New landscape" moves the city too.
+- Behind the car the side mountains sink back into the ground before they leave, opening onto
+  the city, instead of vanishing in big chunks in front of it.
+- The horizon range no longer starts with an even, flat ramp: its foot is ragged, the rock
+  beginning further back in some places than in others, rising in steep faces, with loose crags
+  in front.
+- Side panel in thematic order: the cars and the sun, the road and its sides, the landscape
+  (mountains, horizon range, side mountains, city), the night sky and the environment (with the
+  landscape seed and "New landscape"), the effects, then the switches; the glow switch is now
+  "Wireframe glow (G)".
 - Shadows are drawn only for things near the car, not for the palms and rocks far behind it
   (about 18% fewer triangles and 29% fewer draw calls per frame).
 
