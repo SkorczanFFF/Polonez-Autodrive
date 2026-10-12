@@ -188,6 +188,7 @@ export const MOUNTAINS = {
     height: 1, // fraction of `height`
     pass: 24, // half-width of the flat pass the road runs through (the striped sun shows in it)
     wall: 20, // width over which the sides rise: steep, like a parted sea
+    foot: 0.4, // where the rock begins varies across its front, up to this share of its depth
   },
 };
 
