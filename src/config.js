@@ -28,6 +28,7 @@ export const PALETTE = {
   midnight: "#08041a", // the night sky behind the car
   starlight: "#f4f1ff",
   moonlight: "#fff3d6",
+  cityBody: "#140b33", // towers against the night
   void: "#0d0221", // ground, palm silhouettes
   dusk: "#261447", // road
   deepTeal: "#13304a", // rocks
@@ -60,6 +61,8 @@ export const PALETTE = {
  * @property {number} [lineFade] WIRE.fade for this layer (lower: lines stay visible further)
  * @property {number} [lineMin] visibility (0..1) lines fade down to on tiny triangles (default 0)
  * @property {number} [glow] bloom on this layer's lines, 0..1 (default 1)
+ * @property {boolean} [fog] false: the layer ignores the fog (default true)
+ * @property {boolean} [unlit] true: its fill keeps its color whatever the light (default false)
  * @property {"palms" | "rocks"} [density] GUI exposes a density slider for this spawner
  */
 
@@ -105,6 +108,15 @@ export const LAYERS = {
     toggleSolid: true,
     wireType: "basic",
     density: "rocks",
+  },
+  city: {
+    label: "City",
+    solid: PALETTE.cityBody,
+    wire: PALETTE.sunYellow, // lit windows
+    toggleSolid: true,
+    fog: false, // the scene fog ends long before the city: it has its own haze (CITY)
+    unlit: true, // a dark skyline at night: the low sun must not light up the towers
+    glow: 0.4, // far away, its lines and windows would blur into one bright blob
   },
   traffic: {
     label: "Traffic",
@@ -197,6 +209,34 @@ export const SUN = {
 };
 
 /**
+ * The neon city we drive away from (scene/environment/city.js): a skyline far behind the car,
+ * past the end of the side mountains' conveyor (~1.3 * WORLD.length behind), so they pass in
+ * front of it. buildings, height, lit, haze and hazeHeight are live settings (GUI).
+ */
+export const CITY = {
+  near: 2.3 * WORLD.length, // its front in the middle: far, for depth
+  /** The front bends this much further back at the far ends (a banana, the middle nearest). */
+  bend: 520,
+  depth: 320, // towers stand up to this far behind the front
+  sink: 30, // their feet this far below the ground: a lower skyline, its feet deep in the haze
+  halfWidth: 1400, // a metropolis far wider than the valley: its towers rise over the mountains
+  // (the far ends are near + bend + depth away: within SCENE.camera.far)
+  roadGap: 24, // half-width kept free for the road into the city
+  buildings: 175,
+  height: 460, // the tallest towers
+  width: [16, 48], // footprint sides
+  cell: 10, // floors and bays of the window grid
+  window: 0.5, // a window's share of its cell
+  lit: 0.6, // share of lit windows, varied per tower
+  /**
+   * The scene fog ends long before the city, so it has its own haze in the fog color: `haze` at
+   * the ground, thinning out up to `hazeHeight`, so the towers rise out of the mist.
+   */
+  haze: 0.8,
+  hazeHeight: 480,
+};
+
+/**
  * The sky behind the car (scene/environment/sky.js): driving into the sunset, the night falls
  * behind, with stars and a moon. Live settings (GUI).
  */
@@ -229,7 +269,7 @@ export const SCENE = {
   camera: {
     fov: 90,
     near: 0.1,
-    far: 1600, // past the sun (SUN.disc) and the sky dome (sky.js)
+    far: 2400, // past the sun (SUN.disc), the sky dome (sky.js) and the sides of the city (CITY)
     position: [0, 3, 7],
     target: [0, 1.8, 0],
     gamePosition: [0, 4, 7], // OrbitControls clamps it to maxDistance -> (0, 3.9, 6.68), as in v1
@@ -535,6 +575,11 @@ export const GUI = {
   nightBlend: [0.1, 1, 0.05],
   stars: [0, 1, 0.05],
   moonSize: [0.02, 0.2, 0.01],
+  cityBuildings: [0, 800, 1],
+  cityHeight: [40, 900, 10],
+  cityLit: [0, 1, 0.05],
+  cityHaze: [0, 1, 0.05],
+  cityHazeHeight: [0, 800, 10],
 
   crtOpacity: [0, 1, 0.05],
   crtSpeed: [0.05, 0.5, 0.01],
@@ -664,6 +709,11 @@ export const TEXT = {
     moon: "Show moon",
     moonColor: "Moon color",
     moonSize: "Moon size",
+    cityBuildings: "Buildings",
+    cityHeight: "Height",
+    cityLit: "Lit windows",
+    cityHaze: "Haze",
+    cityHazeHeight: "Haze height",
   },
   statsPanel: {
     title: "SYS.MONITOR",

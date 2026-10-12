@@ -73,8 +73,11 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     colors.push({ ...as, controller });
   }
 
+  /** @type {Record<string, GUI>} */
+  const layerFolders = {};
   for (const [key, layer] of Object.entries(LAYERS)) {
     const folder = gui.addFolder(layer.label);
+    layerFolders[key] = folder;
     const params = {
       color: layer.solid,
       showSolid: true,
@@ -178,6 +181,23 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     .onChange((v) => (fog.far = v));
   environment.close();
 
+  // the city's layout, in its layer folder next to its colors
+  const { city } = world.parts;
+  layerFolders.city
+    .add(city.params, "buildings", ...RANGES.cityBuildings)
+    .name(L.cityBuildings)
+    .onChange(city.regenerate);
+  layerFolders.city
+    .add(city.params, "height", ...RANGES.cityHeight)
+    .name(L.cityHeight)
+    .onChange(city.regenerate);
+  layerFolders.city
+    .add(city.params, "lit", ...RANGES.cityLit)
+    .name(L.cityLit)
+    .onChange(city.regenerate);
+  layerFolders.city.add(city.haze.amount, "value", ...RANGES.cityHaze).name(L.cityHaze);
+  layerFolders.city.add(city.haze.height, "value", ...RANGES.cityHazeHeight).name(L.cityHazeHeight);
+
   const { night } = world.parts.sky;
   const nightParams = {
     color: NIGHT.color,
@@ -210,6 +230,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   const regenerate = () => {
     world.parts.sideHills.regenerate();
     world.parts.hills.regenerate();
+    world.parts.city.regenerate(); // built from the same seed
   };
   const mountainFolder = gui.addFolder(L.mountains);
   mountainFolder
