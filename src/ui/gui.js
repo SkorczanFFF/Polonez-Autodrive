@@ -73,11 +73,14 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     colors.push({ ...as, controller });
   }
 
-  /** @type {Record<string, GUI>} */
-  const layerFolders = {};
-  for (const [key, layer] of Object.entries(LAYERS)) {
+  /**
+   * A layer's folder (config.LAYERS): its fill and lines.
+   *
+   * @param {string} key
+   */
+  function layer(key) {
+    const layer = LAYERS[key];
     const folder = gui.addFolder(layer.label);
-    layerFolders[key] = folder;
     const params = {
       color: layer.solid,
       showSolid: true,
@@ -123,107 +126,135 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
       folder.add(wire.userData, "glow", ...RANGES.glow).name(L.glow);
     }
     folder.close();
+    return folder;
   }
 
-  const sunParams = { top: SUN.top, bottom: SUN.bottom, effect: true };
-  const sun = gui.addFolder(L.sun);
-  color(sun, sunParams, "top", L.sunTop, { role: "sunTop" }, (v) => {
-    materials.sun.topColor.set(v);
-    setSceneColor("sunTop", v);
-  });
-  color(sun, sunParams, "bottom", L.sunBottom, { role: "sunBottom" }, (v) => {
-    materials.sun.bottomColor.set(v);
-    setSceneColor("sunBottom", v);
-  });
-  sun
-    .add(sunParams, "effect")
-    .name(L.sunEffect)
-    .onChange((v) => (materials.sun.effect = v));
-  sun.close();
+  /** Sun disc colors and stripes. */
+  function addSun() {
+    const sunParams = { top: SUN.top, bottom: SUN.bottom, effect: true };
+    const sun = gui.addFolder(L.sun);
+    color(sun, sunParams, "top", L.sunTop, { role: "sunTop" }, (v) => {
+      materials.sun.topColor.set(v);
+      setSceneColor("sunTop", v);
+    });
+    color(sun, sunParams, "bottom", L.sunBottom, { role: "sunBottom" }, (v) => {
+      materials.sun.bottomColor.set(v);
+      setSceneColor("sunBottom", v);
+    });
+    sun
+      .add(sunParams, "effect")
+      .name(L.sunEffect)
+      .onChange((v) => (materials.sun.effect = v));
+    sun.close();
+  }
 
-  const bloomFolder = gui.addFolder(L.bloom);
-  bloomFolder.add(bloom, "strength", ...RANGES.bloomStrength).name(L.bloomStrength);
-  bloomFolder.add(bloom, "radius", ...RANGES.bloomRadius).name(L.bloomRadius);
-  bloomFolder.close();
+  /** Glow strength and spread. */
+  function addBloom() {
+    const bloomFolder = gui.addFolder(L.bloom);
+    bloomFolder.add(bloom, "strength", ...RANGES.bloomStrength).name(L.bloomStrength);
+    bloomFolder.add(bloom, "radius", ...RANGES.bloomRadius).name(L.bloomRadius);
+    bloomFolder.close();
+  }
 
-  const c = crt.state;
-  const crtFolder = gui.addFolder(L.crt);
-  crtFolder.add(c, "enabled").name(L.crtEnabled).onChange(crt.apply);
-  color(crtFolder, c, "lineColor", L.crtLineColor, { role: "crt" }, crt.apply);
-  crtFolder
-    .add(c, "lineOpacity", ...RANGES.crtOpacity)
-    .name(L.crtLineOpacity)
-    .onChange(crt.apply);
-  crtFolder.add(c, "flicker").name(L.crtFlicker).onChange(crt.apply);
-  crtFolder
-    .add(c, "flickerSpeed", ...RANGES.crtSpeed)
-    .name(L.crtFlickerSpeed)
-    .onChange(crt.apply);
-  crtFolder
-    .add(c, "flickerIntensity", ...RANGES.crtIntensity)
-    .name(L.crtFlickerIntensity)
-    .onChange(crt.apply);
-  crtFolder.close();
+  /** The CRT overlay. */
+  function addCrt() {
+    const c = crt.state;
+    const crtFolder = gui.addFolder(L.crt);
+    crtFolder.add(c, "enabled").name(L.crtEnabled).onChange(crt.apply);
+    color(crtFolder, c, "lineColor", L.crtLineColor, { role: "crt" }, crt.apply);
+    crtFolder
+      .add(c, "lineOpacity", ...RANGES.crtOpacity)
+      .name(L.crtLineOpacity)
+      .onChange(crt.apply);
+    crtFolder.add(c, "flicker").name(L.crtFlicker).onChange(crt.apply);
+    crtFolder
+      .add(c, "flickerSpeed", ...RANGES.crtSpeed)
+      .name(L.crtFlickerSpeed)
+      .onChange(crt.apply);
+    crtFolder
+      .add(c, "flickerIntensity", ...RANGES.crtIntensity)
+      .name(L.crtFlickerIntensity)
+      .onChange(crt.apply);
+    crtFolder.close();
+  }
 
-  const fog = /** @type {THREE.Fog} */ (scene.fog);
-  const background = /** @type {THREE.Color} */ (scene.background);
-  const sceneParams = { ...SCENE.fog, sky: SCENE.background };
-  const environment = gui.addFolder(L.environment);
-  color(environment, sceneParams, "sky", L.sky, { role: "sky" }, (v) => background.set(v));
-  color(environment, sceneParams, "color", L.fogColor, { role: "fog" }, (v) => fog.color.set(v));
-  environment
-    .add(sceneParams, "near", ...RANGES.fogNear)
-    .name(L.fogNear)
-    .onChange((v) => (fog.near = v));
-  environment
-    .add(sceneParams, "far", ...RANGES.fogFar)
-    .name(L.fogFar)
-    .onChange((v) => (fog.far = v));
-  environment.close();
+  /** Sky and fog colors, fog distance, and the landscape seed. */
+  function addEnvironment() {
+    const fog = /** @type {THREE.Fog} */ (scene.fog);
+    const background = /** @type {THREE.Color} */ (scene.background);
+    const sceneParams = { ...SCENE.fog, sky: SCENE.background };
+    const environment = gui.addFolder(L.environment);
+    color(environment, sceneParams, "sky", L.sky, { role: "sky" }, (v) => background.set(v));
+    color(environment, sceneParams, "color", L.fogColor, { role: "fog" }, (v) => fog.color.set(v));
+    environment
+      .add(sceneParams, "near", ...RANGES.fogNear)
+      .name(L.fogNear)
+      .onChange((v) => (fog.near = v));
+    environment
+      .add(sceneParams, "far", ...RANGES.fogFar)
+      .name(L.fogFar)
+      .onChange((v) => (fog.far = v));
 
-  // the city's layout, in its layer folder next to its colors
-  const { city } = world.parts;
-  layerFolders.city
-    .add(city.params, "buildings", ...RANGES.cityBuildings)
-    .name(L.cityBuildings)
-    .onChange(city.regenerate);
-  layerFolders.city
-    .add(city.params, "height", ...RANGES.cityHeight)
-    .name(L.cityHeight)
-    .onChange(city.regenerate);
-  layerFolders.city
-    .add(city.params, "lit", ...RANGES.cityLit)
-    .name(L.cityLit)
-    .onChange(city.regenerate);
-  layerFolders.city.add(city.haze.amount, "value", ...RANGES.cityHaze).name(L.cityHaze);
-  layerFolders.city.add(city.haze.height, "value", ...RANGES.cityHazeHeight).name(L.cityHazeHeight);
+    // the landscape: mountains, horizon range and city all come from this seed
+    const seed = environment.add(mountains, "seed").step(1).name(L.seed).onFinishChange(regenerate);
+    const newLandscape = () => {
+      mountains.seed = randomSeed();
+      seed.updateDisplay();
+      regenerate();
+    };
+    environment.add({ newLandscape }, "newLandscape").name(L.newLandscape);
+    environment.close();
+  }
 
-  const { night } = world.parts.sky;
-  const nightParams = {
-    color: NIGHT.color,
-    starColor: NIGHT.starColor,
-    moon: NIGHT.moon.show,
-    moonColor: NIGHT.moon.color,
-  };
-  const nightFolder = gui.addFolder(L.night);
-  color(nightFolder, nightParams, "color", L.nightColor, { role: "night" }, (v) =>
-    night.color.value.set(v),
-  );
-  nightFolder.add(night.reach, "value", ...RANGES.nightReach).name(L.nightReach);
-  nightFolder.add(night.blend, "value", ...RANGES.nightBlend).name(L.nightBlend);
-  nightFolder.add(night.stars, "value", ...RANGES.stars).name(L.stars);
-  color(nightFolder, nightParams, "starColor", L.starColor, { role: "stars" }, (v) =>
-    night.starColor.value.set(v),
-  );
-  nightFolder
-    .add(nightParams, "moon")
-    .name(L.moon)
-    .onChange((v) => (night.moon.value = v ? 1 : 0));
-  color(nightFolder, nightParams, "moonColor", L.moonColor, { role: "moon" }, (v) =>
-    night.moonColor.value.set(v),
-  );
-  nightFolder.add(night.moonSize, "value", ...RANGES.moonSize).name(L.moonSize);
-  nightFolder.close();
+  /** The city's folder: its layer, then its layout and haze. */
+  function addCity() {
+    const folder = layer("city");
+    const { city } = world.parts;
+    folder
+      .add(city.params, "buildings", ...RANGES.cityBuildings)
+      .name(L.cityBuildings)
+      .onChange(city.regenerate);
+    folder
+      .add(city.params, "height", ...RANGES.cityHeight)
+      .name(L.cityHeight)
+      .onChange(city.regenerate);
+    folder
+      .add(city.params, "lit", ...RANGES.cityLit)
+      .name(L.cityLit)
+      .onChange(city.regenerate);
+    folder.add(city.haze.amount, "value", ...RANGES.cityHaze).name(L.cityHaze);
+    folder.add(city.haze.height, "value", ...RANGES.cityHazeHeight).name(L.cityHazeHeight);
+  }
+
+  /** The night sky behind the car. */
+  function addNight() {
+    const { night } = world.parts.sky;
+    const nightParams = {
+      color: NIGHT.color,
+      starColor: NIGHT.starColor,
+      moon: NIGHT.moon.show,
+      moonColor: NIGHT.moon.color,
+    };
+    const nightFolder = gui.addFolder(L.night);
+    color(nightFolder, nightParams, "color", L.nightColor, { role: "night" }, (v) =>
+      night.color.value.set(v),
+    );
+    nightFolder.add(night.reach, "value", ...RANGES.nightReach).name(L.nightReach);
+    nightFolder.add(night.blend, "value", ...RANGES.nightBlend).name(L.nightBlend);
+    nightFolder.add(night.stars, "value", ...RANGES.stars).name(L.stars);
+    color(nightFolder, nightParams, "starColor", L.starColor, { role: "stars" }, (v) =>
+      night.starColor.value.set(v),
+    );
+    nightFolder
+      .add(nightParams, "moon")
+      .name(L.moon)
+      .onChange((v) => (night.moon.value = v ? 1 : 0));
+    color(nightFolder, nightParams, "moonColor", L.moonColor, { role: "moon" }, (v) =>
+      night.moonColor.value.set(v),
+    );
+    nightFolder.add(night.moonSize, "value", ...RANGES.moonSize).name(L.moonSize);
+    nightFolder.close();
+  }
 
   // A rebuild of all mountains takes ~6 ms: live while dragging; the seed when typed in.
   const { mountains } = world;
@@ -232,31 +263,39 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     world.parts.hills.regenerate();
     world.parts.city.regenerate(); // built from the same seed
   };
-  const mountainFolder = gui.addFolder(L.mountains);
-  mountainFolder
-    .add(mountains, "height", ...RANGES.mountainHeight)
-    .name(L.mountainHeight)
-    .onChange(regenerate);
-  mountainFolder
-    .add(mountains, "roughness", ...RANGES.mountainRoughness)
-    .name(L.mountainRoughness)
-    .onChange(regenerate);
-  mountainFolder
-    .add(mountains, "start", ...RANGES.mountainStart)
-    .name(L.mountainStart)
-    .onChange(regenerate);
-  const seed = mountainFolder
-    .add(mountains, "seed")
-    .step(1)
-    .name(L.seed)
-    .onFinishChange(regenerate);
-  const newLandscape = () => {
-    mountains.seed = randomSeed();
-    seed.updateDisplay();
-    regenerate();
-  };
-  mountainFolder.add({ newLandscape }, "newLandscape").name(L.newLandscape);
-  mountainFolder.close();
+
+  /** The mountain generator's shape (the seed is global: it builds the city too). */
+  function addMountains() {
+    const mountainFolder = gui.addFolder(L.mountains);
+    mountainFolder
+      .add(mountains, "height", ...RANGES.mountainHeight)
+      .name(L.mountainHeight)
+      .onChange(regenerate);
+    mountainFolder
+      .add(mountains, "roughness", ...RANGES.mountainRoughness)
+      .name(L.mountainRoughness)
+      .onChange(regenerate);
+    mountainFolder
+      .add(mountains, "start", ...RANGES.mountainStart)
+      .name(L.mountainStart)
+      .onChange(regenerate);
+    mountainFolder.close();
+  }
+
+  // Thematic order: the cars and the sun ahead, the road and its sides, the landscape, the night
+  // and the air, the effects; the global switches last.
+  layer("polonez");
+  layer("traffic");
+  addSun();
+  for (const key of ["road", "terrain", "palm", "rock"]) layer(key);
+  addMountains();
+  layer("hills");
+  layer("side");
+  addCity();
+  addNight();
+  addEnvironment();
+  addBloom();
+  addCrt();
 
   const glowName = touch ? L.bloomEnabled : `${L.bloomEnabled} (${TEXT.keys.glow})`;
   gui.add(bloom, "enabled").name(glowName).listen(); // G too

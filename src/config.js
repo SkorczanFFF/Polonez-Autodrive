@@ -688,7 +688,7 @@ export const TEXT = {
     lineFade: "Line fade",
     lineMin: "Line min",
     bloom: "Bloom",
-    bloomEnabled: "Glow",
+    bloomEnabled: "Wireframe glow",
     bloomStrength: "Strength",
     bloomRadius: "Radius",
     glow: "Glow",
