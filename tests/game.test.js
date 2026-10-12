@@ -19,7 +19,16 @@ function setup() {
     update: () => ({ crashed: state.crashNext, scored: false }),
   };
   const car = { steering: false, reset() {}, update() {}, release() {} };
-  const hud = new Proxy({}, { get: () => () => {} }); // every HUD call is a no-op
+  /** @type {number[]} progress of every countGameOver call */
+  const counts = [];
+  // every HUD call is a no-op, but the game over count is recorded
+  const hud = new Proxy(
+    {},
+    {
+      get: (_, name) =>
+        name === "countGameOver" ? (/** @type {number} */ p) => counts.push(p) : () => {},
+    },
+  );
   const menu = { show: () => calls.menuShow++, hide: () => calls.menuHide++ };
   const tweens = createTweens();
   const input = createInput(new EventTarget());
@@ -45,7 +54,7 @@ function setup() {
     state.crashNext = false;
   };
 
-  return { game, input, world, camera, calls, run, crash };
+  return { game, input, world, camera, calls, counts, minigame, run, crash };
 }
 
 describe("crash", () => {
@@ -97,6 +106,23 @@ describe("crash", () => {
     expect(world.speedMultiplier).toBe(1);
     expect(calls.minigameReset).toBe(resets + 1);
     expect(calls.menuShow).toBe(1);
+  });
+
+  it("counts the score up once the panel is in, then holds it", () => {
+    const { counts, minigame, run, crash } = setup();
+    crash();
+    counts.length = 0;
+    run(MINIGAME.crash.lock - 0.05);
+    expect(Math.max(...counts)).toBe(0); // the panel is not in yet
+    const duration = Math.min(
+      minigame.score * MINIGAME.scoreCount.perPoint,
+      MINIGAME.scoreCount.max,
+    );
+    run(0.05 + duration / 2);
+    expect(counts.at(-1)).toBeGreaterThan(0.3);
+    expect(counts.at(-1)).toBeLessThan(0.7);
+    run(duration);
+    expect(counts.at(-1)).toBe(1);
   });
 
   it("leaves the minigame for free ride too", () => {

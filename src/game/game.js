@@ -231,9 +231,16 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
           break;
         }
 
-        case "gameover":
+        case "gameover": {
           shake(stateTime);
+          // the score counts up once the panel is in (after the lock)
+          const { perPoint, max } = MINIGAME.scoreCount;
+          const duration = Math.min(minigame.score * perPoint, max);
+          const counting = stateTime - MINIGAME.crash.lock;
+          const progress = duration > 0 ? counting / duration : counting >= 0 ? 1 : 0;
+          hud.countGameOver(Math.min(Math.max(progress, 0), 1));
           break;
+        }
       }
     },
   };

@@ -812,8 +812,42 @@ kbd {
     0 0 28px var(--pink);
 }
 
-.hud__final-score.is-pop {
-  animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) var(--crash-lock, 0s) backwards;
+/* counting up: every new number ticks */
+.hud__final-score.is-tick {
+  animation: score-tick 0.12s ease-out;
+}
+
+/* counted: an arcade flash, then the score keeps pulsing like a neon sign */
+.hud__final-score.is-final {
+  animation:
+    score-flash 0.18s steps(1) 6,
+    score-pulse 1.4s ease-in-out 1.08s infinite; /* the pulse starts after the 6 flashes */
+}
+
+@keyframes score-tick {
+  from {
+    scale: 1.15;
+  }
+}
+
+@keyframes score-flash {
+  50% {
+    color: var(--yellow);
+    text-shadow:
+      3px 3px 0 var(--ui-deep),
+      0 0 16px var(--yellow),
+      0 0 40px var(--yellow);
+  }
+}
+
+@keyframes score-pulse {
+  50% {
+    scale: 1.06;
+    text-shadow:
+      3px 3px 0 var(--ui-deep),
+      0 0 18px var(--pink),
+      0 0 48px var(--pink);
+  }
 }
 
 .hud__final-best,

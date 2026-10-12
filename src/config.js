@@ -466,6 +466,11 @@ export const MINIGAME = {
     shakeAmount: 0.3, // largest camera offset, units
     lock: 0.6, // seconds before game over takes keys and clicks (and its panel shows)
   },
+  /** Game over score, arcade style: counts up once the panel is in, then flashes and pulses. */
+  scoreCount: {
+    perPoint: 0.06, // seconds per point
+    max: 1.2, // seconds at most, however big the score
+  },
 };
 
 export const CRT = {
