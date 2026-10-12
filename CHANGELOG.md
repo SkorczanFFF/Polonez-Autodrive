@@ -39,8 +39,8 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   that leaves only a faint eye icon in the corner.
 - In-game HUD (best, score and level), animated countdown, game over panel (score, best,
   NEW BEST, AGAIN / FREE RIDE / MENU); best score saved in `localStorage`.
-- Self-hosted fonts: VT323 (HUD, terminal, side panel) and Pacifico (logo); the loader switches
-  off like a CRT; `prefers-reduced-motion` turns UI animations and the CRT flicker off.
+- Self-hosted fonts: VT323 (HUD, terminal, side panel) and Yellowtail (logo, titles); the loader
+  switches off like a CRT; `prefers-reduced-motion` turns UI animations and the CRT flicker off.
 - F10 developer stats restyled as a SYS.MONITOR terminal panel.
 - Car handling: the body rolls outwards on its own pivot while the wheels stay on the road, the
   front wheels steer (5°) and the car yaws with its sideways speed.
@@ -79,6 +79,33 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 - Crimson fog (`#c70050`) instead of magenta.
 - The world is twice as long: palms and rocks come from 200 m ahead (the road starts lined with
   them), the fog reaches 400 m and the sun is twice as far and twice as big (same size on screen).
+- Game over counts the score up arcade style once its panel is in, then flashes it and keeps it
+  pulsing like a neon sign; the tail of the big "G" in "Game Over" is no longer cut off.
+- A crash no longer cuts straight to the menu: the world brakes to a halt with the traffic still on
+  the road, the camera shakes and the screen flashes; the game over panel shows up 0.6 s later,
+  when keys and buttons work again (no accidental restart). The camera and the side panel come
+  back only when you leave game over.
+- Menu, game over and the loading screen fit phone screens: the buttons stack, the loader's
+  terminal and text shrink to the width, and the logo shrinks smoothly with narrow screens
+  ("Polonez" never under ~300 px) instead of jumping between sizes.
+- Touch screens (phones, tablets without a keyboard) get the scene to look at: a bigger logo,
+  HIDE, the side panel (starting folded) and the camera orbiting with one finger, pinch to zoom.
+  The minigame and free ride need the arrow keys, so they are hidden until touch steering.
+- Side panel: the hill layers are now "Horizon range" and "Side mountains"; "Line width (all)"
+  says that it sets every line.
+- "Randomize all" picks a palette instead of unrelated random colors: a few related hues, and
+  lines in another hue than their model that always stand out from it (at least 3:1 contrast),
+  so they no longer vanish into a fill of a similar color. Three moods: night (dark fills, neon
+  lines, dark sky, glowing fog), day (pastel fills, dark lines, light sky) and mixed, where every
+  layer goes dark or light on its own.
+- The interface wears the scene's palette: panels, buttons, the loader, the HUD and the side
+  panel take their hue from the ground grid, the Polonez lines and the sun, keeping their
+  brightness, so a recolored or randomized scene no longer sits under a blue UI and every text
+  stays as readable as with the default colors.
+- No flash of unstyled buttons on a white page before the app loads: the page stays dark and
+  empty until its styles and colors are in, then the loader appears.
+- Shadows are drawn only for things near the car, not for the palms and rocks far behind it
+  (about 18% fewer triangles and 29% fewer draw calls per frame).
 
 ### Removed
 
