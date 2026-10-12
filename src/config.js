@@ -172,6 +172,8 @@ export const MOUNTAINS = {
   chunkRows: 16, // cells per side-band chunk along the road
   /** Along the road, the side mountains rise from flat ground over `length` from `from`. */
   grow: { from: -0.6 * WORLD.length, length: 160 }, // from inside the horizon range
+  /** Behind the car, they sink back into the ground over this before the conveyor ends. */
+  shrink: 192,
   lift: 0.05, // above the ground, so the flat foot does not z-fight with it
   /** Line overlay: "triangles" (every edge) or "squares" (the grid cells, like the terrain). */
   lines: /** @type {"triangles" | "squares"} */ ("triangles"),
