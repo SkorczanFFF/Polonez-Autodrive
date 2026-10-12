@@ -29,8 +29,8 @@ export const PALETTE = {
   dusk: "#261447", // road
   deepTeal: "#13304a", // rocks
   polonezBody: "#420d59", // the star: stands apart from the road; neon pink lines are its own
-  grape: "#2a0a4a", // horizon hills
-  plum: "#1e0f4f", // side hills
+  grape: "#2a0a4a", // horizon range
+  plum: "#1e0f4f", // side mountains
   horizon: "#c70050", // fog: distant things sink into a crimson-magenta glow
   neonPink: "#ff2a6d",
   neonMagenta: "#f706cf",
@@ -71,8 +71,18 @@ export const LAYERS = {
     lineMin: 0.2, // the far end of the car keeps a hint of its lines
     glow: 0.3, // its dense lines would blow out to white at full bloom
   },
-  hills: { label: "Hills", solid: PALETTE.grape, wire: PALETTE.neonMagenta, toggleSolid: true },
-  side: { label: "Side hills", solid: PALETTE.plum, wire: PALETTE.neonViolet, toggleSolid: true },
+  hills: {
+    label: "Horizon range",
+    solid: PALETTE.grape,
+    wire: PALETTE.neonMagenta,
+    toggleSolid: true,
+  },
+  side: {
+    label: "Side mountains",
+    solid: PALETTE.plum,
+    wire: PALETTE.neonViolet,
+    toggleSolid: true,
+  },
   road: { label: "Road", solid: PALETTE.dusk, wire: PALETTE.sunYellow, wireMap: "roadline" },
   terrain: { label: "Terrain", solid: PALETTE.void, wire: PALETTE.neonCyan, wireGrid: true },
   palm: {
@@ -599,7 +609,7 @@ export const TEXT = {
     fogColor: "Fog color",
     fogNear: "Fog near",
     fogFar: "Fog far",
-    lineWidth: "Line width",
+    lineWidth: "Line width (all)", // one shared uniform for every line material
     lineFade: "Line fade",
     lineMin: "Line min",
     bloom: "Bloom",
