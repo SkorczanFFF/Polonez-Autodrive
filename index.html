@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover: the scene runs under notches and the home indicator; the HUD stays
+         inside the safe area (CSS --safe-*). Page zoom stays allowed: the canvas has touch-action:
+         none, so pinching the scene zooms the scene, and pinching the HUD still zooms the page. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta
       name="description"
       content="Synthwave coloring-book style Three.js animation of a Polonez driving into the sunset, with a minigame."
@@ -69,6 +72,19 @@
         <kbd data-key="left"></kbd><kbd data-key="right"></kbd> <span data-text="steer"></span>
         <span class="hud__dot">·</span>
         <kbd data-key="exit"></kbd> <span data-text="exit"></span>
+      </div>
+
+      <!-- Touch screens in free ride: steering held like the arrow keys, and a way back. -->
+      <div class="hud__touch">
+        <button class="button hud__touch-steer" type="button" data-hold="left">
+          <span data-key="left"></span>
+        </button>
+        <button class="button" type="button" data-action="exit">
+          <span data-text="menu"></span>
+        </button>
+        <button class="button hud__touch-steer" type="button" data-hold="right">
+          <span data-key="right"></span>
+        </button>
       </div>
 
       <div class="hud__countdown sunset-text" hidden></div>

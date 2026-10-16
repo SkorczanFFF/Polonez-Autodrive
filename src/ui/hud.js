@@ -33,12 +33,18 @@ function replay(element, className) {
 /**
  * Menu, in-game HUD and game-over panel. Visibility per state lives in CSS (`body[data-state]`);
  * texts come from config.TEXT (`data-text`, `data-key` attributes). Buttons carry a
- * `data-action` and feed the same actions as the keyboard.
+ * `data-action` and feed the same actions as the keyboard; `data-hold` buttons are held like keys.
  *
- * @param {(action: Action) => void} dispatch
+ * Touch screens (`html[data-input="touch"]`) get no minigame for now and no key hints; free ride
+ * shows on-screen steering and an exit button instead.
+ *
+ * @param {Pick<ReturnType<typeof import("../core/input.js").createInput>, "dispatch" | "hold">} input
  * @param {HTMLElement} [root]
  */
-export function createHud(dispatch, root = document.getElementById("hud")) {
+export function createHud({ dispatch, hold }, root = document.getElementById("hud")) {
+  const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
+  document.documentElement.dataset.input = touch ? "touch" : "keys";
+
   const $ = (/** @type {string} */ selector) =>
     /** @type {HTMLElement} */ (root.querySelector(selector));
   const $$ = (/** @type {string} */ selector) =>
@@ -56,6 +62,23 @@ export function createHud(dispatch, root = document.getElementById("hud")) {
     } else {
       element.textContent = TEXT.keys[key];
     }
+  }
+
+  for (const button of $$("button[data-hold]")) {
+    const action = /** @type {Action} */ (button.dataset.hold);
+    button.setAttribute("aria-label", TEXT.keys[action]);
+    button.addEventListener("pointerdown", (event) => {
+      button.setPointerCapture(event.pointerId); // keeps steering while the finger slides off
+      hold(action, true, event.pointerId);
+    });
+    for (const type of /** @type {const} */ ([
+      "pointerup",
+      "pointercancel",
+      "lostpointercapture",
+    ])) {
+      button.addEventListener(type, (event) => hold(action, false, event.pointerId));
+    }
+    button.addEventListener("contextmenu", (event) => event.preventDefault()); // long press
   }
 
   for (const button of $$("button[data-action]")) {

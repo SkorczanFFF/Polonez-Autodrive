@@ -45,7 +45,7 @@ async function main() {
 
   const tweens = createTweens();
   const input = createInput();
-  const hud = createHud(input.dispatch);
+  const hud = createHud(input);
   const menu = createSceneGui({
     scene: view.scene,
     materials,

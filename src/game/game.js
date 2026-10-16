@@ -48,6 +48,11 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
   /** @type {THREE.Vector3 | null} camera position the crash shake jitters around */
   let shakeFrom = null;
   const shakeOffset = new THREE.Vector3();
+  let followX = 0; // sideways camera offset that keeps the car in frame
+  const carBounds = new THREE.Box3();
+  const corner = new THREE.Vector3();
+  const toCorner = new THREE.Vector3();
+  const forward = new THREE.Vector3();
   let stateTime = 0;
   let best = loadNumber(STORAGE.bestScore);
 
@@ -112,6 +117,37 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
     const random = () => Math.random() * 2 - 1;
     shakeOffset.set(random(), random(), 0).multiplyScalar(shakeAmount * left * left);
     camera.position.copy(shakeFrom).add(shakeOffset);
+  }
+
+  /**
+   * On portrait screens the steering range is wider than the view: the camera slides sideways,
+   * together with its orbit target, only as far as needed to keep the car inside. Landscape screens
+   * keep the fixed camera of the desktop version.
+   */
+  function followCar() {
+    if (cameraTween?.isActive()) {
+      followX = 0; // the move sets absolute positions
+      return;
+    }
+    const portrait = camera.aspect < 1;
+    if (!portrait && followX === 0) return; // landscape: nothing to measure every frame
+    // The outer corner of the body nearest the camera is the first to leave the frame.
+    const side = car.group.position.x >= 0 ? 1 : -1;
+    car.getBounds(carBounds);
+    const { min, max } = carBounds;
+    corner.set(side > 0 ? max.x : min.x, max.y, max.z);
+    const base = camera.position.x - followX; // camera x without the offset
+    const depth = toCorner
+      .subVectors(corner, camera.position)
+      .dot(camera.getWorldDirection(forward));
+    const halfWidth = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect; // per unit of depth
+    const room = depth * halfWidth - SCENE.camera.followMargin; // half the view at the corner
+    const offset = portrait ? side * Math.max(0, side * (corner.x - base) - room) : 0;
+    const dx = offset - followX;
+    if (dx === 0) return;
+    camera.position.x += dx;
+    controls.target.x += dx;
+    followX = offset;
   }
 
   function leaveMinigame() {
@@ -200,6 +236,7 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
     update(dt) {
       stateTime += dt;
       car.update(dt, world.speedMultiplier, steerInput());
+      followCar();
 
       switch (machine.state) {
         case "countdown": {

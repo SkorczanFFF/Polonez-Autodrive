@@ -44,9 +44,8 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   // touchStyles: lil-gui would make every row taller and its font smaller on touch screens;
   // the compact terminal look reads better there too (its typings say number, it is a boolean)
   const gui = new GUI({ title: L.title, touchStyles: /** @type {any} */ (false) });
-  // touch screens (phones): no keys to hint at; start folded, open it covers most of the screen
-  const touch = window.matchMedia("(pointer: coarse)").matches;
-  if (touch) gui.close();
+  // touch screens: no keys to hint at (ui/hud.js, created first, decides and sets data-input)
+  const touch = document.documentElement.dataset.input === "touch";
 
   /**
    * What "Randomize all" gives a color control (ui/randomPalette.js); a layer's line is picked
@@ -344,6 +343,15 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   icon.setAttribute("aria-hidden", "true");
   icon.textContent = L.randomizeIcon;
   randomizeButton.$name.prepend(icon);
+
+  // Small screens (.is-compact in CSS: folded, just the title; open, at most the screen width) and
+  // touch screens start folded, as the open panel covers most of the screen.
+  const small = RANGES.compactBelow;
+  const compact = matchMedia(`(max-width: ${small}px), (max-height: ${small}px)`); // phones, both ways
+  const applyCompact = () => gui.domElement.classList.toggle("is-compact", compact.matches);
+  compact.addEventListener("change", applyCompact);
+  applyCompact();
+  if (compact.matches || touch) gui.close();
 
   // lil-gui stops key events while one of its controls is focused; give focus back after each
   // edit or folder toggle, so ENTER / F / arrows reach the game without clicking the scene.

@@ -270,13 +270,15 @@ export const SCENE = {
     },
   },
   camera: {
-    fov: 90,
+    fov: 90, // vertical, degrees
+    minHorizontalFov: 70, // degrees; portrait screens widen the vertical fov to keep this
     near: 0.1,
     far: 2400, // past the sun (SUN.disc), the sky dome (sky.js) and the sides of the city (CITY)
     position: [0, 3, 7],
     target: [0, 1.8, 0],
     gamePosition: [0, 4, 7], // OrbitControls clamps it to maxDistance -> (0, 3.9, 6.68), as in v1
     transition: 1, // seconds for camera moves between menu and minigame
+    followMargin: 0.5, // units; on narrow screens the camera slides sideways to keep the car this far inside
   },
   controls: {
     minDistance: 4.5,
@@ -588,6 +590,7 @@ export const GUI = {
   crtSpeed: [0.05, 0.5, 0.01],
   crtIntensity: [0, 2, 0.1],
   randomizeDuration: 1, // seconds
+  compactBelow: 600, // px; screens narrower or lower than this start with the panel closed
 };
 
 export const STORAGE = {

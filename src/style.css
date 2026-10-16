@@ -11,6 +11,11 @@
   --z-crt: 9999;
   --font-terminal: "VT323", monospace;
   --font-script: "Yellowtail", cursive;
+  /* notch and home indicator (viewport-fit=cover): fixed HUD elements add these to their offsets */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
 
 /* ---------- base ---------- */
@@ -19,6 +24,7 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none; /* no bounce or pull-to-refresh when dragging the scene */
 }
 
 canvas {
@@ -27,6 +33,7 @@ canvas {
   height: 100%;
   outline: none;
   cursor: grab;
+  touch-action: none; /* gestures orbit and zoom the scene (OrbitControls), never the page */
 }
 
 canvas:active {
@@ -305,6 +312,7 @@ kbd {
   white-space: nowrap;
   color: var(--aqua);
   text-shadow: 0 0 8px currentColor;
+  touch-action: manipulation; /* taps act at once: no double-tap zoom on buttons */
   background-color: color-mix(in srgb, var(--ui-deep) 84%, transparent);
   border: 2px solid currentColor;
   box-shadow:
@@ -344,7 +352,8 @@ kbd {
   z-index: var(--z-hud);
   flex-direction: column;
   align-items: center;
-  padding: 5vh 16px 3vh;
+  padding: calc(5vh + var(--safe-top)) calc(16px + var(--safe-right)) calc(3vh + var(--safe-bottom))
+    calc(16px + var(--safe-left));
   text-align: center;
   pointer-events: none;
 }
@@ -580,8 +589,8 @@ kbd {
 
 .hud__toggle {
   position: fixed;
-  top: 15px;
-  left: 15px;
+  top: calc(15px + var(--safe-top));
+  left: calc(15px + var(--safe-left));
   transition:
     opacity 0.3s,
     border-color 0.3s,
@@ -625,8 +634,8 @@ kbd {
 /* top-left hints (free ride, countdown, playing) */
 .hud__corner {
   position: fixed;
-  top: 15px;
-  left: 15px;
+  top: calc(15px + var(--safe-top));
+  left: calc(15px + var(--safe-left));
   z-index: var(--z-hud);
   padding: 4px 12px;
   font-size: 20px;
@@ -668,7 +677,7 @@ kbd {
 /* scoreboard */
 .hud__scoreboard {
   position: fixed;
-  top: 12px;
+  top: calc(12px + var(--safe-top));
   left: 50%;
   z-index: var(--z-hud);
   transform: translateX(-50%);
@@ -988,8 +997,8 @@ kbd {
 /* ---------- F10 developer stats (SYS.MONITOR) ---------- */
 .devstats {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: calc(20px + var(--safe-bottom));
+  left: calc(20px + var(--safe-left));
   z-index: var(--z-devstats);
   min-width: 230px;
   font-family: var(--font-terminal);
@@ -1129,12 +1138,7 @@ kbd {
 @media (max-width: 560px) {
   /* the logo starts below the HIDE toggle in the corner */
   .hud__menu {
-    padding-top: 64px;
-  }
-
-  /* the folded scene panel is just its title, clear of the HIDE toggle; full width when open */
-  .lil-gui.lil-root.lil-closed {
-    width: auto;
+    padding-top: calc(64px + var(--safe-top));
   }
 
   /* buttons stack: side by side they run off the screen */
@@ -1144,15 +1148,65 @@ kbd {
   }
 }
 
-/* ---------- touch screens (no keyboard) ----------
-   A scene to look at, orbit (one finger, pinch to zoom) and recolor; the minigame and free ride
-   need the arrow keys, so they wait for touch steering. */
-@media (pointer: coarse) {
-  .hud__best,
-  .hud__bottom,
-  .hud__toggle kbd {
-    display: none !important;
-  }
+/* ---------- touch screens (no keyboard; ui/hud.js sets data-input) ----------
+   No minigame for now (it needs the arrow keys), so no best score, and no key hints; free ride
+   gets on-screen controls (.hud__touch). */
+[data-input="touch"] .hud__menu [data-action="start"],
+[data-input="touch"] .hud__best,
+[data-input="touch"] .button kbd,
+[data-input="touch"] .hud__steer,
+[data-input="touch"] .hud__corner {
+  display: none !important;
+}
+
+[data-input="touch"] .hud__menu .button-grid {
+  --columns: 1;
+}
+
+[data-input="touch"] [data-state="free"] .hud__touch {
+  display: flex !important;
+}
+
+.hud__touch {
+  position: fixed;
+  right: calc(16px + var(--safe-right));
+  bottom: calc(16px + var(--safe-bottom));
+  left: calc(16px + var(--safe-left));
+  z-index: var(--z-hud);
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.hud__touch .button {
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+.hud__touch-steer {
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  font-size: 40px;
+}
+
+/* lil-gui sits in the top right corner; keep it out of the notch */
+.lil-gui.lil-root.autoPlace {
+  top: var(--safe-top);
+  right: calc(15px + var(--safe-right));
+  max-height: calc(100% - var(--safe-top) - var(--safe-bottom));
+}
+
+/* lil-gui on small screens (.is-compact, ui/gui.js): folded, it is just its title, clear of the
+   HIDE toggle; open, at most the screen width */
+.lil-gui.lil-root.is-compact {
+  --width: min(290px, calc(100vw - 30px - var(--safe-left) - var(--safe-right)));
+}
+
+.lil-gui.lil-root.is-compact.lil-closed {
+  width: auto;
 }
 
 /* ---------- reduced motion ---------- */

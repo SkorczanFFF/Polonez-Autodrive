@@ -28,7 +28,7 @@ The Polonez, its wheels, the palms and the rocks were modeled in 3Ds Max 2018, u
 
 All menu and game over buttons are clickable too. Drag with the mouse to orbit the camera outside the minigame.
 
-On touch screens (phones, tablets without a keyboard) the app is a scene to look at: orbit with one finger, pinch to zoom, recolor it in the side panel. The minigame and free ride need the arrow keys, so they are hidden there until touch steering.
+On touch screens (phones, tablets without a keyboard) orbit with one finger, pinch to zoom and recolor the scene in the side panel; free ride has on-screen steering (hold ← / →) and a MENU button. The minigame needs a keyboard for now.
 
 ---
 
@@ -93,7 +93,7 @@ tests/             Vitest unit tests
 - Rocks and palms that follow the terrain, so the mountains can start closer to the road; a sidewalk
 - Palette presets: Original 2024, Take On Me, Game Boy, Tron, Vaporwave
 - More communist-era cars in the minigame; springy suspension
-- Touch controls
+- The minigame on touch screens
 
 ---
 

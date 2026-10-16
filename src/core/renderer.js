@@ -48,6 +48,7 @@ export function createView(container = document.body) {
     renderer.setSize(width, height, false);
     bloom.setSize(width, height);
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.fov = fitFov(camera.aspect);
     camera.updateProjectionMatrix();
   }
 
@@ -59,4 +60,17 @@ export function createView(container = document.body) {
   }
 
   return { renderer, scene, camera, controls, bloom, render };
+}
+
+/**
+ * Vertical fov for an aspect ratio: SCENE.camera.fov, widened on narrow (portrait) screens so the
+ * horizontal fov never drops below SCENE.camera.minHorizontalFov.
+ *
+ * @param {number} aspect width / height
+ */
+export function fitFov(aspect) {
+  const { fov, minHorizontalFov } = SCENE.camera;
+  const halfWidth = Math.tan(THREE.MathUtils.degToRad(minHorizontalFov) / 2);
+  const needed = THREE.MathUtils.radToDeg(2 * Math.atan(halfWidth / aspect));
+  return Math.max(fov, needed);
 }

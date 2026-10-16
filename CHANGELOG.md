@@ -66,6 +66,10 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   "New landscape" button.
 - Side panel: Glow switch, Bloom folder, line width, per-layer line fade / line min / glow,
   traffic layer, aligned columns with square color previews and `#hex` values.
+- Phones and tablets: the scene fits portrait screens (a wider view, and the camera follows the
+  car sideways), the HUD keeps clear of notches and the home indicator, and free ride has
+  on-screen steering (hold ← / →) and a MENU button. The minigame is not offered on touch screens
+  yet.
 
 ### Changed
 
@@ -90,7 +94,7 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   ("Polonez" never under ~300 px) instead of jumping between sizes.
 - Touch screens (phones, tablets without a keyboard) get the scene to look at: a bigger logo,
   HIDE, the side panel (starting folded) and the camera orbiting with one finger, pinch to zoom.
-  The minigame and free ride need the arrow keys, so they are hidden until touch steering.
+  Pinching the scene zooms the scene, never the page.
 - Side panel: the hill layers are now "Horizon range" and "Side mountains"; "Line width (all)"
   says that it sets every line.
 - "Randomize all" picks a palette instead of unrelated random colors: a few related hues, and
