@@ -51,15 +51,10 @@ export function applyTheme(root = document.documentElement) {
   }
   for (const [name, value] of Object.entries(SCENE_DEFAULTS)) setSceneColor(name, value, root);
 
-  let meta = /** @type {HTMLMetaElement | null} */ (
+  const meta = /** @type {HTMLMetaElement | null} */ (
     document.querySelector('meta[name="theme-color"]')
   );
-  if (!meta) {
-    meta = document.createElement("meta");
-    meta.name = "theme-color";
-    document.head.append(meta);
-  }
-  meta.content = PALETTE.pink;
+  if (meta) meta.content = PALETTE.pink;
 
   root.dataset.theme = "ready";
 }

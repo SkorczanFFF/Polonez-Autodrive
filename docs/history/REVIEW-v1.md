@@ -1,5 +1,7 @@
 # REVIEW — Polonez Autodrive (przed deployem)
 
+> **Historia.** Przegląd kodu v1 sprzed przebudowy 2.0 na Vite i three.js r186. Opisywane pliki (`js/core`, `Application.js`, `MinigameManager.js`) już nie istnieją; plik zostaje jako zapis decyzji, które ukształtowały 2.0. Aktualny przegląd: `RV.md` w korzeniu.
+
 > Stan: `main` @ `a3dc09a`. Przeczytane w całości: `js/core`, `js/models`, `js/utils`, `index.html`, `style.css`. Pominięte jako vendor: `three.js`, `FBXLoader.js`, `inflate.min.js`, `dat.gui.module.js`.
 > Scena była też odpalona lokalnie: ok. 69 FPS przy 1920×889, 104 meshe, 64 draw calle, ok. 13 tys. trójkątów, 27 warningów z FBXLoadera w konsoli.
 

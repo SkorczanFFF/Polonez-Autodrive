@@ -1,9 +1,10 @@
 import GUI, { ColorController } from "lil-gui";
 import * as THREE from "three";
-import { ACTIONS, GUI as RANGES, LAYERS, NIGHT, SCENE, SUN, TEXT } from "../config.js";
+import { GUI as RANGES, LAYERS, NIGHT, SCENE, SUN, TEXT } from "../config.js";
 import { isLineMaterial, lineWidth } from "../scene/lines.js";
 import { randomSeed } from "../scene/mountains.js";
 import { createRandomPalette } from "./randomPalette.js";
+import { withKey } from "./labels.js";
 import { setSceneColor } from "./theme.js";
 
 /**
@@ -19,7 +20,8 @@ import { setSceneColor } from "./theme.js";
 
 /**
  * lil-gui shows a color as "f749ae" in its text field; show "#f749ae", so a typed or pasted
- * "#hex" fits the field (lil-gui parses it with or without the "#").
+ * "#hex" fits the field (lil-gui parses it with or without the "#"). Relies on lil-gui 0.21
+ * internals (`_textFocused`, `$text`, `$input`): the first thing to check after an upgrade.
  *
  * @param {import("lil-gui").Controller} controller
  */
@@ -170,11 +172,11 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
     environment
       .add(sceneParams, "near", ...RANGES.fogNear)
       .name(L.fogNear)
-      .onChange((v) => (fog.near = v));
+      .onChange((/** @type {number} */ v) => (fog.near = v));
     environment
       .add(sceneParams, "far", ...RANGES.fogFar)
       .name(L.fogFar)
-      .onChange((v) => (fog.far = v));
+      .onChange((/** @type {number} */ v) => (fog.far = v));
 
     // the landscape: mountains, horizon range and city all come from this seed
     const seed = environment.add(mountains, "seed").step(1).name(L.seed).onFinishChange(regenerate);
@@ -229,7 +231,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
     nightFolder
       .add(nightParams, "moon")
       .name(L.moon)
-      .onChange((v) => (night.moon.value = v ? 1 : 0));
+      .onChange((/** @type {boolean} */ v) => (night.moon.value = v ? 1 : 0));
     color(nightFolder, nightParams, "moonColor", L.moonColor, { role: "moon" }, (v) =>
       night.moonColor.value.set(v),
     );
@@ -274,9 +276,9 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   addBloom();
   addCrt();
 
-  /** A label with its key, where there are keys. @param {string} label @param {"glow" | "randomize"} action */
-  const withKey = (label, action) => (touch ? label : `${label} (${ACTIONS[action].label})`);
-  gui.add(bloom, "enabled").name(withKey(L.bloomEnabled, "glow")).listen(); // G too
+  /** A label with its key, where there are keys. @param {string} label @param {import("../config.js").Action} action */
+  const keyed = (label, action) => (touch ? label : withKey(label, action));
+  gui.add(bloom, "enabled").name(keyed(L.bloomEnabled, "glow")).listen(); // G too
 
   /** @type {import("../core/tween.js").TweenHandle | null} */
   let randomizing = null;
@@ -315,9 +317,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   }
 
   // the emoji gets its own box, so it can sit centered on the label (fonts differ in metrics)
-  const randomizeButton = gui
-    .add({ randomize }, "randomize")
-    .name(withKey(L.randomize, "randomize")); // R too
+  const randomizeButton = gui.add({ randomize }, "randomize").name(keyed(L.randomize, "randomize")); // R too
   randomizeButton.domElement.classList.add("gui-randomize");
   const icon = document.createElement("span");
   icon.className = "gui-randomize__icon";
@@ -331,6 +331,15 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   small.addEventListener("change", applyCompact);
   applyCompact();
   if (small.matches || touch) gui.close();
+
+  // the name column fits the longest label (style.css --name-width)
+  const labels = [
+    ...Object.values(L),
+    keyed(L.bloomEnabled, "glow"),
+    keyed(L.randomize, "randomize"),
+  ];
+  const chars = Math.max(...labels.map((label) => label.length));
+  gui.domElement.style.setProperty("--name-chars", String(chars));
 
   // lil-gui stops key events while one of its controls is focused; give focus back after each
   // edit or folder toggle, so ENTER / F / arrows reach the game without clicking the scene.

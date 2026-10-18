@@ -21,23 +21,24 @@ export function pruneEmpty(root) {
 }
 
 /**
- * Geometric centre of a model in its own space (model origin at the world origin).
+ * Geometric centre of a model in its own space: the box around its meshes' bounding boxes, each
+ * brought into the model's space (the model itself is left as it is).
  *
  * @param {THREE.Object3D} model
  */
 function localCenter(model) {
-  const { position, quaternion, scale } = model;
-  const savedPosition = position.clone();
-  const savedQuaternion = quaternion.clone();
-  const savedScale = scale.clone();
-  position.set(0, 0, 0);
-  quaternion.identity();
-  scale.set(1, 1, 1);
-  const center = new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3());
-  position.copy(savedPosition);
-  quaternion.copy(savedQuaternion);
-  scale.copy(savedScale);
-  return center;
+  model.updateWorldMatrix(true, true);
+  const toLocal = model.matrixWorld.clone().invert();
+  const bounds = new THREE.Box3();
+  const box = new THREE.Box3();
+  model.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    const geometry = /** @type {THREE.BufferGeometry} */ (object.geometry);
+    if (!geometry.boundingBox) geometry.computeBoundingBox();
+    box.copy(/** @type {THREE.Box3} */ (geometry.boundingBox));
+    bounds.union(box.applyMatrix4(object.matrixWorld).applyMatrix4(toLocal));
+  });
+  return bounds.getCenter(new THREE.Vector3());
 }
 
 /**

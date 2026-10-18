@@ -62,17 +62,19 @@ export function createInput(target = window) {
     dispatchRelease(action);
   }
 
-  target.addEventListener("keydown", (/** @type {KeyboardEvent} */ event) => {
-    const action = actionByCode.get(event.code);
+  target.addEventListener("keydown", (event) => {
+    const { code, repeat } = /** @type {KeyboardEvent} */ (event);
+    const action = actionByCode.get(code);
     if (!action) return;
     event.preventDefault();
-    if (event.repeat) return; // OS auto-repeat must not restart presses (v1 bug)
-    press(action, event.code);
+    if (repeat) return; // OS auto-repeat must not restart presses (v1 bug)
+    press(action, code);
   });
 
-  target.addEventListener("keyup", (/** @type {KeyboardEvent} */ event) => {
-    const action = actionByCode.get(event.code);
-    if (action) release(action, event.code);
+  target.addEventListener("keyup", (event) => {
+    const { code } = /** @type {KeyboardEvent} */ (event);
+    const action = actionByCode.get(code);
+    if (action) release(action, code);
   });
 
   // Keys released while the window had no focus would otherwise stay "held".

@@ -1,5 +1,6 @@
 import { ACTIONS, MINIGAME, TEXT } from "../config.js";
 import { ICONS } from "./icons.js";
+import { withKey } from "./labels.js";
 
 /** @typedef {import("../config.js").Action} Action */
 
@@ -32,9 +33,9 @@ function replay(element, className) {
 
 /**
  * Menu, in-game HUD and game-over panel. Visibility per state lives in CSS (`body[data-state]`);
- * texts come from config.TEXT (`data-text`) and keycaps from config.ACTIONS (`data-key`). Buttons
- * carry a `data-action` and feed the same actions as the keyboard; `data-hold` buttons are held
- * like keys.
+ * texts and accessible names come from config.TEXT (`data-text`, `data-label`), keycaps from
+ * config.ACTIONS (`data-key`) and icons from ui/icons.js (`data-icon`). Buttons carry a
+ * `data-action` and feed the same actions as the keyboard; `data-hold` buttons are held like keys.
  *
  * Touch screens (`html[data-input="touch"]`, core/device.js) get no minigame for now and no key
  * hints; free ride shows on-screen steering and an exit button instead.
@@ -42,17 +43,28 @@ function replay(element, className) {
  * @param {Pick<ReturnType<typeof import("../core/input.js").createInput>, "dispatch" | "hold">} input
  * @param {HTMLElement} [root]
  */
-export function createHud({ dispatch, hold }, root = document.getElementById("hud")) {
+export function createHud(
+  { dispatch, hold },
+  root = /** @type {HTMLElement} */ (document.getElementById("hud")),
+) {
   const $ = (/** @type {string} */ selector) =>
     /** @type {HTMLElement} */ (root.querySelector(selector));
   const $$ = (/** @type {string} */ selector) =>
     /** @type {HTMLElement[]} */ ([...root.querySelectorAll(selector)]);
+  /** A text of config.TEXT by the key an element names. @param {string} [key] */
+  const textOf = (key = "") => String(/** @type {Record<string, unknown>} */ (TEXT)[key]);
 
-  for (const element of $$("[data-text]")) element.textContent = TEXT[element.dataset.text];
+  for (const element of $$("[data-text]")) element.textContent = textOf(element.dataset.text);
+  for (const element of $$("[data-label]")) {
+    element.setAttribute("aria-label", textOf(element.dataset.label));
+  }
+  for (const element of $$("[data-icon]")) {
+    element.innerHTML = ICONS[/** @type {keyof typeof ICONS} */ (element.dataset.icon)];
+  }
   root.style.setProperty("--crash-lock", `${MINIGAME.crash.lock}s`); // game over panel delay
   root.style.setProperty("--crash-shake", `${MINIGAME.crash.shake}s`); // the flash lasts as long
   for (const element of $$("[data-key]")) {
-    const { label, icon } = ACTIONS[/** @type {Action} */ (element.dataset.key)];
+    const { label = "", icon } = ACTIONS[/** @type {Action} */ (element.dataset.key)];
     if (icon) {
       element.innerHTML = ICONS[icon];
       element.setAttribute("aria-label", label);
@@ -64,7 +76,7 @@ export function createHud({ dispatch, hold }, root = document.getElementById("hu
 
   for (const button of $$("button[data-hold]")) {
     const action = /** @type {Action} */ (button.dataset.hold);
-    button.setAttribute("aria-label", ACTIONS[action].label);
+    button.setAttribute("aria-label", ACTIONS[action].label ?? "");
     button.addEventListener("pointerdown", (event) => {
       button.setPointerCapture(event.pointerId); // keeps steering while the finger slides off
       hold(action, true, event.pointerId);
@@ -102,7 +114,7 @@ export function createHud({ dispatch, hold }, root = document.getElementById("hu
   /** @param {boolean} visible */
   function setMenuVisible(visible) {
     document.body.dataset.menu = visible ? "visible" : "hidden";
-    const label = `${visible ? TEXT.menuHide : TEXT.menuShow} (${ACTIONS.menu.label})`;
+    const label = withKey(visible ? TEXT.menuHide : TEXT.menuShow, "menu");
     menuToggle.title = label;
     menuToggle.setAttribute("aria-label", label);
     menuToggle.setAttribute("aria-pressed", String(!visible));

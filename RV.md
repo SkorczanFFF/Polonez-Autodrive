@@ -245,7 +245,20 @@ Done: jak wyżej + ręczny przegląd; testy kolorów bez własnego ustawiania Co
 
 ### Faza 4 — Dokumentacja, CSS, higiena
 
-- [ ] C5 `REVIEW.md` → `docs/history/`, liczby w prozie → odesłania do config, README `environment/` + `city.js`
-- [ ] C2.3–C2.7 tokeny CSS (`--corner-gap`, `.loader__terminal.panel`, `calc()` dla `score-pulse`, `--name-width` z `TEXT.gui`, `CRT.lineOpacity` dla loadera)
-- [ ] C4.8–C4.11 sufiks klawisza w jednym miejscu, ikona oka przez `icons.js`, `aria-label` z `TEXT`, devstats deklaratywnie
-- [ ] A5–A8 kosmetyka; D6 `<meta theme-color>` w HTML; F `strict: true`
+- [x] C5 `REVIEW.md` → `docs/history/`, liczby w prozie → odesłania do config, README `environment/` + `city.js`
+- [x] C2.3–C2.7 tokeny CSS (`--corner-gap`, `.loader__terminal.panel`, `calc()` dla `score-pulse`, `--name-width` z `TEXT.gui`, `CRT.lineOpacity` dla loadera)
+- [x] C4.8–C4.11 sufiks klawisza w jednym miejscu, ikona oka przez `icons.js`, `aria-label` z `TEXT`, devstats deklaratywnie
+- [x] A5–A8 kosmetyka; D6 `<meta theme-color>` w HTML; F `strict: true`
+
+**Zrobione 2026-10-18**, pięć commitów od `4fb842b` do `ae49f0a` (125 testów, typecheck w trybie strict, build zielone; strona w headless Chrome bez błędów konsoli). Decyzje po drodze:
+
+- C5: `REVIEW.md` → `docs/history/REVIEW-v1.md` z nagłówkiem "historia". Poprawione tylko opisy stanu bieżącego (sekcja "What the app is" w CHANGELOG: tempo gry bez liczb, nazwy warstw panelu z miastem i nocą; README: `city.js` w `environment/`, palmy "z daleka" zamiast "200 m"; komentarz o kolorach FPS w config). Datowane wpisy CHANGELOG zostają z liczbami: to zapis tego, co wtedy zmieniono. Tabela klawiszy w README zostaje: to dokumentacja dla użytkownika, nie kopia config.
+- C2.3–C2.7: tokeny `--panel-bg`, `--panel-glow`, `--corner-gap` w `:root`; `.loader__terminal` bierze tylko poświatę (jego tło jest kryjące, inaczej niż `.panel`, więc nie nosi tej klasy); `score-pulse` startuje po `calc(--flash * --flashes)`; kolumna nazw panelu to `--name-chars` liczone w `gui.js` z `TEXT.gui` (najdłuższa etykieta to teraz "Wireframe glow (G)", 18 znaków); scanlines loadera z `LOADER.lineOpacity` przez `--loader-line-opacity`.
+- C4.8–C4.11: `ui/labels.js` z `withKey`; ikona oka w `ICONS.eye` (kreska jako `.icon__slash`), wstawiana przez `data-icon`; `aria-label` sekcji przez `data-label` z `TEXT`; devstats ma markup w `index.html` (`data-text` z `TEXT.statsPanel`, `data-stat` per czytnik).
+- A5: `localCenter` liczy box z geometrii dzieci sprowadzonych do przestrzeni modelu, bez zerowania transformacji. A6: stany chunka to `null` i `"partial"` (typ `Growth`), `reshape(chunk, index)` dostaje indeks wprost. A7: komentarz przy `showHash` o internals lil-gui 0.21. A8 (`prewarm`): zostawione, jak radził przegląd. D6: pusty `<meta name="theme-color">` w HTML, JS ustawia tylko `content`.
+- F: `strict: true` przeszło po 31 poprawkach: rzutowania `getElementById` w domyślnych parametrach, `$()` zwraca `HTMLElement`, `textOf()` w `hud.js` dla kluczy z `data-*`, zdarzenia klawiatury rzutowane w środku listenera (`EventTarget` nie zna `KeyboardEvent`), `label ?? ""` dla akcji bez etykiety, typ `values` w teście tweenów.
+
+## Stan po czterech fazach
+
+Wszystkie pozycje §A–F poza świadomie odłożonymi: A8 `prewarm`, `roadGap` jako wartość docelowa i `SPEED.traffic` z §C3, wzór na centroid w `lights.test.js`, tabela w `state.test.js`. Otwarte pytanie z fazy 3: fallback `@supports` dla przeglądarek bez `oklch(from …)`.
+

@@ -14,16 +14,16 @@ lets you recolor and tweak everything.
   (**H**) to enjoy or recolor the view.
 - **Free ride (F):** steer the Polonez with **← / →**, no obstacles.
 - **Minigame (ENTER):** a 3-2-1 countdown, then oncoming communist-era traffic (Fiat 126p, Škoda
-  120). Dodge it: every car that passes scores a point, every 20 points the world gets 15% faster.
-  A crash ends the game; the best score is kept in the browser.
+  120). Dodge it: every car that passes scores a point, and every few points the world speeds up
+  (`SPEED` in `src/config.js`). A crash ends the game; the best score is kept in the browser.
 - **Scene:** road and scrolling terrain grid that rises into endless procedural mountains on both
   sides and a range in front of the sun, palms and rocks appearing out of the haze, a sky that
   glows crimson at the horizon, soft sunset shadows, glowing
   wireframes, a CRT overlay and an intentionally half-resolution, slightly blurry 80s look.
-- **Side panel:** per layer (Polonez, hills, side hills, road, terrain, palms, rocks, traffic) the
-  fill and line colors and visibility, line fading and glow, palm and rock density; sun colors and
-  stripes, bloom, CRT, sky and fog, mountain height / roughness / start / seed, line width, and
-  "Randomize all".
+- **Side panel:** per layer (Polonez, traffic, road, terrain, palms, rocks, horizon range, side
+  mountains, city) the fill and line colors and visibility, line fading and glow, palm and rock
+  density; sun colors and stripes, mountain height / roughness / start / seed, the city's layout
+  and haze, the night sky, sky and fog, bloom, CRT, line width, and "Randomize all".
 - **Keys:** ENTER start, F free ride, ESC menu, ← / → steer, H hide menu, G glow on/off, R
   randomize all colors, F10
   developer stats.

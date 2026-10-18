@@ -566,12 +566,13 @@ export const STORAGE = {
 /** F10 developer overlay. */
 export const DEVSTATS = {
   refresh: 1, // seconds between updates
-  fpsGood: 55, // FPS at or above: aqua
-  fpsWarn: 30, // FPS at or above: yellow, below: red
+  fpsGood: 55, // FPS at or above: level "good"
+  fpsWarn: 30, // FPS at or above: level "warn", below: "bad" (colors per level in style.css)
 };
 
 export const LOADER = {
   barLength: 20, // characters in the progress bar
+  lineOpacity: 0.25, // dark scan lines over the loading screen (the CRT overlay has its own, CRT)
   typeDelay: [0.03, 0.06], // seconds per typed character (random in range)
   messagePause: 0.5, // seconds between messages
   fadeDelay: 0.3, // seconds "SYSTEM READY!" stays before fading

@@ -16,29 +16,29 @@ const fpsLevel = (fps) =>
   fps >= DEVSTATS.fpsGood ? "good" : fps >= DEVSTATS.fpsWarn ? "warn" : "bad";
 
 /**
- * Developer overlay ("SYS.MONITOR"), toggled with the "stats" action (F10). The markup is built
- * once; every DEVSTATS.refresh seconds only the values change. Reads renderer.info of the
- * previous frame.
+ * Developer overlay ("SYS.MONITOR"), toggled with the "stats" action (F10). The markup is in
+ * index.html (`data-text` from TEXT.statsPanel, `data-stat` per ROWS reader); every
+ * DEVSTATS.refresh seconds only the values change. Reads renderer.info of the previous frame.
  *
  * @param {import("three").WebGLRenderer} renderer
  * @param {Pick<ReturnType<typeof import("../core/input.js").createInput>, "onPress">} input
  * @param {HTMLElement} [root]
  */
-export function createDevStats(renderer, input, root = document.getElementById("devstats")) {
+export function createDevStats(
+  renderer,
+  input,
+  root = /** @type {HTMLElement} */ (document.getElementById("devstats")),
+) {
   const L = TEXT.statsPanel;
-  const keys = /** @type {(keyof typeof ROWS)[]} */ (Object.keys(ROWS));
-
-  root.innerHTML = `
-    <div class="devstats__header">${L.title}</div>
-    <div class="devstats__fps"><span class="devstats__fps-value" data-fps>--</span>${L.fps}</div>
-    <dl class="devstats__rows">
-      ${keys.map((key) => `<dt>${L[key]}</dt><dd data-stat="${key}">--</dd>`).join("")}
-    </dl>`;
-
+  const $$ = (/** @type {string} */ selector) =>
+    /** @type {HTMLElement[]} */ ([...root.querySelectorAll(selector)]);
+  for (const element of $$("[data-text]")) {
+    element.textContent = L[/** @type {keyof typeof L} */ (element.dataset.text)];
+  }
   const fpsValue = /** @type {HTMLElement} */ (root.querySelector("[data-fps]"));
-  const values = keys.map((key) => ({
-    read: ROWS[key],
-    element: /** @type {HTMLElement} */ (root.querySelector(`[data-stat="${key}"]`)),
+  const values = $$("[data-stat]").map((element) => ({
+    read: ROWS[/** @type {keyof typeof ROWS} */ (element.dataset.stat)],
+    element,
   }));
 
   let visible = false;

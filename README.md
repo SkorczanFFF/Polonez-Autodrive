@@ -67,7 +67,7 @@ src/
   scene/           materials, shader wireframes, car, minigame traffic, spawner, height fields,
                    mountain shapes, world
     environment/   independent world parts: sky, lights, ground, sun, horizon range (hills),
-                   side mountains (side hills), scenery
+                   side mountains (side hills), scenery, city
   game/            state machine, minigame, game orchestration
   ui/              theme, loader, HUD, scene GUI, CRT overlay, F10 stats
 public/            FBX models (Polonez, wheel, palm, rocks) and textures
@@ -87,7 +87,7 @@ tests/             Vitest unit tests
   - Both sides of the road are an endless conveyor of chunks rolling towards the camera; they grow out of the ground as they come closer, rising out of the horizon range.
   - The horizon range in front of the sun is static and parted like a sea for the road, so the striped sun shows in the pass.
   - The side panel (**Mountains**) sets their height, roughness and where they start, and the seed: a new landscape on every visit, or **New landscape**. The line style (triangles or squares) is `MOUNTAINS.lines` in `src/config.js`.
-- The road starts lined with palms and rocks; they come from 200 m ahead and fade in and out.
+- The road starts lined with palms and rocks; they come from far ahead (`SPAWN` in `src/config.js`) and fade in and out.
 
 ---
 

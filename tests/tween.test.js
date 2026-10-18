@@ -4,6 +4,7 @@ import { createTweens, easeInOutCubic } from "../src/core/tween.js";
 describe("tweens", () => {
   it("eases from 0 to 1 and completes once", () => {
     const tweens = createTweens();
+    /** @type {number[]} */
     const values = [];
     const onComplete = vi.fn();
     tweens.add({ duration: 1, onUpdate: (v) => values.push(v), onComplete });

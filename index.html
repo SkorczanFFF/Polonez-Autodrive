@@ -14,6 +14,8 @@
     <link rel="icon" href="./favicon.ico" />
     <!-- dark browser background from the first paint, not a white flash -->
     <meta name="color-scheme" content="dark" />
+    <!-- browser chrome in the UI pink (content set by ui/theme.js from PALETTE) -->
+    <meta name="theme-color" content="" />
     <!-- nothing shows until the styles and theme.js colors are in (no unstyled flash); kept
          inline, as the stylesheet itself arrives later -->
     <style>
@@ -35,14 +37,10 @@
       </div>
     </div>
     <div class="hud" id="hud">
-      <section class="hud__menu" aria-label="Menu">
+      <section class="hud__menu" data-label="menu">
         <!-- Like the DISPLAY/OSD button of an 80s remote: hides the menu, keeps the scene. -->
         <button class="button button--small hud__toggle" type="button" data-action="menu">
-          <svg class="icon hud__toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
-            <circle cx="12" cy="12" r="3" />
-            <path class="hud__toggle-slash" d="M3 3l18 18" />
-          </svg>
+          <span class="hud__toggle-icon" data-icon="eye"></span>
           <span data-text="hide"></span><kbd data-key="menu"></kbd>
         </button>
         <h1 class="logo hud__fade">
@@ -106,7 +104,7 @@
 
       <div class="hud__flash" aria-hidden="true"></div>
 
-      <section class="hud__gameover panel" aria-label="Game over" aria-live="assertive">
+      <section class="hud__gameover panel" data-label="gameOver" aria-live="assertive">
         <h2 class="hud__gameover-title sunset-text" data-text="gameOver"></h2>
         <!-- the score is the headline; the record sits under it, or NEW BEST! when it was beaten -->
         <div class="hud__final">
@@ -130,7 +128,25 @@
         </div>
       </section>
     </div>
-    <div class="devstats panel" id="devstats" hidden></div>
+    <!-- F10 developer stats (ui/devstats.js fills the texts and values) -->
+    <div class="devstats panel" id="devstats" hidden>
+      <div class="devstats__header" data-text="title"></div>
+      <div class="devstats__fps">
+        <span class="devstats__fps-value" data-fps>--</span><span data-text="fps"></span>
+      </div>
+      <dl class="devstats__rows">
+        <dt data-text="calls"></dt>
+        <dd data-stat="calls">--</dd>
+        <dt data-text="triangles"></dt>
+        <dd data-stat="triangles">--</dd>
+        <dt data-text="geometries"></dt>
+        <dd data-stat="geometries">--</dd>
+        <dt data-text="textures"></dt>
+        <dd data-stat="textures">--</dd>
+        <dt data-text="programs"></dt>
+        <dd data-stat="programs">--</dd>
+      </dl>
+    </div>
     <div class="crt" id="crt" aria-hidden="true"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -159,10 +159,13 @@ function setupTextures(textures, anisotropy) {
     texture.anisotropy = anisotropy;
   };
 
-  configure(
-    textures[LAYERS.road.wireMap],
-    THREE.MirroredRepeatWrapping,
-    ROAD.lineTilesAcross,
-    tiles(WORLD.groundSize),
-  );
+  const roadLine = LAYERS.road.wireMap;
+  if (roadLine) {
+    configure(
+      textures[roadLine],
+      THREE.MirroredRepeatWrapping,
+      ROAD.lineTilesAcross,
+      tiles(WORLD.groundSize),
+    );
+  }
 }

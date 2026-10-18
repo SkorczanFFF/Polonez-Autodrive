@@ -16,6 +16,12 @@
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+  /* fixed HUD elements and the scene panel keep this far from the corners */
+  --corner-gap: 15px;
+  /* panels, buttons and the loader terminal: deep blue in a neon aqua glow */
+  --panel-bg: color-mix(in srgb, var(--ui-deep) 84%, transparent);
+  --panel-glow:
+    0 0 20px var(--aqua), inset 0 0 10px color-mix(in srgb, var(--aqua) 50%, transparent);
 
   /* UI colors. Most take their hue from a scene color while keeping their own lightness and
      chroma, so panels, buttons and the scene GUI wear the scene's palette ("Randomize all"
@@ -72,7 +78,8 @@ canvas:active {
   align-items: center;
   background-color: var(--ui-loader-bg);
   font-family: var(--font-terminal);
-  /* shrinks with phones, so the longest line (the 100% progress bar, ~14.5em) still fits */
+  /* shrinks with phones, so the longest line (the 100% progress bar: LOADER.barLength characters
+     plus its label) still fits */
   font-size: clamp(15px, 5.2vw, 22px);
   animation: loader-flicker 8s linear infinite;
 }
@@ -84,7 +91,8 @@ canvas:active {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(transparent 50%, rgb(0 0 0 / 25%) 50%);
+  /* --loader-line-opacity: LOADER.lineOpacity, set by ui/loader.js */
+  background: linear-gradient(transparent 50%, rgb(0 0 0 / var(--loader-line-opacity, 0.25)) 50%);
   background-size: 100% 4px;
   opacity: var(--flicker-opacity);
 }
@@ -96,9 +104,7 @@ canvas:active {
   color: var(--aqua);
   background-color: var(--ui-deep);
   border: 2px solid var(--aqua);
-  box-shadow:
-    0 0 20px var(--aqua),
-    inset 0 0 10px color-mix(in srgb, var(--aqua) 50%, transparent);
+  box-shadow: var(--panel-glow);
 }
 
 .loader__header {
@@ -267,11 +273,9 @@ canvas:active {
 }
 
 .panel {
-  background-color: color-mix(in srgb, var(--ui-deep) 84%, transparent);
+  background-color: var(--panel-bg);
   border: 2px solid var(--aqua);
-  box-shadow:
-    0 0 20px var(--aqua),
-    inset 0 0 10px color-mix(in srgb, var(--aqua) 50%, transparent);
+  box-shadow: var(--panel-glow);
 }
 
 /* sun-gradient script text: logo, countdown, game over title */
@@ -329,7 +333,7 @@ kbd {
   color: var(--aqua);
   text-shadow: 0 0 8px currentColor;
   touch-action: manipulation; /* taps act at once: no double-tap zoom on buttons */
-  background-color: color-mix(in srgb, var(--ui-deep) 84%, transparent);
+  background-color: var(--panel-bg);
   border: 2px solid currentColor;
   box-shadow:
     0 0 14px color-mix(in srgb, currentColor 70%, transparent),
@@ -598,8 +602,8 @@ kbd {
 
 .hud__toggle {
   position: fixed;
-  top: calc(15px + var(--safe-top));
-  left: calc(15px + var(--safe-left));
+  top: calc(var(--corner-gap) + var(--safe-top));
+  left: calc(var(--corner-gap) + var(--safe-left));
   transition:
     opacity 0.3s,
     border-color 0.3s,
@@ -609,12 +613,16 @@ kbd {
 }
 
 .hud__toggle-icon {
+  display: inline-flex;
+}
+
+.hud__toggle-icon .icon {
   width: 1.3em;
   height: 1.3em;
   filter: drop-shadow(0 0 4px currentColor);
 }
 
-.hud__toggle-slash {
+.icon__slash {
   display: none;
 }
 
@@ -636,15 +644,15 @@ kbd {
   opacity: 1;
 }
 
-[data-menu="hidden"] .hud__toggle-slash {
+[data-menu="hidden"] .icon__slash {
   display: inline;
 }
 
 /* top-left hints (free ride, countdown, playing) */
 .hud__corner {
   position: fixed;
-  top: calc(15px + var(--safe-top));
-  left: calc(15px + var(--safe-left));
+  top: calc(var(--corner-gap) + var(--safe-top));
+  left: calc(var(--corner-gap) + var(--safe-left));
   z-index: var(--z-hud);
   padding: 4px 12px;
   font-size: 20px;
@@ -839,9 +847,11 @@ kbd {
 
 /* counted: an arcade flash, then the score keeps pulsing like a neon sign */
 .hud__final-score.is-final {
+  --flash: 0.18s;
+  --flashes: 6;
   animation:
-    score-flash 0.18s steps(1) 6,
-    score-pulse 1.4s ease-in-out 1.08s infinite; /* the pulse starts after the 6 flashes */
+    score-flash var(--flash) steps(1) var(--flashes),
+    score-pulse 1.4s ease-in-out calc(var(--flash) * var(--flashes)) infinite; /* after the flashes */
 }
 
 @keyframes score-tick {
@@ -1087,11 +1097,13 @@ kbd {
   --font-size: 17px;
   --input-font-size: 17px;
   --widget-height: 22px;
-  /* VT323 is monospaced: the name column fits the longest label (17 characters plus the letter
-     spacing), so every widget, and every color swatch, starts on the same line */
-  --name-width: calc(19ch + var(--spacing));
+  /* VT323 is monospaced: the name column fits the longest label (--name-chars, counted by
+     ui/gui.js, plus the letter spacing), so every widget, and every color swatch, starts on the
+     same line */
+  --letter-spacing: 0.04em;
+  --name-width: calc(var(--name-chars, 17) * (1ch + var(--letter-spacing)) + var(--spacing));
   --width: 290px;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing);
 }
 
 /* label on the left, values on the right: checkboxes and colors sit at the right edge */
@@ -1203,14 +1215,14 @@ kbd {
 /* lil-gui sits in the top right corner; keep it out of the notch */
 .lil-gui.lil-root.autoPlace {
   top: var(--safe-top);
-  right: calc(15px + var(--safe-right));
+  right: calc(var(--corner-gap) + var(--safe-right));
   max-height: calc(100% - var(--safe-top) - var(--safe-bottom));
 }
 
 /* lil-gui on small screens (.is-compact, ui/gui.js): folded, it is just its title, clear of the
    HIDE toggle; open, at most the screen width */
 .lil-gui.lil-root.is-compact {
-  --width: min(290px, calc(100vw - 30px - var(--safe-left) - var(--safe-right)));
+  --width: min(290px, calc(100vw - 2 * var(--corner-gap) - var(--safe-left) - var(--safe-right)));
 }
 
 .lil-gui.lil-root.is-compact.lil-closed {

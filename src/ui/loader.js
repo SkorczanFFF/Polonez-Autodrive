@@ -17,7 +17,7 @@ export function formatProgress(loaded, total, barLength = LOADER.barLength) {
 }
 
 /** @param {string} url */
-const fileName = (url) => url.split("/").pop().toUpperCase();
+const fileName = (url) => (url.split("/").pop() ?? url).toUpperCase();
 
 /**
  * 80s terminal loading screen driven by a THREE.LoadingManager. Typing and removal run on the
@@ -25,8 +25,11 @@ const fileName = (url) => url.split("/").pop().toUpperCase();
  *
  * @param {HTMLElement} [root]
  */
-export function createLoader(root = document.getElementById("loader")) {
-  const $ = (/** @type {string} */ selector) => root.querySelector(selector);
+export function createLoader(
+  root = /** @type {HTMLElement} */ (document.getElementById("loader")),
+) {
+  const $ = (/** @type {string} */ selector) =>
+    /** @type {HTMLElement} */ (root.querySelector(selector));
   const text = $(".loader__text");
   const progress = $(".loader__progress");
   const status = $(".loader__status");
@@ -36,6 +39,7 @@ export function createLoader(root = document.getElementById("loader")) {
   progress.textContent = formatProgress(0, 0);
   root.style.setProperty("--loader-fade-delay", `${LOADER.fadeDelay}s`);
   root.style.setProperty("--loader-fade-duration", `${LOADER.fadeDuration}s`);
+  root.style.setProperty("--loader-line-opacity", String(LOADER.lineOpacity));
 
   const manager = new THREE.LoadingManager();
   manager.onProgress = (url, loaded, total) => {

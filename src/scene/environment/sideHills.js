@@ -16,10 +16,12 @@ export const CONVEYOR_END = FAR + CHUNK_COUNT * CHUNK_LENGTH;
 /**
  * @typedef {object} Chunk
  * @property {THREE.Mesh} mesh
- * @property {number} index landscape stretch it shows (NaN: needs a reshape)
+ * @property {number | null} index landscape stretch it shows (null: needs a reshape)
  * @property {Float32Array} heights full-grown height of every vertex
- * @property {number} growth applied growth: 0 flat, 1 full, NaN partial or not applied yet
+ * @property {Growth | null} growth applied growth (null: not applied yet)
  */
+
+/** @typedef {0 | 1 | "partial"} Growth flat, full-grown, or in between (rewritten every frame) */
 
 /**
  * Endless mountains on both sides of the road, rolling towards the camera with the world speed.
@@ -70,23 +72,29 @@ export function createSideHills({ scene, materials, mountains }) {
       mesh.position.x = x;
       scene.add(mesh);
       const heights = new Float32Array(geometry.getAttribute("position").count);
-      chunks.push({ mesh, index: NaN, heights, growth: NaN });
+      chunks.push({ mesh, index: null, heights, growth: null });
     }
   }
 
   let heightAt = createMountainHeight(mountains);
   let distance = 0;
 
-  /** @param {Chunk} chunk */
-  function reshape(chunk) {
+  /**
+   * Gives the chunk the landscape stretch `index`.
+   *
+   * @param {Chunk} chunk
+   * @param {number} index
+   */
+  function reshape(chunk, index) {
     const { mesh, heights } = chunk;
-    const end = (chunk.index + 1) * length; // landscape at the chunk's far edge (local z = 0)
+    chunk.index = index;
+    const end = (index + 1) * length; // landscape at the chunk's far edge (local z = 0)
     fillHeightField(mesh.geometry, (x, z) => heightAt(mesh.position.x + x, end - z), {
       hideDiagonals: MOUNTAINS.lines === "squares",
     });
     const array = mesh.geometry.getAttribute("position").array;
     for (let v = 0; v < heights.length; v++) heights[v] = array[v * 3 + 1];
-    chunk.growth = NaN;
+    chunk.growth = null;
   }
 
   /**
@@ -97,13 +105,15 @@ export function createSideHills({ scene, materials, mountains }) {
   function grow(chunk) {
     const { mesh, heights } = chunk;
     const z = mesh.position.z; // far edge
-    const growth = z + length <= growFrom ? 0 : z >= growTo && z + length <= shrinkFrom ? 1 : NaN;
-    if (growth === chunk.growth) return; // flat or full-grown, already applied
+    /** @type {Growth} */
+    const growth =
+      z + length <= growFrom ? 0 : z >= growTo && z + length <= shrinkFrom ? 1 : "partial";
+    if (growth !== "partial" && growth === chunk.growth) return; // already applied
     chunk.growth = growth;
     const position = mesh.geometry.getAttribute("position");
     const array = position.array;
     for (let v = 0; v < heights.length; v++) {
-      const g = Number.isNaN(growth) ? growthAt(z + array[v * 3 + 2]) : growth;
+      const g = growth === "partial" ? growthAt(z + array[v * 3 + 2]) : growth;
       array[v * 3 + 1] = lift + (heights[v] - lift) * g;
     }
     position.needsUpdate = true;
@@ -115,10 +125,7 @@ export function createSideHills({ scene, materials, mountains }) {
     chunks.forEach((chunk, i) => {
       const slot = Math.floor(i / 2);
       const index = newest - ((((newest - slot) % count) + count) % count);
-      if (chunk.index !== index) {
-        chunk.index = index;
-        reshape(chunk);
-      }
+      if (chunk.index !== index) reshape(chunk, index);
       chunk.mesh.position.z = distance - (index + 1) * length + far;
       grow(chunk);
     });
@@ -132,7 +139,7 @@ export function createSideHills({ scene, materials, mountains }) {
     /** Rebuilds every chunk from the current `mountains` settings (GUI). */
     regenerate() {
       heightAt = createMountainHeight(mountains);
-      for (const chunk of chunks) chunk.index = NaN;
+      for (const chunk of chunks) chunk.index = null;
       place();
     },
 
