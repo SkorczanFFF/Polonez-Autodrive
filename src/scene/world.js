@@ -58,11 +58,18 @@ export function createWorld(assets) {
     /** Named parts, e.g. parts.scenery.palms.density for the GUI. */
     parts,
 
-    /** Mountain generator settings; the GUI edits them, then calls regenerate() on the parts. */
+    /** Mountain generator settings; the GUI edits them, then calls regenerate(). */
     mountains: context.mountains,
 
     /** 1 = base speed; the minigame raises it per tier. */
     speedMultiplier: 1,
+
+    /** Rebuilds the landscape from `mountains`: everything that grows from its seed and settings. */
+    regenerate() {
+      parts.sideHills.regenerate();
+      parts.hills.regenerate();
+      parts.city.regenerate(); // built from the same seed
+    },
 
     /** @param {number} dt */
     update(dt) {

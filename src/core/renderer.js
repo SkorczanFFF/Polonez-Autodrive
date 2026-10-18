@@ -3,12 +3,10 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { SCENE } from "../config.js";
 import { createBloom } from "./bloom.js";
 
-// Match the v1 (r116) look: colors are used as-is and the output stays linear.
-THREE.ColorManagement.enabled = false;
-
 /**
  * Renderer, scene, camera and orbit controls. The canvas is rendered at SCENE.renderScale
- * of its CSS size and stretched back up by the browser.
+ * of its CSS size and stretched back up by the browser. Expects THREE.ColorManagement off
+ * (main.js): the output stays linear.
  *
  * @param {HTMLElement} [container]
  */

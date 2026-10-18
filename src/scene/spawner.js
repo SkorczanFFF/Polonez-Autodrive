@@ -1,5 +1,6 @@
+import { MathUtils } from "three";
 import { SPAWN } from "../config.js";
-import { createFader, smoothstep } from "./fade.js";
+import { createFader } from "./fade.js";
 
 /**
  * @typedef {object} SpawnerOptions
@@ -14,6 +15,8 @@ import { createFader, smoothstep } from "./fade.js";
  * @property {number} [fadeIn] seconds new instances take to fade in from transparent (0 = pop in)
  * @property {number} [fadeOut] seconds instances take to fade out before endZ at speedMultiplier 1;
  *   a fixed distance, so faster objects fade quicker (0 = vanish at endZ)
+ *
+ * startZ, endZ, fadeIn and fadeOut default to SPAWN.
  */
 
 /**
@@ -31,8 +34,8 @@ export function createSpawner({
   create,
   startZ = SPAWN.startZ,
   endZ = SPAWN.endZ,
-  fadeIn = 0,
-  fadeOut = 0,
+  fadeIn = SPAWN.fadeIn,
+  fadeOut = SPAWN.fadeOut,
 }) {
   /** @type {import("three").Object3D[]} */
   const objects = [];
@@ -52,7 +55,7 @@ export function createSpawner({
     const age = /** @type {number} */ (ages.get(object));
     const fadingIn = fadeIn > 0 ? age / fadeIn : 1;
     const fadingOut = fadeOutDistance > 0 ? (endZ - object.position.z) / fadeOutDistance : 1;
-    return smoothstep(Math.min(Math.max(Math.min(fadingIn, fadingOut), 0), 1));
+    return MathUtils.smoothstep(Math.min(fadingIn, fadingOut), 0, 1); // eased, not linear
   }
 
   const spawner = {

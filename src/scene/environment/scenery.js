@@ -1,14 +1,9 @@
 import { SPAWN, WORLD } from "../../config.js";
+import { between, pick, randomIn } from "../../core/random.js";
 import { createSpawner } from "../spawner.js";
 import { dress } from "../wire.js";
 
 const FULL_TURN = 2 * Math.PI;
-
-/** @param {number[]} range [min, max] */
-const randomIn = ([min, max]) => min + Math.random() * (max - min);
-
-/** @template T @param {T[]} items */
-const pick = (items) => items[Math.floor(Math.random() * items.length)];
 
 /**
  * @param {import("three").Object3D} template
@@ -18,7 +13,7 @@ const pick = (items) => items[Math.floor(Math.random() * items.length)];
 function place(template, x, scale = 1) {
   const instance = template.clone();
   instance.position.set(x, 0, 0);
-  instance.rotation.set(0, Math.random() * FULL_TURN, 0);
+  instance.rotation.set(0, between(0, FULL_TURN), 0);
   instance.scale.setScalar(scale);
   return instance;
 }
@@ -42,8 +37,6 @@ export function createScenery({ scene, models, materials }) {
     speed: WORLD.speed,
     interval: () => palmCfg.interval,
     minInterval: palmCfg.minInterval,
-    fadeIn: SPAWN.fadeIn,
-    fadeOut: SPAWN.fadeOut,
     create: () => palmCfg.x.map((x) => place(palm, x)),
   });
 
@@ -52,8 +45,6 @@ export function createScenery({ scene, models, materials }) {
     speed: WORLD.speed,
     interval: () => rockCfg.interval,
     minInterval: rockCfg.minInterval,
-    fadeIn: SPAWN.fadeIn,
-    fadeOut: SPAWN.fadeOut,
     create: () => [place(pick(rocks), randomIn(pick(rockCfg.xRanges)), randomIn(rockCfg.scale))],
   });
 

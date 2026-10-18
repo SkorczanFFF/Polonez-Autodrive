@@ -139,6 +139,8 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 
 - With "reduce motion" on in the OS, the CRT flicker is off by default but can be switched on in the
   side panel again; the stylesheet no longer overrides the switch.
+- The sun's "Show effect" switch in the side panel works again: since the rebuild it had not been
+  toggling the gradient, the cuts and the halo.
 
 ## [2.0.0] – October 2026
 

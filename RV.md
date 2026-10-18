@@ -199,16 +199,29 @@ Done: zielone testy/typecheck/build, wszystkie pozycje odhaczone.
 
 ### Faza 2 — Sprzężenia i duplikaty
 
-- [ ] D1 `world.regenerate()`; GUI woła jedno
-- [ ] C1.1 + D3 dotyk wykryty raz (`core/device.js`), przekazany do `createHud` i `createSceneGui`; `data-input` zostaje jako widok dla CSS
-- [ ] C1.5 + D4 `ColorManagement.enabled = false` jawnie w `main.js`; w testach jeden `vitest.setup.js`
-- [ ] D2 bramkowanie `menu`/`glow` z `main.js` do `game.js`; D10 `car.steering` raz przed `switch`
-- [ ] C4.1 wspólny GLSL `stripeCut`; C4.2 `core/random.js`; C4.3 + D8 `MathUtils.smoothstep`; C4.4 `isLineMaterial()`; C4.5 `dress(..., { shadows: false })`; C4.6 `memoByGeometry`
-- [ ] C1.4 GUI na żywych obiektach
-- [ ] C3 gettery i wyprowadzenia w config (`TRAFFIC.y`, `MOUNTAINS.cell`, `horizon.halfWidth`, `camera.far`, `start/minStart`, `groundSize` ↔ `GUI.fogFar`, `Math.max(400…)`, `menuFree/freeRide`, jedna tabela akcji `{ codes, label, icon }`, `DEFAULTS`)
-- [ ] C2.1 jeden próg telefon; C2.2 `crash-flash` z `MINIGAME.crash.shake`; D9 domyślne `SPAWN` w spawnerze
+- [x] D1 `world.regenerate()`; GUI woła jedno
+- [x] C1.1 + D3 dotyk wykryty raz (`core/device.js`), przekazany do `createHud` i `createSceneGui`; `data-input` zostaje jako widok dla CSS
+- [x] C1.5 + D4 `ColorManagement.enabled = false` jawnie w `main.js`; w testach jeden `vitest.setup.js`
+- [x] D2 bramkowanie `menu`/`glow` z `main.js` do `game.js`; D10 `car.steering` raz przed `switch`
+- [x] C4.1 wspólny GLSL `stripeCut`; C4.2 `core/random.js`; C4.3 + D8 `MathUtils.smoothstep`; C4.4 `isLineMaterial()`; C4.5 `dress(..., { shadows: false })`; C4.6 `memoByGeometry`
+- [x] C1.4 GUI na żywych obiektach
+- [x] C3 gettery i wyprowadzenia w config (`TRAFFIC.y`, `MOUNTAINS.cell`, `horizon.halfWidth`, `camera.far`, `start/minStart`, `groundSize` ↔ `GUI.fogFar`, `Math.max(400…)`, `menuFree/freeRide`, jedna tabela akcji `{ codes, label, icon }`, `DEFAULTS`)
+- [x] C2.1 jeden próg telefon; C2.2 `crash-flash` z `MINIGAME.crash.shake`; D9 domyślne `SPAWN` w spawnerze
 
 Done: jak wyżej + ręczny przegląd; testy kolorów bez własnego ustawiania ColorManagement.
+
+**Zrobione 2026-10-18**, dziewięć commitów od `d62060e` do `41d949b` (126 testów, typecheck, build zielone; strona w headless Chrome bez błędów shaderów i wyjątków). Decyzje po drodze:
+
+- Próg "telefon" to jedna liczba `SCREEN.phone = 600` (CSS miało 560): `core/device.js` ustawia `data-screen="narrow"` na `<html>`, CSS nie ma już własnej media query; GUI dostaje `device.small` (szerokość lub wysokość).
+- `core/device.js` ustawia też `data-input`; `hud.js` i `gui.js` nic już nie wykrywają.
+- F10 obsługuje `devstats.js` sam (dostaje `input`), menu/glow bramkuje `game.js`; `main.js` to czyste składanie.
+- Jedna tabela `ACTIONS` (`keys`, `label`, `icon`) zastąpiła `KEYS`, `TEXT.keys` i `KEY_ICONS`; typ `Action` jest teraz w `config.js`.
+- `SCENE.camera.far` liczy się z dalszego rogu miasta (1,1 × 2249 ≈ 2474 zamiast 2400); kopuła nieba podąża (0,75 × far).
+- Błysk zderzenia trwa tyle co wstrząs (`--crash-shake` = 0,45 s zamiast 0,5 s w CSS).
+- Przy C1.4 wyszedł błąd: `Object.assign` w `sunMaterial.js` wykonywał getter `effect` i gubił setter, więc "Show effect" nic nie robiło; teraz `defineProperty` (wpis w CHANGELOG).
+- `WIRE.min` i `WIRE.glow` to domyślne wartości warstw (zamiast literałów w `lines.js`, `materials.js`, `bloom.js`); `TRAFFIC.y`, `MOUNTAINS.cell/start`, `horizon.halfWidth`, `WORLD.groundSize ← fogReach` to gettery.
+- Pominięte z §C3 (zostaje na później): `roadGap` jako wartość docelowa, `SPEED.traffic` (komentarz już mówi, że 200 to świat v1).
+- Do ręcznego sprawdzenia przez autora: telefon (próg 600 px, panel zwinięty), przełączniki "Show model/wireframe", gęstość palm i skał, "Show effect" słońca, "New landscape".
 
 ### Faza 3 — Decyzje architektoniczne (każda pozycja osobno do akceptacji)
 

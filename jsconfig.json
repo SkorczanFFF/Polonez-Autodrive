@@ -11,5 +11,5 @@
     "strict": false,
     "skipLibCheck": true
   },
-  "include": ["src", "tests", "vite.config.js"]
+  "include": ["src", "tests", "vite.config.js", "vitest.setup.js"]
 }

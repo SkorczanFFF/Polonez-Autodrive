@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { MOUNTAINS, WORLD } from "../../config.js";
 import { createHeightField, fillHeightField } from "../heightField.js";
-import { createMountainHeight, smoothstep } from "../mountains.js";
+import { createMountainHeight } from "../mountains.js";
 import { dress } from "../wire.js";
 
 /**
@@ -48,7 +48,8 @@ export function createSideHills({ scene, materials, mountains }) {
 
   /** @param {number} z */
   const growthAt = (z) =>
-    smoothstep(growFrom, growTo, z) * (1 - smoothstep(shrinkFrom, shrinkTo, z));
+    THREE.MathUtils.smoothstep(z, growFrom, growTo) *
+    (1 - THREE.MathUtils.smoothstep(z, shrinkFrom, shrinkTo));
 
   /** @type {Chunk[]} */
   const chunks = [];
@@ -56,11 +57,7 @@ export function createSideHills({ scene, materials, mountains }) {
     for (const x of [-MOUNTAINS.outer, MOUNTAINS.minStart]) {
       const geometry = createHeightField({ cols, rows, cell });
       const mesh = new THREE.Mesh(geometry);
-      dress(mesh, materials.solid.side, materials.wire.side);
-      mesh.traverse((object) => {
-        object.castShadow = false; // far outside the shadow box anyway
-        object.receiveShadow = false;
-      });
+      dress(mesh, materials.solid.side, materials.wire.side, { shadows: false }); // far outside the shadow box
       mesh.position.x = x;
       scene.add(mesh);
       const heights = new Float32Array(geometry.getAttribute("position").count);

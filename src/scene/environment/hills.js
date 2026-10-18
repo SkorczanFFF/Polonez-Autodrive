@@ -14,10 +14,8 @@ import { dress } from "../wire.js";
 export function createHills({ scene, materials, mountains }) {
   const { front, halfWidth, depth, cell } = MOUNTAINS.horizon;
   const geometry = createHeightField({ cols: (2 * halfWidth) / cell, rows: depth / cell, cell });
-  const range = dress(new THREE.Mesh(geometry), materials.solid.hills, materials.wire.hills);
-  range.traverse((object) => {
-    object.castShadow = false; // far outside the shadow box
-    object.receiveShadow = false;
+  const range = dress(new THREE.Mesh(geometry), materials.solid.hills, materials.wire.hills, {
+    shadows: false, // far outside the shadow box
   });
   range.position.set(-halfWidth, 0, front - depth); // local z = 0: the far ridge
   scene.add(range);

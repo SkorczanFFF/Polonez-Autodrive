@@ -1,7 +1,7 @@
-import { MINIGAME, TEXT } from "../config.js";
-import { ICONS, KEY_ICONS } from "./icons.js";
+import { ACTIONS, MINIGAME, TEXT } from "../config.js";
+import { ICONS } from "./icons.js";
 
-/** @typedef {import("../core/input.js").Action} Action */
+/** @typedef {import("../config.js").Action} Action */
 
 /**
  * Called every frame by the game, so it only touches the DOM when something changed.
@@ -32,19 +32,17 @@ function replay(element, className) {
 
 /**
  * Menu, in-game HUD and game-over panel. Visibility per state lives in CSS (`body[data-state]`);
- * texts come from config.TEXT (`data-text`, `data-key` attributes). Buttons carry a
- * `data-action` and feed the same actions as the keyboard; `data-hold` buttons are held like keys.
+ * texts come from config.TEXT (`data-text`) and keycaps from config.ACTIONS (`data-key`). Buttons
+ * carry a `data-action` and feed the same actions as the keyboard; `data-hold` buttons are held
+ * like keys.
  *
- * Touch screens (`html[data-input="touch"]`) get no minigame for now and no key hints; free ride
- * shows on-screen steering and an exit button instead.
+ * Touch screens (`html[data-input="touch"]`, core/device.js) get no minigame for now and no key
+ * hints; free ride shows on-screen steering and an exit button instead.
  *
  * @param {Pick<ReturnType<typeof import("../core/input.js").createInput>, "dispatch" | "hold">} input
  * @param {HTMLElement} [root]
  */
 export function createHud({ dispatch, hold }, root = document.getElementById("hud")) {
-  const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
-  document.documentElement.dataset.input = touch ? "touch" : "keys";
-
   const $ = (/** @type {string} */ selector) =>
     /** @type {HTMLElement} */ (root.querySelector(selector));
   const $$ = (/** @type {string} */ selector) =>
@@ -52,21 +50,21 @@ export function createHud({ dispatch, hold }, root = document.getElementById("hu
 
   for (const element of $$("[data-text]")) element.textContent = TEXT[element.dataset.text];
   root.style.setProperty("--crash-lock", `${MINIGAME.crash.lock}s`); // game over panel delay
+  root.style.setProperty("--crash-shake", `${MINIGAME.crash.shake}s`); // the flash lasts as long
   for (const element of $$("[data-key]")) {
-    const key = /** @type {Action} */ (element.dataset.key);
-    const icon = KEY_ICONS[key];
+    const { label, icon } = ACTIONS[/** @type {Action} */ (element.dataset.key)];
     if (icon) {
       element.innerHTML = ICONS[icon];
-      element.setAttribute("aria-label", TEXT.keys[key]);
-      element.title = TEXT.keys[key];
+      element.setAttribute("aria-label", label);
+      element.title = label;
     } else {
-      element.textContent = TEXT.keys[key];
+      element.textContent = label;
     }
   }
 
   for (const button of $$("button[data-hold]")) {
     const action = /** @type {Action} */ (button.dataset.hold);
-    button.setAttribute("aria-label", TEXT.keys[action]);
+    button.setAttribute("aria-label", ACTIONS[action].label);
     button.addEventListener("pointerdown", (event) => {
       button.setPointerCapture(event.pointerId); // keeps steering while the finger slides off
       hold(action, true, event.pointerId);
@@ -104,7 +102,7 @@ export function createHud({ dispatch, hold }, root = document.getElementById("hu
   /** @param {boolean} visible */
   function setMenuVisible(visible) {
     document.body.dataset.menu = visible ? "visible" : "hidden";
-    const label = `${visible ? TEXT.menuHide : TEXT.menuShow} (${TEXT.keys.menu})`;
+    const label = `${visible ? TEXT.menuHide : TEXT.menuShow} (${ACTIONS.menu.label})`;
     menuToggle.title = label;
     menuToggle.setAttribute("aria-label", label);
     menuToggle.setAttribute("aria-pressed", String(!visible));

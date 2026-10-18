@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { NIGHT, SCENE, SUN } from "../../config.js";
+import { STRIPE_CUT, stripeUniforms } from "../sunMaterial.js";
 
 /** Inside the camera's far plane; drawn first and without depth, so it never hides anything. */
 const DOME_RADIUS = 0.75 * SCENE.camera.far;
@@ -27,10 +28,8 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uMoonColor;
   uniform float uMoonSize;
   uniform vec3 uMoonDirection;
-  uniform float uStripeCount;
-  uniform float uStripeTop;
-  uniform vec2 uGap;
   varying vec3 vWorld;
+  ${STRIPE_CUT}
 
   float hash(vec3 p) {
     return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
@@ -72,19 +71,7 @@ const fragmentShader = /* glsl */ `
 
     float h = clamp((m.y + 1.0) * 0.5, 0.0, 1.0); // 0 at its bottom, 1 at its top
     vec3 moon = mix(mix(uMoonColor, uHorizon, 0.65), uMoonColor, smoothstep(0.0, 1.0, h));
-    float cut = 0.0;
-    if (h < uStripeTop) {
-      float s = h / uStripeTop;
-      float y = s * uStripeCount;
-      float halfGap = mix(uGap.y, uGap.x, s) * 0.5;
-      float nearest = y - halfGap + 0.5;
-      float fromMiddle = abs(fract(nearest) - 0.5);
-      float pixel = fwidth(y);
-      float drawn = max(halfGap, pixel * 0.5);
-      cut = 1.0 - smoothstep(drawn - pixel * 0.5, drawn + pixel * 0.5, fromMiddle);
-      cut *= clamp(halfGap / drawn, 0.0, 1.0);
-      cut *= step(nearest, uStripeCount);
-    }
+    float cut = stripeCut(h);
     // the halo hugs the lit crescent, not the whole disc (that would read as an eclipse)
     float halo = facing * 0.45 * exp(-max(r - 1.0, 0.0) / 0.35) * (1.0 - full);
     halo *= smoothstep(0.85, 1.4, shadowR);
@@ -138,10 +125,7 @@ export function createSky({ scene }) {
         uMoonColor: night.moonColor,
         uMoonSize: night.moonSize,
         uMoonDirection: { value: new THREE.Vector3(...NIGHT.moon.direction).normalize() },
-        // the moon's cuts are the sun's
-        uStripeCount: { value: SUN.stripes.count },
-        uStripeTop: { value: SUN.stripes.top },
-        uGap: { value: new THREE.Vector2(...SUN.stripes.gap) },
+        ...stripeUniforms(SUN.stripes), // the moon's cuts are the sun's
       },
       vertexShader,
       fragmentShader,

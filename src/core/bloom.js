@@ -3,7 +3,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { BLOOM } from "../config.js";
+import { BLOOM, WIRE } from "../config.js";
 
 const mixShader = {
   vertexShader: /* glsl */ `
@@ -126,7 +126,7 @@ export function createBloom(renderer, scene, camera) {
     if (!(object instanceof THREE.Mesh || object instanceof THREE.Line)) return;
     const { material } = object;
     if (object.layers.test(glowing)) {
-      const factor = Array.isArray(material) ? 1 : (material.userData.glow ?? 1);
+      const factor = Array.isArray(material) ? 1 : (material.userData.glow ?? WIRE.glow);
       if (factor >= 1 || !("color" in material)) return;
       swapped.set(object, material);
       object.material = dimmedFor(/** @type {any} */ (material), factor);

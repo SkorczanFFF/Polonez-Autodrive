@@ -16,13 +16,15 @@ const fpsLevel = (fps) =>
   fps >= DEVSTATS.fpsGood ? "good" : fps >= DEVSTATS.fpsWarn ? "warn" : "bad";
 
 /**
- * F10 developer overlay ("SYS.MONITOR"). The markup is built once; every DEVSTATS.refresh
- * seconds only the values change. Reads renderer.info of the previous frame.
+ * Developer overlay ("SYS.MONITOR"), toggled with the "stats" action (F10). The markup is built
+ * once; every DEVSTATS.refresh seconds only the values change. Reads renderer.info of the
+ * previous frame.
  *
  * @param {import("three").WebGLRenderer} renderer
+ * @param {Pick<ReturnType<typeof import("../core/input.js").createInput>, "onPress">} input
  * @param {HTMLElement} [root]
  */
-export function createDevStats(renderer, root = document.getElementById("devstats")) {
+export function createDevStats(renderer, input, root = document.getElementById("devstats")) {
   const L = TEXT.statsPanel;
   const keys = /** @type {(keyof typeof ROWS)[]} */ (Object.keys(ROWS));
 
@@ -56,14 +58,17 @@ export function createDevStats(renderer, root = document.getElementById("devstat
     renderCounters();
   }
 
+  function toggle() {
+    visible = !visible;
+    root.hidden = !visible;
+    frames = 0;
+    elapsed = 0;
+    if (visible) renderCounters(); // FPS needs a full refresh period to be measured
+  }
+  input.onPress((action) => action === "stats" && toggle());
+
   return {
-    toggle() {
-      visible = !visible;
-      root.hidden = !visible;
-      frames = 0;
-      elapsed = 0;
-      if (visible) renderCounters(); // FPS needs a full refresh period to be measured
-    },
+    toggle,
 
     /** @param {number} dt */
     update(dt) {

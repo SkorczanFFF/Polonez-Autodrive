@@ -1,3 +1,4 @@
+import { createRandom } from "../core/random.js";
 import { contrast, hsl, hueDistance, hueOf, luminance } from "./color.js";
 
 /**
@@ -48,23 +49,20 @@ const LIGHT_FILL = 0.18;
  * @param {() => number} [random] numbers in [0, 1), e.g. seeded in tests
  */
 export function createRandomPalette(random = Math.random) {
-  const between = (/** @type {number} */ min, /** @type {number} */ max) =>
-    min + random() * (max - min);
+  const { between, pick } = createRandom(random);
   let roll = random();
   const [mood] = /** @type {[PaletteMood, number]} */ (
     MOODS.find(([, odds]) => (roll -= odds) < 0) ?? MOODS[0]
   );
   const day = mood === "day";
   const base = random();
-  const scheme = SCHEMES[Math.floor(random() * SCHEMES.length)];
-  const hues = scheme.map((offset) => (base + offset) % 1);
-  /** @param {number[]} list */
-  const pick = (list = hues) => list[Math.floor(random() * list.length)];
+  const hues = pick(SCHEMES).map((offset) => (base + offset) % 1);
+  const anyHue = () => pick(hues);
   const jitter = (/** @type {number} */ hue, /** @type {number} */ amount) =>
     (hue + between(-amount, amount) + 1) % 1;
 
-  const darkFill = () => hsl(jitter(pick(), 0.04), between(0.45, 0.85), between(0.05, 0.13));
-  const lightFill = () => hsl(jitter(pick(), 0.04), between(0.45, 0.8), between(0.72, 0.88));
+  const darkFill = () => hsl(jitter(anyHue(), 0.04), between(0.45, 0.85), between(0.05, 0.13));
+  const lightFill = () => hsl(jitter(anyHue(), 0.04), between(0.45, 0.8), between(0.72, 0.88));
 
   return {
     mood,
@@ -102,16 +100,16 @@ export function createRandomPalette(random = Math.random) {
         day ? between(0.72, 0.85) : between(0.06, 0.12),
       ),
     // the horizon glow: bright at night, a pastel haze by day
-    fog: () => hsl(pick(), between(0.75, 1), day ? between(0.6, 0.72) : between(0.3, 0.42)),
+    fog: () => hsl(anyHue(), between(0.75, 1), day ? between(0.6, 0.72) : between(0.3, 0.42)),
     sunTop: () =>
-      hsl(jitter(pick(), 0.05), between(0.9, 1), day ? between(0.55, 0.65) : between(0.6, 0.72)),
-    sunBottom: () => hsl(pick(), between(0.9, 1), day ? between(0.42, 0.52) : between(0.5, 0.6)),
+      hsl(jitter(anyHue(), 0.05), between(0.9, 1), day ? between(0.55, 0.65) : between(0.6, 0.72)),
+    sunBottom: () => hsl(anyHue(), between(0.9, 1), day ? between(0.42, 0.52) : between(0.5, 0.6)),
     // the night behind the car stays night in every mood, with pale stars and moon
     night: () => hsl(jitter(hues[0], 0.05), between(0.5, 0.8), between(0.03, 0.07)),
-    stars: () => hsl(pick(), between(0.2, 0.5), between(0.86, 0.95)),
-    moon: () => hsl(pick(), between(0.3, 0.6), between(0.8, 0.9)),
+    stars: () => hsl(anyHue(), between(0.2, 0.5), between(0.86, 0.95)),
+    moon: () => hsl(anyHue(), between(0.3, 0.6), between(0.8, 0.9)),
     // faint scan lines: light at night, dark by day
-    crt: () => hsl(pick(), between(0.5, 0.8), day ? between(0.3, 0.4) : between(0.75, 0.85)),
+    crt: () => hsl(anyHue(), between(0.5, 0.8), day ? between(0.3, 0.4) : between(0.75, 0.85)),
   };
 }
 

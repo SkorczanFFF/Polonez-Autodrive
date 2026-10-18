@@ -50,8 +50,8 @@ export const PALETTE = {
  * @property {"roadline"} [wireMap] textured overlay instead of a wireframe
  * @property {boolean} [wireGrid] procedural line grid overlay instead of a wireframe
  * @property {number} [lineFade] WIRE.fade for this layer (lower: lines stay visible further)
- * @property {number} [lineMin] visibility (0..1) lines fade down to on tiny triangles (default 0)
- * @property {number} [glow] bloom on this layer's lines, 0..1 (default 1)
+ * @property {number} [lineMin] visibility (0..1) lines fade down to on tiny triangles (default WIRE.min)
+ * @property {number} [glow] bloom on this layer's lines, 0..1 (default WIRE.glow)
  * @property {boolean} [fog] false: the layer ignores the fog (default true)
  * @property {boolean} [unlit] true: its fill keeps its color whatever the light (default false)
  * @property {"palms" | "rocks"} [density] GUI exposes a density slider for this spawner
@@ -125,12 +125,16 @@ export const LAYERS = {
 export const WORLD = {
   length: 400, // scenery travels from -length/2 to +length/2; default fog end
   width: 200, // rock bands fit inside this width
+  /** The farthest fog end the GUI allows (GUI.fogFar); the default is `length` (SCENE.fog). */
+  get fogReach() {
+    return 2 * WORLD.length;
+  },
   /**
-   * Terrain and road are drawn this big (square), past the farthest fog the GUI allows, so the
-   * ground reaches the horizon in full fog color and meets the sky gradient without a seam.
+   * Terrain and road are drawn this big (square), past the farthest fog, so the ground reaches
+   * the horizon in full fog color and meets the sky gradient without a seam.
    */
   get groundSize() {
-    return 2 * GUI.fogFar[1];
+    return 2 * WORLD.fogReach;
   },
   cellSize: 4, // units per ground texture tile (terrain grid and road lines)
   speed: 14.4, // units/s at speedMultiplier 1 (v1 ground: 0.06 tiles/frame; scenery was 200/14 = 14.3)
@@ -152,8 +156,14 @@ export const GRID = {
  */
 export const MOUNTAINS = {
   minStart: 88, // the side band begins here (past the rock bands); also the lowest `start`
-  start: 88, // |x| where they begin to rise
-  cell: 8, // grid cell of the side band: 2 ground cells, so its lines meet every other grid line
+  /** |x| where they begin to rise: right where the band begins, unless the GUI moves it out. */
+  get start() {
+    return MOUNTAINS.minStart;
+  },
+  /** Grid cell of the side band: two ground cells, so its lines meet every other grid line. */
+  get cell() {
+    return 2 * WORLD.cellSize;
+  },
   ramp: 48, // width over which they rise from the ground
   outer: 320, // |x| of the outer ridge; the sky is behind it
   height: 70, // highest peaks
@@ -174,7 +184,10 @@ export const MOUNTAINS = {
     /** Towards the sun, rising all the way: it ends at its far, highest ridge (its back slope
      * would never be seen); far, but not so deep in the fog that it melts into the sky. */
     depth: 128,
-    halfWidth: 336, // past the outer side ridge: no gap on the horizon; tapering ends
+    /** A cell past the outer side ridge: no gap on the horizon; the tapering ends there. */
+    get halfWidth() {
+      return MOUNTAINS.outer + MOUNTAINS.horizon.cell;
+    },
     cell: 16, // big facets: far away, smaller triangles would blur into a mass
     height: 1, // fraction of `height`
     pass: 24, // half-width of the flat pass the road runs through (the striped sun shows in it)
@@ -264,7 +277,12 @@ export const SCENE = {
     fov: 90, // vertical, degrees
     minHorizontalFov: 70, // degrees; portrait screens widen the vertical fov to keep this
     near: 0.1,
-    far: 2400, // past the sun (SUN.disc), the sky dome (sky.js) and the sides of the city (CITY)
+    /** Past the sun (SUN.disc) and the far corners of the city (CITY); the sky dome (sky.js) fits inside. */
+    get far() {
+      const sun = SUN.disc.radius - SUN.disc.position[2];
+      const city = Math.hypot(CITY.near + CITY.bend + CITY.depth, CITY.halfWidth);
+      return 1.1 * Math.max(sun, city);
+    },
     position: [0, 3, 7],
     target: [0, 1.8, 0],
     gamePosition: [0, 4, 7], // OrbitControls clamps it to maxDistance -> (0, 3.9, 6.68), as in v1
@@ -317,12 +335,15 @@ export const SCENE = {
  * width: triangle lines in world units, so they thin out with distance, never below a pixel
  * (scene/lines.js). fade: lines of triangles whose inradius on screen is below `fade` render
  * pixels fade out (gone at a quarter of it), so dense meshes far away show their fill; 0 = off.
+ * fade, min and glow are the defaults a layer can override (Layer.lineFade, lineMin, glow).
  */
 export const WIRE = {
   mode: /** @type {"edges" | "triangles"} */ ("triangles"),
   edgeAngle: 20, // degrees
   width: 0.02,
   fade: 2,
+  min: 0, // visibility (0..1) the lines of tiny triangles fade down to
+  glow: 1, // bloom on the lines, 0..1 (core/bloom.js)
 };
 
 /**
@@ -449,7 +470,10 @@ export const SPAWN = {
  */
 export const TRAFFIC = {
   scale: 1.8, // metres -> scene units (the Polonez model is about 1.8x life size)
-  y: 0.04, // above the road, as CAR.lift
+  /** Above the road, like the Polonez. */
+  get y() {
+    return CAR.lift;
+  },
   roofWidth: 0.8, // cabin width at the roof, fraction of the body width
   tireWidth: 0.17,
   /** @type {Record<string, TrafficModel>} */
@@ -538,16 +562,26 @@ export const CRT = {
   flickerIntensity: 0.4,
 };
 
-/** KeyboardEvent.code values per action. */
-export const KEYS = {
-  start: ["Enter", "NumpadEnter"],
-  free: ["KeyF"],
-  exit: ["Escape"],
-  left: ["ArrowLeft"],
-  right: ["ArrowRight"],
-  stats: ["F10"], // developer overlay, not advertised in the UI
-  menu: ["KeyH"],
-  glow: ["KeyG"],
+/** @typedef {"start" | "free" | "exit" | "left" | "right" | "stats" | "menu" | "glow"} Action */
+
+/**
+ * @typedef {object} ActionKeys
+ * @property {string[]} keys KeyboardEvent.code values that trigger the action
+ * @property {string} [label] keycap text in the UI; actions without one are not advertised
+ * @property {"enter" | "arrowLeft" | "arrowRight"} [icon] drawn instead of the label (ui/icons.js):
+ *   the UI font has no glyph for these keys; the label becomes the accessible name
+ */
+
+/** Player actions (core/input.js): their keys and how the UI shows them. @type {Record<Action, ActionKeys>} */
+export const ACTIONS = {
+  start: { keys: ["Enter", "NumpadEnter"], label: "Enter", icon: "enter" },
+  free: { keys: ["KeyF"], label: "F" },
+  exit: { keys: ["Escape"], label: "ESC" },
+  left: { keys: ["ArrowLeft"], label: "Left arrow", icon: "arrowLeft" },
+  right: { keys: ["ArrowRight"], label: "Right arrow", icon: "arrowRight" },
+  stats: { keys: ["F10"] }, // developer overlay, not advertised in the UI
+  menu: { keys: ["KeyH"], label: "H" },
+  glow: { keys: ["KeyG"], label: "G" },
 };
 
 export const GUI = {
@@ -558,10 +592,7 @@ export const GUI = {
   bloomStrength: [0, 3, 0.05],
   bloomRadius: [0, 1, 0.05],
   glow: [0, 1, 0.05],
-  /** Upper bound follows the world, so the default fog end (WORLD.length) always fits. */
-  get fogFar() {
-    return [50, Math.max(400, 2 * WORLD.length)];
-  },
+  fogFar: [50, WORLD.fogReach],
   density: [0.1, 2, 0.1],
   mountainHeight: [0, 150, 1],
   mountainRoughness: [0, 1, 0.05],
@@ -580,7 +611,11 @@ export const GUI = {
   crtSpeed: [0.05, 0.5, 0.01],
   crtIntensity: [0, 2, 0.1],
   randomizeDuration: 1, // seconds
-  compactBelow: 600, // px; screens narrower or lower than this start with the panel closed
+};
+
+/** Screens the UI adapts to (core/device.js). */
+export const SCREEN = {
+  phone: 600, // px; narrower (the HUD stacks its buttons) or lower (the scene panel starts folded)
 };
 
 export const STORAGE = {
@@ -631,8 +666,7 @@ export const TEXT = {
   loading: "LOADING",
   logoScript: "Polonez",
   logoCaps: "AUTODRIVE",
-  menuStart: "MINI GAME", // same length as "FREE RIDE", so both buttons match
-  menuFree: "FREE RIDE",
+  menuStart: "MINI GAME", // same length as freeRide, so both buttons match
   again: "AGAIN",
   menu: "MENU",
   steer: "steer",
@@ -644,16 +678,6 @@ export const TEXT = {
   level: "LVL",
   newBest: "NEW BEST!",
   gameOver: "Game Over",
-  /** Keycap labels per action (see KEYS); keys with an icon (ui/icons.js) use them as names. */
-  keys: {
-    start: "Enter",
-    free: "F",
-    exit: "ESC",
-    left: "Left arrow",
-    right: "Right arrow",
-    menu: "H",
-    glow: "G",
-  },
   menuHide: "Hide menu",
   menuShow: "Show menu",
   hide: "HIDE",

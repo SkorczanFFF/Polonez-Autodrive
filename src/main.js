@@ -1,9 +1,11 @@
 import "@fontsource/yellowtail/latin.css";
 import "@fontsource/vt323/latin.css";
 import "./style.css";
+import * as THREE from "three";
 import { ASSETS, TEXT } from "./config.js";
 import { createView } from "./core/renderer.js";
 import { createLoop } from "./core/loop.js";
+import { detectDevice } from "./core/device.js";
 import { loadAssets } from "./core/assets.js";
 import { createTweens } from "./core/tween.js";
 import { createInput } from "./core/input.js";
@@ -20,7 +22,12 @@ import { createSceneGui } from "./ui/gui.js";
 import { createDevStats } from "./ui/devstats.js";
 
 async function main() {
+  // Match the v1 (r116) look: colors are used as-is and the output stays linear (ui/color.js and
+  // core/renderer.js count on it).
+  THREE.ColorManagement.enabled = false;
+
   applyTheme();
+  const device = detectDevice();
   const crt = createCrt();
 
   const view = createView();
@@ -53,14 +60,10 @@ async function main() {
     crt,
     tweens,
     bloom: view.bloom,
+    device,
   });
   const game = createGame({ view, world, car, minigame, tweens, input, hud, menu });
-  const stats = createDevStats(view.renderer);
-  input.onPress((action) => {
-    if (action === "stats") stats.toggle();
-    if (action === "menu" && game.state === "idle") hud.toggleMenu(); // only where the toggle is shown
-    if (action === "glow") view.bloom.enabled = !view.bloom.enabled;
-  });
+  const stats = createDevStats(view.renderer, input);
 
   loop.add(tweens.update);
   loop.add(world.update);

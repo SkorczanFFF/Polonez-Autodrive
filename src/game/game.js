@@ -30,8 +30,9 @@ const tierForScore = (score) => Math.floor(score / SPEED.tierEvery);
 const speedForScore = (score) => 1 + tierForScore(score) * SPEED.tierStep;
 
 /**
- * Orchestrates the game: maps input to state events, runs per-state timers inside update(dt)
- * and performs the enter actions of each state (camera, car, minigame, HUD, menu).
+ * Orchestrates the game: maps input to state events (and gates the menu and glow keys by state),
+ * runs per-state timers inside update(dt) and performs the enter actions of each state (camera,
+ * car, minigame, HUD, menu).
  *
  * @param {GameDeps} deps
  */
@@ -178,11 +179,11 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
   function enter(next, previous) {
     stateTime = 0;
     hud.setState(next);
+    car.steering = next === "free" || next === "playing";
 
     switch (next) {
       case "countdown":
         stopCrash();
-        car.steering = false;
         car.reset(tweens);
         minigame.reset();
         world.speedMultiplier = 1;
@@ -194,19 +195,16 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
         break;
 
       case "playing":
-        car.steering = true;
         hud.setCountdown(TEXT.countdownGo);
         break;
 
       case "gameover":
         // the scene stays as it was hit; the camera and the scene GUI return on leaving
-        car.steering = false;
         hud.showGameOver(minigame.score, recordScore());
         crash();
         break;
 
       case "idle":
-        car.steering = false;
         car.reset(tweens);
         if (previous === "countdown" || previous === "playing") recordScore();
         if (previous !== "free") leaveMinigame();
@@ -214,7 +212,6 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
 
       case "free":
         if (previous === "gameover") leaveMinigame();
-        car.steering = true;
         break;
     }
   }
@@ -222,9 +219,20 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
   const machine = createStateMachine("idle", enter);
 
   input.onPress((action) => {
-    if (action !== "start" && action !== "free" && action !== "exit") return;
-    if (machine.state === "gameover" && stateTime < MINIGAME.crash.lock) return; // see config
-    machine.send(action);
+    switch (action) {
+      case "start":
+      case "free":
+      case "exit":
+        if (machine.state === "gameover" && stateTime < MINIGAME.crash.lock) return; // see config
+        machine.send(action);
+        break;
+      case "menu":
+        if (machine.state === "idle") hud.toggleMenu(); // only where the toggle is shown
+        break;
+      case "glow":
+        view.bloom.enabled = !view.bloom.enabled;
+        break;
+    }
   });
   input.onRelease((action) => {
     if (action === "left" || action === "right") car.release();

@@ -1,13 +1,8 @@
 import * as THREE from "three";
-import { CAR, MINIGAME, SPAWN, SPEED, TRAFFIC } from "../config.js";
+import { CAR, MINIGAME, SPEED, TRAFFIC } from "../config.js";
+import { createRandom, pick } from "../core/random.js";
 import { createSpawner } from "../scene/spawner.js";
 import { createTrafficModels, trafficHalfWidth } from "../scene/traffic.js";
-
-/**
- * @param {number[]} range [min, max] inclusive integers
- * @param {() => number} rng
- */
-const randomInt = ([min, max], rng) => min + Math.floor(rng() * (max - min + 1));
 
 /**
  * Obstacle x positions from v1: obstacles fill one lane (left or right of the centre safe zone)
@@ -17,6 +12,7 @@ const randomInt = ([min, max], rng) => min + Math.floor(rng() * (max - min + 1))
  * @param {() => number} [rng]
  */
 export function createLanePicker(halfWidth = trafficHalfWidth(), rng = Math.random) {
+  const { between, randomInt } = createRandom(rng);
   const { innerGap, outerMargin, safeZone, batch } = MINIGAME;
   const reach = CAR.steer.maxOffset;
   const minLaneWidth = 0.1; // v1 guard for tiny steering ranges
@@ -32,16 +28,16 @@ export function createLanePicker(halfWidth = trafficHalfWidth(), rng = Math.rand
   /** @type {"left" | "right"} */
   let lane = "left";
   let count = 0;
-  let batchSize = randomInt(batch, rng);
+  let batchSize = randomInt(batch);
 
   return () => {
     const [min, max] = lanes[lane];
-    const x = min + rng() * (max - min);
+    const x = between(min, max);
     count++;
     if (count >= batchSize) {
       lane = lane === "left" ? "right" : "left";
       count = 0;
-      batchSize = randomInt(batch, rng);
+      batchSize = randomInt(batch);
     }
     return x;
   };
@@ -62,10 +58,8 @@ export function createMinigame({ scene, car, materials }) {
     parent: scene,
     speed: SPEED.traffic,
     interval: (roll) => minInterval + roll * (maxInterval - minInterval),
-    fadeIn: SPAWN.fadeIn,
-    fadeOut: SPAWN.fadeOut,
     create: () => {
-      const car = models[Math.floor(Math.random() * models.length)].clone();
+      const car = pick(models).clone();
       car.position.set(nextX(), TRAFFIC.y, 0);
       car.userData.scored = false;
       return [car];

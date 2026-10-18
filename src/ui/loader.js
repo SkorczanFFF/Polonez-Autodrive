@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { LOADER, TEXT } from "../config.js";
+import { randomIn } from "../core/random.js";
 
 /**
  * Text progress bar, e.g. `LOADING: [=====               ] 25%`.
@@ -17,9 +18,6 @@ export function formatProgress(loaded, total, barLength = LOADER.barLength) {
 
 /** @param {string} url */
 const fileName = (url) => url.split("/").pop().toUpperCase();
-
-/** @param {number[]} range [min, max] */
-const randomIn = ([min, max]) => min + Math.random() * (max - min);
 
 /**
  * 80s terminal loading screen driven by a THREE.LoadingManager. Typing and removal run on the

@@ -73,8 +73,8 @@ export function createMaterials(textures, anisotropy) {
       const Material = layer.wireType === "basic" ? BasicLineMaterial : PhongLineMaterial;
       const lines = new Material({ color: layer.wire });
       lines.lineUniforms.fade.value = layer.lineFade ?? WIRE.fade;
-      lines.lineUniforms.min.value = layer.lineMin ?? 0;
-      lines.userData.glow = layer.glow ?? 1; // core/bloom.js; clones (fade-in) copy userData
+      lines.lineUniforms.min.value = layer.lineMin ?? WIRE.min;
+      lines.userData.glow = layer.glow ?? WIRE.glow; // core/bloom.js; clones (fade-in) copy userData
       wire[key] = lines;
     }
 

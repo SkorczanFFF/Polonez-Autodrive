@@ -1,7 +1,7 @@
 import GUI, { ColorController } from "lil-gui";
 import * as THREE from "three";
-import { GUI as RANGES, LAYERS, NIGHT, SCENE, SUN, TEXT } from "../config.js";
-import { BasicLineMaterial, PhongLineMaterial, lineWidth } from "../scene/lines.js";
+import { ACTIONS, GUI as RANGES, LAYERS, NIGHT, SCENE, SUN, TEXT } from "../config.js";
+import { isLineMaterial, lineWidth } from "../scene/lines.js";
 import { randomSeed } from "../scene/mountains.js";
 import { createRandomPalette } from "./randomPalette.js";
 import { setSceneColor } from "./theme.js";
@@ -14,6 +14,7 @@ import { setSceneColor } from "./theme.js";
  * @property {ReturnType<typeof import("./crt.js").createCrt>} crt
  * @property {import("../core/tween.js").Tweens} tweens
  * @property {ReturnType<typeof import("../core/bloom.js").createBloom>} bloom
+ * @property {ReturnType<typeof import("../core/device.js").detectDevice>} device
  */
 
 /**
@@ -34,18 +35,18 @@ function showHash(controller) {
 }
 
 /**
- * Scene manipulation panel, built from config.LAYERS: every layer gets the same controls, and
- * every starting value comes from config, so the panel always shows what is rendered.
+ * Scene manipulation panel, built from config.LAYERS: every layer gets the same controls. The
+ * controls edit the live objects (materials, uniforms, spawners), so the panel always shows what
+ * is rendered; colors go through plain params, as each change also feeds the UI theme.
  *
  * @param {SceneGuiDeps} deps
  */
-export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) {
+export function createSceneGui({ scene, materials, world, crt, tweens, bloom, device }) {
   const L = TEXT.gui;
+  const { touch, small } = device; // touch screens: no keys to hint at
   // touchStyles: lil-gui would make every row taller and its font smaller on touch screens;
   // the compact terminal look reads better there too (its typings say number, it is a boolean)
   const gui = new GUI({ title: L.title, touchStyles: /** @type {any} */ (false) });
-  // touch screens: no keys to hint at (ui/hud.js, created first, decides and sets data-input)
-  const touch = document.documentElement.dataset.input === "touch";
 
   /**
    * What "Randomize all" gives a color control (ui/randomPalette.js); a layer's line is picked
@@ -80,13 +81,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   function layer(key) {
     const layer = LAYERS[key];
     const folder = gui.addFolder(layer.label);
-    const params = {
-      color: layer.solid,
-      showSolid: true,
-      wire: layer.wire,
-      showWire: true,
-      density: 1,
-    };
+    const params = { color: layer.solid, wire: layer.wire };
     const solid = materials.solid[key];
     const wire = materials.wire[key];
 
@@ -94,31 +89,19 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
       solid.color.set(v);
       setSceneColor(`${key}Solid`, v); // the logo wears the scene colors
     });
-    if (layer.toggleSolid) {
-      folder
-        .add(params, "showSolid")
-        .name(L.showModel)
-        .onChange((v) => (solid.visible = v));
-    }
+    if (layer.toggleSolid) folder.add(solid, "visible").name(L.showModel);
     if (layer.density) {
-      const spawner = world.parts.scenery[layer.density];
-      folder
-        .add(params, "density", ...RANGES.density)
-        .name(L.density)
-        .onChange((v) => (spawner.density = v));
+      folder.add(world.parts.scenery[layer.density], "density", ...RANGES.density).name(L.density);
     }
     color(folder, params, "wire", L.wireColor, { role: "wire", layer: key }, (v) => {
       wire.color.set(v);
       setSceneColor(`${key}Wire`, v);
     });
-    folder
-      .add(params, "showWire")
-      .name(L.showWire)
-      .onChange((v) => (wire.visible = v));
+    folder.add(wire, "visible").name(L.showWire);
     if (key === "polonez") {
       folder.add(lineWidth, "value", ...RANGES.lineWidth).name(L.lineWidth); // a shared uniform
     }
-    if (wire instanceof BasicLineMaterial || wire instanceof PhongLineMaterial) {
+    if (isLineMaterial(wire)) {
       const { fade, min } = wire.lineUniforms;
       folder.add(fade, "value", ...RANGES.lineFade).name(L.lineFade);
       folder.add(min, "value", ...RANGES.lineMin).name(L.lineMin);
@@ -130,7 +113,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
 
   /** Sun disc colors and stripes. */
   function addSun() {
-    const sunParams = { top: SUN.top, bottom: SUN.bottom, effect: true };
+    const sunParams = { top: SUN.top, bottom: SUN.bottom };
     const sun = gui.addFolder(L.sun);
     color(sun, sunParams, "top", L.sunTop, { role: "sunTop" }, (v) => {
       materials.sun.topColor.set(v);
@@ -140,10 +123,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
       materials.sun.bottomColor.set(v);
       setSceneColor("sunBottom", v);
     });
-    sun
-      .add(sunParams, "effect")
-      .name(L.sunEffect)
-      .onChange((v) => (materials.sun.effect = v));
+    sun.add(materials.sun, "effect").name(L.sunEffect);
     sun.close();
   }
 
@@ -255,13 +235,8 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
     nightFolder.close();
   }
 
-  // A rebuild of all mountains takes ~6 ms: live while dragging; the seed when typed in.
-  const { mountains } = world;
-  const regenerate = () => {
-    world.parts.sideHills.regenerate();
-    world.parts.hills.regenerate();
-    world.parts.city.regenerate(); // built from the same seed
-  };
+  // A rebuild of the landscape takes ~6 ms: live while dragging; the seed when typed in.
+  const { mountains, regenerate } = world;
 
   /** The mountain generator's shape (the seed is global: it builds the city too). */
   function addMountains() {
@@ -296,7 +271,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   addBloom();
   addCrt();
 
-  const glowName = touch ? L.bloomEnabled : `${L.bloomEnabled} (${TEXT.keys.glow})`;
+  const glowName = touch ? L.bloomEnabled : `${L.bloomEnabled} (${ACTIONS.glow.label})`;
   gui.add(bloom, "enabled").name(glowName).listen(); // G too
 
   /** @type {import("../core/tween.js").TweenHandle | null} */
@@ -346,12 +321,10 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
 
   // Small screens (.is-compact in CSS: folded, just the title; open, at most the screen width) and
   // touch screens start folded, as the open panel covers most of the screen.
-  const small = RANGES.compactBelow;
-  const compact = matchMedia(`(max-width: ${small}px), (max-height: ${small}px)`); // phones, both ways
-  const applyCompact = () => gui.domElement.classList.toggle("is-compact", compact.matches);
-  compact.addEventListener("change", applyCompact);
+  const applyCompact = () => gui.domElement.classList.toggle("is-compact", small.matches);
+  small.addEventListener("change", applyCompact);
   applyCompact();
-  if (compact.matches || touch) gui.close();
+  if (small.matches || touch) gui.close();
 
   // lil-gui stops key events while one of its controls is focused; give focus back after each
   // edit or folder toggle, so ENTER / F / arrows reach the game without clicking the scene.

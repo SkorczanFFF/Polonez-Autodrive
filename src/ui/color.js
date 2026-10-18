@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 /**
  * Color math for the UI and the random palettes, in sRGB as seen on screen. It never reads a
- * THREE.Color's r/g/b as linear: the app turns three's ColorManagement off (core/renderer.js),
+ * THREE.Color's r/g/b as linear: the app turns three's ColorManagement off (main.js),
  * and then those hold sRGB values. Hex in, hex out, the same with ColorManagement on or off.
  */
 

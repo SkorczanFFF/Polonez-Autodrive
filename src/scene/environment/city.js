@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { BLOOM, CITY } from "../../config.js";
 import { mulberry32 } from "../../core/noise.js";
+import { createRandom } from "../../core/random.js";
 import { writeWireEdges } from "../lines.js";
 import { dress } from "../wire.js";
 
@@ -33,9 +34,7 @@ const snap = (value, step) => Math.max(step, Math.round(value / step) * step);
  * @returns {Building[]}
  */
 export function layoutCity({ buildings, height, lit }, seed) {
-  const random = mulberry32(seed);
-  const between = (/** @type {number} */ min, /** @type {number} */ max) =>
-    min + random() * (max - min);
+  const { random, between, pick } = createRandom(mulberry32(seed));
   const { near, depth, bend, halfWidth, roadGap, cell } = CITY;
   const [narrow, wide] = CITY.width;
   /** @type {Building[]} */
@@ -68,7 +67,7 @@ export function layoutCity({ buildings, height, lit }, seed) {
       d,
       h,
       lit: Math.min(lit * between(0.2, 1.8), 1),
-      style: STYLES[Math.floor(random() * STYLES.length)],
+      style: pick(STYLES),
       seed: Math.floor(random() * 2 ** 31),
     });
   }
@@ -264,7 +263,7 @@ export function createCity({ scene, materials, mountains }) {
   const buildings = layout();
 
   const towers = new THREE.Mesh(towersGeometry(buildings));
-  dress(towers, materials.solid.city, materials.wire.city);
+  dress(towers, materials.solid.city, materials.wire.city, { shadows: false }); // far outside the shadow box
 
   const lines = materials.wire.city;
   const glass = new THREE.MeshBasicMaterial({ fog: false, transparent: true });
@@ -281,10 +280,6 @@ export function createCity({ scene, materials, mountains }) {
 
   const city = new THREE.Group().add(towers, windows);
   city.position.y = -CITY.sink;
-  city.traverse((object) => {
-    object.castShadow = false; // far outside the shadow box
-    object.receiveShadow = false;
-  });
   scene.add(city);
 
   return {

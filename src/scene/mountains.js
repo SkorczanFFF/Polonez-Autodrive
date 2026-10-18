@@ -1,3 +1,4 @@
+import { MathUtils } from "three";
 import { MOUNTAINS } from "../config.js";
 import { createRidged } from "../core/noise.js";
 
@@ -20,12 +21,6 @@ export function createMountainParams(seed = randomSeed()) {
   return { seed, height, roughness, start };
 }
 
-/** @param {number} edge0 @param {number} edge1 @param {number} x */
-export const smoothstep = (edge0, edge1, x) => {
-  const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1);
-  return t * t * (3 - 2 * t);
-};
-
 /**
  * Mountain height over the ground at a point of the landscape: flat (MOUNTAINS.lift) up to
  * `start` across the road, then ridged noise under an envelope that rises over `ramp` and keeps
@@ -40,7 +35,7 @@ export function createMountainHeight(params) {
   const { lift, ramp, outer, scale, octaves } = MOUNTAINS;
   return (x, s) => {
     const across = Math.abs(x);
-    const rise = smoothstep(params.start, params.start + ramp, across);
+    const rise = MathUtils.smoothstep(across, params.start, params.start + ramp);
     if (rise <= 0) return lift;
     const outward = Math.min((across - params.start) / (outer - params.start), 1);
     const envelope = rise * (0.4 + 0.6 * outward);
@@ -68,17 +63,21 @@ export function createHorizonHeight(params) {
   const { halfWidth, depth, height, pass, wall, foot } = MOUNTAINS.horizon;
   return (x, z) => {
     const across = Math.abs(x);
-    const rise = smoothstep(pass, pass + wall, across);
+    const rise = MathUtils.smoothstep(across, pass, pass + wall);
     if (rise <= 0) return lift;
-    const profile = rise * smoothstep(halfWidth, halfWidth - 64, across);
+    const profile = rise * (1 - MathUtils.smoothstep(across, halfWidth - 64, halfWidth));
     const back = 1 - z / depth; // 0 at the front edge, 1 at the far ridge
     // where the rock begins: further back in some places than in others
     const start = foot * ridged(x / (scale * 0.5), 77, octaves, params.roughness);
-    const ridge = smoothstep(start, start + 0.1, back) * (0.55 + 0.45 * back);
+    const ridge = MathUtils.smoothstep(back, start, start + 0.1) * (0.55 + 0.45 * back);
     const shape = 0.35 + 0.65 * ridged(x / scale, z / scale + 1000, octaves, params.roughness);
     // loose crags in front, rising off the ground at the front edge and gone further back
     const crags = ridged(x / (scale * 0.6), z / (scale * 0.6) + 500, octaves, params.roughness);
-    const scree = 0.9 * crags ** 2 * smoothstep(0, 0.06, back) * (1 - smoothstep(0.2, 0.6, back));
+    const scree =
+      0.9 *
+      crags ** 2 *
+      MathUtils.smoothstep(back, 0, 0.06) *
+      (1 - MathUtils.smoothstep(back, 0.2, 0.6));
     return lift + params.height * height * profile * Math.max(ridge * shape, scree);
   };
 }

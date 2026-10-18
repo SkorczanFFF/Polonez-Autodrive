@@ -4,9 +4,6 @@ import * as THREE from "three";
 
 /** @typedef {[THREE.Mesh | THREE.Line, ColoredMaterial, ColoredMaterial][]} Swaps object, shared, own copy */
 
-/** Ease in and out: fades start and settle softly instead of at a constant rate. */
-export const smoothstep = (/** @type {number} */ t) => t * t * (3 - 2 * t);
-
 /**
  * Makes objects partly transparent (spawn fade-in, fade-out before removal). Materials are shared
  * between instances, so a fading instance gets its own copies while it is see-through; they

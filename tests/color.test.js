@@ -6,7 +6,7 @@ const managed = THREE.ColorManagement.enabled;
 afterEach(() => (THREE.ColorManagement.enabled = managed));
 
 describe("color math", () => {
-  // the app turns ColorManagement off (core/renderer.js); the results must not depend on it
+  // the app turns ColorManagement off (main.js, vitest.setup.js); the results must not depend on it
   for (const enabled of [true, false]) {
     it(`gives WCAG luminance and contrast with ColorManagement ${enabled ? "on" : "off"}`, () => {
       THREE.ColorManagement.enabled = enabled;

@@ -54,7 +54,8 @@ Press **F10** in the app for the developer stats overlay (FPS, draw calls, trian
 src/
   config.js        single source of truth: palette, layers, world size, gameplay, keys, texts
   main.js          bootstrap
-  core/            renderer, wireframe bloom, main loop, tweens, asset loading, input, seeded noise
+  core/            renderer, wireframe bloom, main loop, tweens, asset loading, input, device
+                   detection, seeded noise, random picks
   scene/           materials, shader wireframes, car, minigame traffic, spawner, height fields,
                    mountain shapes, world
     environment/   independent world parts: sky, lights, ground, sun, horizon range (hills),

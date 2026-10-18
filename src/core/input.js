@@ -1,11 +1,11 @@
-import { KEYS } from "../config.js";
+import { ACTIONS } from "../config.js";
 
-/** @typedef {keyof typeof KEYS} Action */
+/** @typedef {import("../config.js").Action} Action */
 /** @typedef {(action: Action) => void} ActionListener */
 /** @typedef {string | number} Holder a key code or a pointer id */
 
 /**
- * Keyboard -> actions (config.KEYS). Everything else (HUD buttons, touch controls) feeds the
+ * Keyboard -> actions (config.ACTIONS). Everything else (HUD buttons, touch controls) feeds the
  * same actions through `dispatch` and `hold`, so game logic never looks at raw keys.
  *
  * @param {EventTarget} [target]
@@ -13,8 +13,8 @@ import { KEYS } from "../config.js";
 export function createInput(target = window) {
   /** @type {Map<string, Action>} */
   const actionByCode = new Map();
-  for (const [action, codes] of Object.entries(KEYS)) {
-    for (const code of codes) actionByCode.set(code, /** @type {Action} */ (action));
+  for (const [action, { keys }] of Object.entries(ACTIONS)) {
+    for (const code of keys) actionByCode.set(code, /** @type {Action} */ (action));
   }
 
   /**

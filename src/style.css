@@ -742,7 +742,8 @@ kbd {
   }
 }
 
-/* the crash: a neon flash with a CRT glitch, once on entering game over */
+/* the crash: a neon flash with a CRT glitch, once on entering game over, for as long as the
+   camera shakes (--crash-shake, set by ui/hud.js) */
 .hud__flash {
   position: fixed;
   inset: 0;
@@ -756,7 +757,7 @@ kbd {
     radial-gradient(circle at 50% 60%, var(--white), var(--red) 45%, var(--ui-deep));
   mix-blend-mode: screen;
   opacity: 0;
-  animation: crash-flash 0.5s steps(10, end);
+  animation: crash-flash var(--crash-shake, 0.5s) steps(10, end);
 }
 
 @keyframes crash-flash {
@@ -1127,21 +1128,19 @@ kbd {
   text-shadow: 0 0 6px var(--aqua);
 }
 
-/* ---------- narrow screens (phones) ---------- */
-@media (max-width: 560px) {
-  /* the logo starts below the HIDE toggle in the corner */
-  .hud__menu {
-    padding-top: calc(64px + var(--safe-top));
-  }
-
-  /* buttons stack: side by side they run off the screen */
-  .button-grid,
-  .button-grid--3 {
-    --columns: 1;
-  }
+/* ---------- narrow screens (phones held upright; core/device.js sets data-screen from SCREEN.phone) ---------- */
+/* the logo starts below the HIDE toggle in the corner */
+[data-screen="narrow"] .hud__menu {
+  padding-top: calc(64px + var(--safe-top));
 }
 
-/* ---------- touch screens (no keyboard; ui/hud.js sets data-input) ----------
+/* buttons stack: side by side they run off the screen */
+[data-screen="narrow"] .button-grid,
+[data-screen="narrow"] .button-grid--3 {
+  --columns: 1;
+}
+
+/* ---------- touch screens (no keyboard; core/device.js sets data-input) ----------
    No minigame for now (it needs the arrow keys), so no best score, and no key hints; free ride
    gets on-screen controls (.hud__touch). */
 [data-input="touch"] .hud__menu [data-action="start"],

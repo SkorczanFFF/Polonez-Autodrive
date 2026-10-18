@@ -5,8 +5,6 @@ import { mulberry32 } from "../src/core/noise.js";
 import { contrast, hueDistance, hueOf } from "../src/ui/color.js";
 import { MIN_LINE_CONTRAST, createRandomPalette } from "../src/ui/randomPalette.js";
 
-THREE.ColorManagement.enabled = false; // as in the app (core/renderer.js)
-
 /** Many palettes from fixed seeds, every layer's fill and line from each. */
 function samples(count = 300) {
   const random = mulberry32(42);

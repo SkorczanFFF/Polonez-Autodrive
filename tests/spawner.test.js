@@ -12,6 +12,8 @@ function setup(options = {}) {
     create: () => [new THREE.Object3D()],
     startZ: -100,
     endZ: 100,
+    fadeIn: 0,
+    fadeOut: 0,
     ...options,
   });
   return { parent, spawner };

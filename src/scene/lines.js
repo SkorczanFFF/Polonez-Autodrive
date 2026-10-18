@@ -19,8 +19,22 @@ import { WIRE } from "../config.js";
 /** Shared by all line materials, so one GUI slider sets the width everywhere. */
 export const lineWidth = { value: WIRE.width };
 
-/** One prepared geometry per source geometry: clones share geometries, so they share it too. */
-const geometries = new WeakMap();
+/**
+ * Memoizes a per-geometry derivation: clones share geometries, so they share the result too.
+ *
+ * @template T
+ * @param {(geometry: THREE.BufferGeometry) => T} derive
+ * @returns {(geometry: THREE.BufferGeometry) => T}
+ */
+export function memoByGeometry(derive) {
+  /** @type {WeakMap<THREE.BufferGeometry, T>} */
+  const cache = new WeakMap();
+  return (geometry) => {
+    let value = cache.get(geometry);
+    if (value === undefined) cache.set(geometry, (value = derive(geometry)));
+    return value;
+  };
+}
 
 /**
  * Added to an edge distance to hide that edge: the distance stays linear (the shader needs its
@@ -29,22 +43,17 @@ const geometries = new WeakMap();
 const HIDDEN = 1e4;
 
 /**
- * The geometry with the `wireEdge` attribute (non-indexed: each triangle needs its own vertices).
- * A non-indexed geometry that already has `wireEdge` (written by its generator, see
- * writeWireEdges) is used as is.
+ * The geometry with the `wireEdge` attribute (non-indexed: each triangle needs its own vertices),
+ * one per source geometry. A non-indexed geometry that already has `wireEdge` (written by its
+ * generator, see writeWireEdges) is used as is.
  *
- * @param {THREE.BufferGeometry} geometry
- * @returns {THREE.BufferGeometry}
+ * @type {(geometry: THREE.BufferGeometry) => THREE.BufferGeometry}
  */
-export function lineGeometry(geometry) {
-  let prepared = geometries.get(geometry);
-  if (!prepared) {
-    prepared = geometry.index ? geometry.toNonIndexed() : geometry;
-    if (geometry.index || !prepared.hasAttribute("wireEdge")) writeWireEdges(prepared);
-    geometries.set(geometry, prepared);
-  }
+export const lineGeometry = memoByGeometry((geometry) => {
+  const prepared = geometry.index ? geometry.toNonIndexed() : geometry;
+  if (geometry.index || !prepared.hasAttribute("wireEdge")) writeWireEdges(prepared);
   return prepared;
-}
+});
 
 /**
  * (Re)computes `wireEdge` of a non-indexed geometry, e.g. after its generator moved vertices.
@@ -170,7 +179,7 @@ const LINE_PARAMETERS = { transparent: true, depthWrite: false, side: THREE.Doub
  */
 export class BasicLineMaterial extends THREE.MeshBasicMaterial {
   /** @type {LineUniforms} */
-  lineUniforms = { fade: { value: WIRE.fade }, min: { value: 0 } };
+  lineUniforms = { fade: { value: WIRE.fade }, min: { value: WIRE.min } };
 
   /** @param {THREE.MeshBasicMaterialParameters} [parameters] */
   constructor(parameters) {
@@ -193,7 +202,7 @@ export class BasicLineMaterial extends THREE.MeshBasicMaterial {
 /** Lit lines (v1 wireframes were Phong). */
 export class PhongLineMaterial extends THREE.MeshPhongMaterial {
   /** @type {LineUniforms} */
-  lineUniforms = { fade: { value: WIRE.fade }, min: { value: 0 } };
+  lineUniforms = { fade: { value: WIRE.fade }, min: { value: WIRE.min } };
 
   /** @param {THREE.MeshPhongMaterialParameters} [parameters] */
   constructor(parameters) {
@@ -212,3 +221,10 @@ export class PhongLineMaterial extends THREE.MeshPhongMaterial {
     return this;
   }
 }
+
+/**
+ * @param {THREE.Material} material
+ * @returns {material is BasicLineMaterial | PhongLineMaterial}
+ */
+export const isLineMaterial = (material) =>
+  material instanceof BasicLineMaterial || material instanceof PhongLineMaterial;

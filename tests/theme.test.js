@@ -4,8 +4,6 @@ import { LAYERS, PALETTE, SUN } from "../src/config.js";
 import { contrast } from "../src/ui/color.js";
 import { UI_TINTS, turnHue } from "../src/ui/theme.js";
 
-THREE.ColorManagement.enabled = false; // as in the app (core/renderer.js)
-
 /** @param {string} color */
 const hsl = (color) => new THREE.Color(color).getHSL({ h: 0, s: 0, l: 0 }, THREE.SRGBColorSpace);
 
