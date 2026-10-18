@@ -274,8 +274,9 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   addBloom();
   addCrt();
 
-  const glowName = touch ? L.bloomEnabled : `${L.bloomEnabled} (${ACTIONS.glow.label})`;
-  gui.add(bloom, "enabled").name(glowName).listen(); // G too
+  /** A label with its key, where there are keys. @param {string} label @param {"glow" | "randomize"} action */
+  const withKey = (label, action) => (touch ? label : `${label} (${ACTIONS[action].label})`);
+  gui.add(bloom, "enabled").name(withKey(L.bloomEnabled, "glow")).listen(); // G too
 
   /** @type {import("../core/tween.js").TweenHandle | null} */
   let randomizing = null;
@@ -314,7 +315,9 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   }
 
   // the emoji gets its own box, so it can sit centered on the label (fonts differ in metrics)
-  const randomizeButton = gui.add({ randomize }, "randomize").name(L.randomize);
+  const randomizeButton = gui
+    .add({ randomize }, "randomize")
+    .name(withKey(L.randomize, "randomize")); // R too
   randomizeButton.domElement.classList.add("gui-randomize");
   const icon = document.createElement("span");
   icon.className = "gui-randomize__icon";
@@ -341,5 +344,6 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   return {
     show: () => gui.show(),
     hide: () => gui.hide(),
+    randomize,
   };
 }

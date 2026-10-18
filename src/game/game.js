@@ -9,6 +9,7 @@ import { createStateMachine } from "./state.js";
  * @typedef {object} Menu
  * @property {() => void} show
  * @property {() => void} hide
+ * @property {() => void} randomize "Randomize all" (R)
  */
 
 /**
@@ -30,7 +31,7 @@ const tierForScore = (score) => Math.floor(score / SPEED.tierEvery);
 const speedForScore = (score) => 1 + tierForScore(score) * SPEED.tierStep;
 
 /**
- * Orchestrates the game: maps input to state events (and gates the menu and glow keys by state),
+ * Orchestrates the game: maps input to state events (and gates the menu, glow and randomize keys),
  * runs per-state timers inside update(dt) and performs the enter actions of each state (camera,
  * car, minigame, HUD, menu).
  *
@@ -231,6 +232,9 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
         break;
       case "glow":
         view.bloom.enabled = !view.bloom.enabled;
+        break;
+      case "randomize":
+        menu?.randomize();
         break;
     }
   });

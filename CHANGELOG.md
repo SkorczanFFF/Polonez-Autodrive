@@ -24,7 +24,8 @@ lets you recolor and tweak everything.
   fill and line colors and visibility, line fading and glow, palm and rock density; sun colors and
   stripes, bloom, CRT, sky and fog, mountain height / roughness / start / seed, line width, and
   "Randomize all".
-- **Keys:** ENTER start, F free ride, ESC menu, ← / → steer, H hide menu, G glow on/off, F10
+- **Keys:** ENTER start, F free ride, ESC menu, ← / → steer, H hide menu, G glow on/off, R
+  randomize all colors, F10
   developer stats.
 
 ## [Unreleased]
@@ -70,6 +71,8 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   car sideways), the HUD keeps clear of notches and the home indicator, and free ride has
   on-screen steering (hold ← / →) and a MENU button. The minigame is not offered on touch screens
   yet.
+- **R** randomizes all the scene colors, like the side panel's "Randomize all" button, in the
+  menu and mid-game alike (the button says "Randomize all (R)").
 
 ### Changed
 

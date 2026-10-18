@@ -25,6 +25,7 @@ The Polonez, its wheels, the palms and the rocks were modeled in 3Ds Max 2018, u
 | **ESC** | Back to the menu |
 | **H** | Hide / show the menu (eye button in the top-left corner) to enjoy or recolor the scene |
 | **G** | Glow on the wireframes on / off (also in the side panel) |
+| **R** | Randomize all: new colors for the whole scene (also in the side panel) |
 
 All menu and game over buttons are clickable too. Drag with the mouse to orbit the camera outside the minigame.
 

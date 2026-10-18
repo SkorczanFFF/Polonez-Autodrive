@@ -10,7 +10,7 @@ function setup() {
   const camera = new THREE.PerspectiveCamera();
   const controls = { enabled: true, target: new THREE.Vector3(), update() {} };
   const world = { speedMultiplier: 1 };
-  const calls = { minigameReset: 0, menuShow: 0 };
+  const calls = { minigameReset: 0, menuShow: 0, menuRandomize: 0 };
   const state = { crashNext: false };
   const minigame = {
     score: 7,
@@ -39,7 +39,7 @@ function setup() {
         name === "countGameOver" ? (/** @type {number} */ p) => counts.push(p) : () => {},
     },
   );
-  const menu = { show: () => calls.menuShow++, hide() {} };
+  const menu = { show: () => calls.menuShow++, hide() {}, randomize: () => calls.menuRandomize++ };
   const tweens = createTweens();
   const input = createInput(new EventTarget());
   const view = { camera, controls };
@@ -66,6 +66,18 @@ function setup() {
 
   return { game, input, world, camera, controls, car, calls, counts, minigame, run, crash };
 }
+
+describe("keys outside the state machine", () => {
+  it("R randomizes the scene colors through the scene GUI, in any state", () => {
+    const { input, calls, run } = setup();
+    input.dispatch("randomize");
+    expect(calls.menuRandomize).toBe(1);
+    input.dispatch("start");
+    run(1 / 60);
+    input.dispatch("randomize");
+    expect(calls.menuRandomize).toBe(2);
+  });
+});
 
 describe("portrait follow", () => {
   const target = new THREE.Vector3().fromArray(SCENE.camera.target);

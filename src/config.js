@@ -502,7 +502,7 @@ export const CRT = {
   flickerIntensity: 0.4,
 };
 
-/** @typedef {"start" | "free" | "exit" | "left" | "right" | "stats" | "menu" | "glow"} Action */
+/** @typedef {"start" | "free" | "exit" | "left" | "right" | "stats" | "menu" | "glow" | "randomize"} Action */
 
 /**
  * @typedef {object} ActionKeys
@@ -522,6 +522,7 @@ export const ACTIONS = {
   stats: { keys: ["F10"] }, // developer overlay, not advertised in the UI
   menu: { keys: ["KeyH"], label: "H" },
   glow: { keys: ["KeyG"], label: "G" },
+  randomize: { keys: ["KeyR"], label: "R" },
 };
 
 export const GUI = {
