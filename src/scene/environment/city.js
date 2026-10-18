@@ -75,6 +75,26 @@ export function layoutCity({ buildings, height, lit }, seed) {
 }
 
 /**
+ * The buildings in CITY.bands bands across the city (by x), each drawn by its own meshes, so
+ * frustum culling can drop what is out of view: the whole city while the camera looks ahead, the
+ * far bands while it looks back. One mesh for all of it has a bounding sphere so wide it reaches
+ * past the camera and is never culled.
+ *
+ * @param {Building[]} buildings
+ * @param {number} [bands]
+ * @returns {Building[][]}
+ */
+export function bandCity(buildings, bands = CITY.bands) {
+  const width = (2 * CITY.halfWidth) / bands;
+  const result = Array.from({ length: bands }, () => /** @type {Building[]} */ ([]));
+  for (const building of buildings) {
+    const i = Math.floor((building.x + CITY.halfWidth) / width);
+    result[Math.min(bands - 1, Math.max(0, i))].push(building);
+  }
+  return result;
+}
+
+/**
  * The faces of a building, walls first then the roof: an origin, two edges in outward-facing
  * order (their cross product points out, as quads() needs) and the outward normal.
  *
@@ -259,11 +279,13 @@ export function createCity({ scene, materials, mountains }) {
     height: { value: CITY.hazeHeight },
     color: { value: fog.color }, // the GUI's fog color
   };
-  const layout = () => layoutCity(params, mountains.seed + 2);
-  const buildings = layout();
-
-  const towers = new THREE.Mesh(towersGeometry(buildings));
-  dress(towers, materials.solid.city, materials.wire.city, { shadows: false }); // far outside the shadow box
+  /** The geometry of every band: towers (with their lines) and windows. */
+  const build = () =>
+    bandCity(layoutCity(params, mountains.seed + 2)).map((buildings) => ({
+      towers: towersGeometry(buildings),
+      windows: windowsGeometry(buildings),
+      empty: buildings.length === 0,
+    }));
 
   // The windows follow the lines' material (the GUI edits it): the same Color object, and
   // visibility and glow copied every frame (update).
@@ -272,11 +294,19 @@ export function createCity({ scene, materials, mountains }) {
   glass.color = lines.color;
   addHaze(materials.solid.city, haze);
   for (const material of [lines, glass]) addHaze(material, haze, true);
-  const windows = new THREE.Mesh(windowsGeometry(buildings), glass);
-  windows.layers.enable(BLOOM.layer); // the windows glow like the lines
 
-  const city = new THREE.Group().add(towers, windows);
+  const city = new THREE.Group();
   city.position.y = -CITY.sink;
+  /** One pair of meshes per band (bandCity). */
+  const bands = build().map(({ towers: towerGeometry, windows: windowGeometry, empty }) => {
+    const towers = new THREE.Mesh(towerGeometry);
+    dress(towers, materials.solid.city, materials.wire.city, { shadows: false }); // far outside the shadow box
+    const windows = new THREE.Mesh(windowGeometry, glass);
+    windows.layers.enable(BLOOM.layer); // the windows glow like the lines
+    towers.visible = windows.visible = !empty;
+    city.add(towers, windows);
+    return { towers, windows };
+  });
   scene.add(city);
 
   return {
@@ -291,13 +321,16 @@ export function createCity({ scene, materials, mountains }) {
 
     /** Rebuilds the city from `params` and the mountains' seed (GUI). */
     regenerate() {
-      const buildings = layout();
-      const old = [towers.geometry, windows.geometry];
-      towers.geometry = towersGeometry(buildings);
-      const wire = /** @type {THREE.Mesh} */ (towers.children[0]);
-      wire.geometry = towers.geometry; // it has its own wireEdge: the line twin shares it
-      windows.geometry = windowsGeometry(buildings);
-      for (const geometry of old) geometry.dispose();
+      build().forEach(({ towers: towerGeometry, windows: windowGeometry, empty }, i) => {
+        const { towers, windows } = bands[i];
+        const old = [towers.geometry, windows.geometry];
+        towers.geometry = towerGeometry;
+        const wire = /** @type {THREE.Mesh} */ (towers.children[0]);
+        wire.geometry = towerGeometry; // it has its own wireEdge: the line twin shares it
+        windows.geometry = windowGeometry;
+        towers.visible = windows.visible = !empty;
+        for (const geometry of old) geometry.dispose();
+      });
     },
   };
 }

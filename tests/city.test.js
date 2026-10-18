@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CITY } from "../src/config.js";
-import { layoutCity } from "../src/scene/environment/city.js";
+import { CITY, SCENE } from "../src/config.js";
+import { bandCity, layoutCity } from "../src/scene/environment/city.js";
 import { CONVEYOR_END } from "../src/scene/environment/sideHills.js";
 
 const params = { buildings: CITY.buildings, height: CITY.height, lit: CITY.lit };
@@ -34,6 +34,30 @@ describe("city", () => {
         expect(apart).toBe(true);
       }
     }
+  });
+
+  it("is drawn in bands, each staying behind the camera however it is bounded", () => {
+    const buildings = layoutCity(params, 1);
+    const bands = bandCity(buildings);
+    expect(bands).toHaveLength(CITY.bands);
+    expect(bands.flat()).toHaveLength(buildings.length);
+    const width = (2 * CITY.halfWidth) / CITY.bands;
+    bands.forEach((band, i) => {
+      for (const b of band) {
+        expect(b.x).toBeGreaterThanOrEqual(-CITY.halfWidth + i * width - 1e-6);
+        expect(b.x).toBeLessThanOrEqual(-CITY.halfWidth + (i + 1) * width + 1e-6);
+      }
+      if (band.length === 0) return;
+      // a bounding sphere around the band (half the box diagonal) ends behind the camera, so
+      // frustum culling drops the band while the camera looks ahead
+      const xs = band.flatMap((b) => [b.x - b.w / 2, b.x + b.w / 2]);
+      const zs = band.flatMap((b) => [b.z - b.d / 2, b.z + b.d / 2]);
+      const height = Math.max(...band.map((b) => b.h));
+      const size = [Math.max(...xs) - Math.min(...xs), height, Math.max(...zs) - Math.min(...zs)];
+      const radius = Math.hypot(...size) / 2;
+      const centerZ = (Math.min(...zs) + Math.max(...zs)) / 2;
+      expect(centerZ - radius).toBeGreaterThan(SCENE.camera.position[2]);
+    });
   });
 
   it("varies the lit windows between towers and follows the seed", () => {

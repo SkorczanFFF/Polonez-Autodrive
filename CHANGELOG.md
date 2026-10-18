@@ -79,6 +79,8 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 - The Polonez sits 4 cm higher (`CAR.lift`), so its tyres no longer look sunk into the road.
 - The UI tints that follow the scene colors (panels, buttons, titles after "Randomize all") are
   now mixed by the stylesheet in oklch: the same hue turn, lightness and chroma kept perceptually.
+- Performance: the city is drawn in bands, so it costs nothing while it is behind the camera (it
+  used to be drawn every frame: about a quarter of the frame's triangles).
 - Side panel: sky and fog in an Environment folder, line width in the Polonez folder, CRT Effect
   starts closed.
 - The game over panel stays until you pick AGAIN, FREE RIDE or MENU (it used to return to the

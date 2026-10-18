@@ -230,6 +230,12 @@ export const CITY = {
   // (the far ends are near + bend + depth away: within SCENE.camera.far)
   roadGap: 24, // half-width kept free for the road into the city
   buildings: 175,
+  /**
+   * The city is drawn as this many bands across (each its own meshes): frustum culling drops the
+   * bands out of view, and the whole city while the camera looks ahead. One mesh for all of it
+   * has a bounding sphere so big it reaches past the camera and is never culled.
+   */
+  bands: 8,
   height: 460, // the tallest towers
   width: [16, 48], // footprint sides
   cell: 10, // floors and bays of the window grid
