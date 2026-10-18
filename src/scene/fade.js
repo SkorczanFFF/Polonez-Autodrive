@@ -84,9 +84,5 @@ export function createFader() {
     clear() {
       for (const object of [...active.keys()]) release(object);
     },
-
-    get size() {
-      return active.size;
-    },
   };
 }

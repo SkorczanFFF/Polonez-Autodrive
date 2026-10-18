@@ -501,13 +501,6 @@ kbd {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .logo__script,
-  .logo__caps {
-    animation: none;
-  }
-}
-
 .hud__best {
   margin: 0.4em 0 0;
   letter-spacing: 0.2em;
@@ -1214,8 +1207,7 @@ kbd {
   .loader,
   .loader *,
   .loader::before,
-  .hud *,
-  .crt {
+  .hud * {
     animation: none !important;
     transition: none !important;
   }

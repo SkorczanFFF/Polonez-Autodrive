@@ -25,7 +25,7 @@ export function pruneEmpty(root) {
  *
  * @param {THREE.Object3D} model
  */
-export function localCenter(model) {
+function localCenter(model) {
   const { position, quaternion, scale } = model;
   const savedPosition = position.clone();
   const savedQuaternion = quaternion.clone();

@@ -12,7 +12,7 @@
  */
 
 /** @type {Record<GameState, Partial<Record<GameEvent, GameState>>>} */
-export const TRANSITIONS = {
+const TRANSITIONS = {
   idle: { start: "countdown", free: "free" },
   free: { start: "countdown", exit: "idle" },
   countdown: { exit: "idle", timeout: "playing" },

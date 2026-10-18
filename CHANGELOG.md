@@ -135,6 +135,11 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 - `hills.fbx` and `side.fbx` (161 KB), replaced by the procedural mountains; with them the
   side hills clipping through the horizon hills.
 
+### Fixed
+
+- With "reduce motion" on in the OS, the CRT flicker is off by default but can be switched on in the
+  side panel again; the stylesheet no longer overrides the switch.
+
 ## [2.0.0] – October 2026
 
 Rebuilt from scratch on Vite and three.js r186 (from r116), with the same look and gameplay.

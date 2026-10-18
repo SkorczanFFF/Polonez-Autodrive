@@ -143,7 +143,6 @@ export function createCar({ scene, models, materials }) {
   return {
     group,
     chassis,
-    body,
     frontWheels,
     /** Steering is only active in free ride and while playing. */
     steering: false,

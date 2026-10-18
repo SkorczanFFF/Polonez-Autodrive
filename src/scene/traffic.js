@@ -19,8 +19,8 @@ const PANEL = { width: 0.35, height: 0.25 };
 /** Side window frame inset and B-pillar width, metres. */
 const WINDOW_FRAME = 0.07;
 const PILLAR = 0.1;
-/** Bumper height, thickness and how far it sticks out, metres. */
-const BUMPER = { height: 0.1, depth: 0.08, out: 0.03 };
+/** Bumper height above the ground, thickness, height and how far it sticks out, metres. */
+const BUMPER = { y: 0.32, height: 0.1, depth: 0.08, out: 0.03 };
 
 /** Half the widest car, in scene units: the minigame keeps lanes this far from the centre. */
 export function trafficHalfWidth() {
@@ -79,7 +79,7 @@ function bodyGeometry(model) {
     [0, -BUMPER.out],
   ]) {
     const bumper = new THREE.BoxGeometry(model.width + 0.04, BUMPER.height, BUMPER.depth);
-    parts.push(plain(bumper.translate(0, model.bumper ?? 0.32, x + out)));
+    parts.push(plain(bumper.translate(0, BUMPER.y, x + out)));
   }
   const tire = TRAFFIC.tireWidth;
   for (const axle of axles) {

@@ -25,13 +25,9 @@ export function createLoop(renderer, render) {
   }
 
   return {
-    /**
-     * @param {Update} update
-     * @returns {() => void} removes the update again
-     */
+    /** @param {Update} update */
     add(update) {
       updates.add(update);
-      return () => updates.delete(update);
     },
     start() {
       renderer.setAnimationLoop(tick);

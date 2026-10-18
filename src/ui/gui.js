@@ -363,8 +363,6 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom }) 
   gui.onOpenClose(releaseFocus);
 
   return {
-    gui,
-    randomize,
     show: () => gui.show(),
     hide: () => gui.hide(),
   };

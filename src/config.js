@@ -5,21 +5,12 @@
  */
 
 export const PALETTE = {
-  // UI colors (CSS) and the original 2024 scene palette, kept for the planned "Original" preset
+  // UI colors (CSS)
   pink: "#c348dd",
-  skyPink: "#eb94c1",
-  violet: "#4f33d9",
   aqua: "#40d5db",
-  blue: "#4790ff",
   yellow: "#ffebac",
   red: "#fc3b96",
   white: "#ededed",
-  tweety: "#ffdf7c",
-  laguna: "#3b8ceb",
-  palm: "#56a0ff",
-  rock: "#9047c3",
-  rockLine: "#66b6cf",
-  box: "#ffff00",
   uiDeep: "#004671",
   uiLoaderBg: "#215a7e",
   crtLine: "#eba2a2",
@@ -448,7 +439,6 @@ export const SPAWN = {
  *   front, y up from the ground; wheel arches are cut into its bottom edge automatically
  * @property {[number, number][]} cabin greenhouse outline, bottom edge a little below the belt
  *   line (no gap to the body); it narrows to TRAFFIC.roofWidth at the roof
- * @property {number} [bumper] bumper height (default 0.32)
  * @property {{ shape: "round" | "rect", y: number, inset: number, size: number }} lights
  *   headlights on the front: height, inset from the body side, size
  */

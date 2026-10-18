@@ -10,7 +10,7 @@ function setup() {
   const camera = new THREE.PerspectiveCamera();
   const controls = { enabled: true, target: new THREE.Vector3(), update() {} };
   const world = { speedMultiplier: 1 };
-  const calls = { minigameReset: 0, menuShow: 0, menuHide: 0 };
+  const calls = { minigameReset: 0, menuShow: 0 };
   const state = { crashNext: false };
   const minigame = {
     score: 7,
@@ -39,7 +39,7 @@ function setup() {
         name === "countGameOver" ? (/** @type {number} */ p) => counts.push(p) : () => {},
     },
   );
-  const menu = { show: () => calls.menuShow++, hide: () => calls.menuHide++ };
+  const menu = { show: () => calls.menuShow++, hide() {} };
   const tweens = createTweens();
   const input = createInput(new EventTarget());
   const view = { camera, controls };

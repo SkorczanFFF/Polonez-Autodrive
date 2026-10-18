@@ -12,7 +12,7 @@ function setup() {
   const materials = createMaterials({ [String(LAYERS.road.wireMap)]: new THREE.Texture() }, 1);
   const mountains = createMountainParams(1234);
   const hills = createSideHills({ scene, materials, mountains, models: {} });
-  return { scene, mountains, hills };
+  return { mountains, hills };
 }
 
 /** @param {THREE.Mesh[]} meshes right-hand chunks, nearest last */

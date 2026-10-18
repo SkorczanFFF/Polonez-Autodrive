@@ -31,5 +31,5 @@ export function createHills({ scene, materials, mountains }) {
   }
   regenerate();
 
-  return { range, regenerate };
+  return { regenerate };
 }

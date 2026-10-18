@@ -288,7 +288,6 @@ export function createCity({ scene, materials, mountains }) {
   scene.add(city);
 
   return {
-    city,
     params,
     haze,
 
