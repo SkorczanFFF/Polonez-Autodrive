@@ -50,6 +50,7 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
   const shakeOffset = new THREE.Vector3();
   let followX = 0; // sideways camera offset that keeps the car in frame
   const carBounds = new THREE.Box3();
+  const base = new THREE.Vector3();
   const corner = new THREE.Vector3();
   const toCorner = new THREE.Vector3();
   const forward = new THREE.Vector3();
@@ -123,6 +124,13 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
    * On portrait screens the steering range is wider than the view: the camera slides sideways,
    * together with its orbit target, only as far as needed to keep the car inside. Landscape screens
    * keep the fixed camera of the desktop version.
+   *
+   * The slide is measured against a stand-in camera that looks straight down the road from the
+   * real orbit's distance and tilt. In free ride the orbit can be turned, and the real camera is
+   * then useless as a reference: measured against it, a centred car looked out of frame once the
+   * view was turned to the right (the camera ran away), and a car driving past the lens asked for
+   * wild slides that could not bring it back anyway. Against the stand-in, turning the orbit
+   * changes nothing; the car is simply kept near the orbit centre.
    */
   function followCar() {
     if (cameraTween?.isActive()) {
@@ -131,22 +139,27 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
     }
     const portrait = camera.aspect < 1;
     if (!portrait && followX === 0) return; // landscape: nothing to measure every frame
-    // The outer corner of the body nearest the camera is the first to leave the frame.
-    const side = car.group.position.x >= 0 ? 1 : -1;
-    car.getBounds(carBounds);
-    const { min, max } = carBounds;
-    corner.set(side > 0 ? max.x : min.x, max.y, max.z);
-    const base = camera.position.x - followX; // camera x without the offset
-    const depth = toCorner
-      .subVectors(corner, camera.position)
-      .dot(camera.getWorldDirection(forward));
-    const halfWidth = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect; // per unit of depth
-    const room = depth * halfWidth - SCENE.camera.followMargin; // half the view at the corner
-    const offset = portrait ? side * Math.max(0, side * (corner.x - base) - room) : 0;
+    let offset = 0;
+    if (portrait) {
+      // the orbit (same with or without the slide) with its turn undone, around the home target
+      base.subVectors(camera.position, controls.target);
+      base.set(0, base.y, Math.hypot(base.x, base.z)).add(cameraTarget);
+      forward.subVectors(cameraTarget, base).normalize();
+      // The outer corner of the body nearest the camera is the first to leave the frame.
+      const side = car.group.position.x >= cameraTarget.x ? 1 : -1;
+      car.getBounds(carBounds);
+      const { min, max } = carBounds;
+      corner.set(side > 0 ? max.x : min.x, max.y, max.z);
+      const depth = toCorner.subVectors(corner, base).dot(forward);
+      const halfWidth = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * camera.aspect; // per unit of depth
+      const room = depth * halfWidth - SCENE.camera.followMargin; // half the view at the corner
+      offset = side * Math.max(0, side * (corner.x - base.x) - room);
+    }
     const dx = offset - followX;
     if (dx === 0) return;
     camera.position.x += dx;
     controls.target.x += dx;
+    if (shakeFrom) shakeFrom.x += dx; // shake() rebuilds camera.position from it every frame
     followX = offset;
   }
 

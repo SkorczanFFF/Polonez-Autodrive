@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { MINIGAME } from "../src/config.js";
+import { MINIGAME, SCENE } from "../src/config.js";
 import { createInput } from "../src/core/input.js";
 import { createTweens } from "../src/core/tween.js";
 import { createGame } from "../src/game/game.js";
@@ -18,7 +18,17 @@ function setup() {
     reset: () => calls.minigameReset++,
     update: () => ({ crashed: state.crashNext, scored: false }),
   };
-  const car = { steering: false, reset() {}, update() {}, release() {} };
+  const group = new THREE.Group();
+  const car = {
+    steering: false,
+    group,
+    reset() {},
+    update() {},
+    release() {},
+    // a body 1.8 wide, 1.4 high and 4.2 long, centred on the group
+    getBounds: (/** @type {THREE.Box3} */ box) =>
+      box.setFromCenterAndSize(group.position, new THREE.Vector3(1.8, 1.4, 4.2)),
+  };
   /** @type {number[]} progress of every countGameOver call */
   const counts = [];
   // every HUD call is a no-op, but the game over count is recorded
@@ -54,8 +64,74 @@ function setup() {
     state.crashNext = false;
   };
 
-  return { game, input, world, camera, calls, counts, minigame, run, crash };
+  return { game, input, world, camera, controls, car, calls, counts, minigame, run, crash };
 }
+
+describe("portrait follow", () => {
+  const target = new THREE.Vector3().fromArray(SCENE.camera.target);
+
+  /** A portrait view (aspect 1:2, 90° vertical fov) from `position`, looking at the orbit target. */
+  function portrait(/** @type {number[]} */ position) {
+    const s = setup();
+    s.camera.aspect = 0.5;
+    s.camera.fov = 90;
+    s.camera.updateProjectionMatrix();
+    s.camera.position.fromArray(position);
+    s.camera.lookAt(target);
+    s.controls.target.copy(target);
+    return s;
+  }
+
+  it("stays put while the centred car is looked at from any side", () => {
+    for (const x of [-5, 0, 5]) {
+      const { camera, controls, run } = portrait([x, 3, 5]);
+      const at = camera.position.clone();
+      run(0.5);
+      expect(camera.position.distanceTo(at)).toBeCloseTo(0);
+      expect(controls.target.distanceTo(target)).toBeCloseTo(0);
+    }
+  });
+
+  it("slides the orbit sideways just enough to keep a steered car in view, and back", () => {
+    const { camera, controls, car, run } = portrait([0, 3, 7]);
+    car.group.position.x = 6;
+    run(1 / 60);
+    expect(camera.position.x).toBeGreaterThan(0);
+    expect(camera.position.y).toBeCloseTo(3);
+    expect(camera.position.z).toBeCloseTo(7);
+    expect(controls.target.x).toBeCloseTo(camera.position.x); // the orbit moves as a whole
+    // the outer top corner nearest the camera ends up just inside the right edge
+    camera.updateMatrixWorld();
+    const corner = new THREE.Vector3(6.9, 0.7, 2.1).project(camera);
+    expect(corner.x).toBeLessThan(1);
+    expect(corner.x).toBeGreaterThan(0.7);
+
+    car.group.position.x = 0;
+    run(1 / 60);
+    expect(camera.position.x).toBeCloseTo(0);
+    expect(controls.target.x).toBeCloseTo(0);
+  });
+
+  it("slides the same for a steered car however the orbit is turned, and not while turning", () => {
+    const { camera, controls, car, run } = portrait([0, 3, 7]);
+    car.group.position.x = 6;
+    run(1 / 60);
+    const slide = controls.target.x;
+    expect(slide).toBeGreaterThan(0);
+
+    // turn the orbit around its (slid) target, as OrbitControls does, then keep running
+    const orbit = camera.position.clone().sub(controls.target);
+    for (const angle of [0.3, 1, -1, Math.PI / 2]) {
+      camera.position.copy(orbit).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+      camera.position.add(controls.target);
+      camera.lookAt(controls.target);
+      const at = camera.position.clone();
+      run(0.5);
+      expect(camera.position.distanceTo(at)).toBeCloseTo(0);
+      expect(controls.target.x).toBeCloseTo(slide);
+    }
+  });
+});
 
 describe("crash", () => {
   it("brakes the world to a halt and keeps the traffic and the game camera", () => {
