@@ -265,14 +265,11 @@ export function createCity({ scene, materials, mountains }) {
   const towers = new THREE.Mesh(towersGeometry(buildings));
   dress(towers, materials.solid.city, materials.wire.city, { shadows: false }); // far outside the shadow box
 
+  // The windows follow the lines' material (the GUI edits it): the same Color object, and
+  // visibility and glow copied every frame (update).
   const lines = materials.wire.city;
   const glass = new THREE.MeshBasicMaterial({ fog: false, transparent: true });
-  glass.color = lines.color; // the same Color: the GUI's line color recolors the windows
-  Object.defineProperty(glass, "visible", { get: () => lines.visible }); // shown with the lines
-  Object.defineProperty(glass.userData, "glow", {
-    get: () => lines.userData.glow,
-    enumerable: true,
-  });
+  glass.color = lines.color;
   addHaze(materials.solid.city, haze);
   for (const material of [lines, glass]) addHaze(material, haze, true);
   const windows = new THREE.Mesh(windowsGeometry(buildings), glass);
@@ -285,6 +282,12 @@ export function createCity({ scene, materials, mountains }) {
   return {
     params,
     haze,
+
+    /** The windows show, hide and glow with the lines. */
+    update() {
+      glass.visible = lines.visible;
+      glass.userData.glow = lines.userData.glow;
+    },
 
     /** Rebuilds the city from `params` and the mountains' seed (GUI). */
     regenerate() {

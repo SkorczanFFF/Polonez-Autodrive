@@ -1,16 +1,17 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { LAYERS, TRAFFIC } from "../src/config.js";
-import { createMaterials } from "../src/scene/materials.js";
+import { TRAFFIC } from "../src/config.js";
 import {
   createTrafficModels,
   monotoneChains,
   prism,
   trafficHalfWidth,
   withArches,
+  ARCH_CLEARANCE,
+  ARCH_SEGMENTS,
 } from "../src/scene/traffic.js";
-
-const materials = () => createMaterials({ [String(LAYERS.road.wireMap)]: new THREE.Texture() }, 1);
+import { TRAFFIC_MODELS } from "../src/scene/trafficModels.js";
+import { testMaterials as materials } from "./helpers.js";
 
 describe("prism", () => {
   it("faces point outwards", () => {
@@ -40,7 +41,7 @@ describe("prism", () => {
 
 describe("profiles", () => {
   it("are x-monotone with their arches, as the panel grid needs", () => {
-    for (const model of Object.values(TRAFFIC.models)) {
+    for (const model of Object.values(TRAFFIC_MODELS)) {
       const body = withArches(model.profile, model.wheel.radius, model.wheel.axles);
       expect(() => monotoneChains(body), model.label).not.toThrow();
       expect(() => monotoneChains(model.cabin), model.label).not.toThrow();
@@ -69,16 +70,16 @@ describe("wheel arches", () => {
       [0, 1],
     ]);
     const cut = withArches(profile, 0.3, [0.7, 2.3]);
-    expect(cut.length).toBeGreaterThan(profile.length + 2 * 6);
+    expect(cut.length).toBeGreaterThan(profile.length + 2 * ARCH_SEGMENTS);
     const top = Math.max(...cut.filter(([, y]) => y < 1).map(([, y]) => y));
-    expect(top).toBeCloseTo(0.3 + 0.3 * 1.15);
+    expect(top).toBeCloseTo(0.3 + 0.3 * ARCH_CLEARANCE);
     for (const [, y] of cut) expect(y).toBeGreaterThanOrEqual(0.2 - 1e-9); // feet on the edge
   });
 });
 
 describe("traffic models", () => {
   const models = createTrafficModels(materials());
-  const configs = Object.values(TRAFFIC.models);
+  const configs = Object.values(TRAFFIC_MODELS);
 
   it("builds one template per model, front towards +z, on the ground", () => {
     expect(models).toHaveLength(configs.length);

@@ -1,12 +1,21 @@
 import * as THREE from "three";
 import { CAR, SPEED } from "../config.js";
-import { frames, perFrame } from "../core/time.js";
 import { pruneEmpty, wheelCenter } from "./model.js";
 import { dress } from "./wire.js";
 
 /** @typedef {-1 | 0 | 1} SteerInput left, none, right */
 
 const UP = new THREE.Vector3(0, 1, 0);
+
+/**
+ * The share of the way to a target covered in dt when approaching it exponentially with time
+ * constant tau: `value += (target - value) * settle(tau, dt)` draws the same curve at any frame
+ * rate.
+ *
+ * @param {number} tau seconds
+ * @param {number} dt seconds
+ */
+const settle = (tau, dt) => 1 - Math.exp(-dt / tau);
 
 /**
  * The Polonez. Each part of the motion lives on its own node, so nothing has to be synced:
@@ -18,8 +27,8 @@ const UP = new THREE.Vector3(0, 1, 0);
  *       └ spin   rolls the wheel around its axle (x)
  *         └ mirror → wheel model, offset so its axle and mid-width sit on the pivot
  *
- * The wheels never roll with the body, which gives the suspension feel of v1. Per-frame
- * constants from CAR are scaled with core/time.js, so 60 Hz and 144 Hz feel the same.
+ * The wheels never roll with the body, which gives the suspension feel of v1. Speeds are per
+ * second and easings time constants (settle), so 60 Hz and 144 Hz feel the same.
  *
  * @param {{ scene: THREE.Scene, models: Record<string, THREE.Group>, materials: import("./materials.js").Materials }} deps
  */
@@ -75,7 +84,7 @@ export function createCar({ scene, models, materials }) {
   const { roll, yaw, wheelSteer } = CAR.handling;
   const rollSign = roll.outward ? 1 : -1;
 
-  let speed = 0; // lateral speed, units per reference frame
+  let speed = 0; // lateral speed, units/s
   let direction = 0; // last steering direction, used for momentum
   let holdTime = 0; // seconds the current direction has been held
   /** @type {SteerInput} */
@@ -97,18 +106,16 @@ export function createCar({ scene, models, materials }) {
    * @param {SteerInput} input
    */
   function steer(dt, input) {
-    const f = frames(dt);
-
     if (input !== 0) {
       if (input !== lastInput) holdTime = 0;
       holdTime += dt;
       direction = input;
       const target = Math.min(s.baseSpeed + s.holdAccel * holdTime, s.maxSpeed);
-      speed += (target - speed) * perFrame(s.speedEasing, dt);
-      moveBy(direction * speed * f);
+      speed += (target - speed) * settle(s.speedEasing, dt);
+      moveBy(direction * speed * dt);
     } else {
-      speed = Math.max(0, speed - s.decel * f);
-      if (speed > 0) moveBy(direction * speed * f);
+      speed = Math.max(0, speed - s.decel * dt);
+      if (speed > 0) moveBy(direction * speed * dt);
     }
 
     lastInput = input;
@@ -120,17 +127,17 @@ export function createCar({ scene, models, materials }) {
    *
    * @param {number} dt
    * @param {SteerInput} input
-   * @param {number} lateralVelocity units per reference frame, measured this frame
+   * @param {number} lateralVelocity units/s, measured this frame
    */
   function handle(dt, input, lateralVelocity) {
-    const kRoll = perFrame(roll.easing, dt);
+    const kRoll = settle(roll.easing, dt);
     rollTarget += (input * roll.max * rollSign - rollTarget) * kRoll;
     chassis.rotation.z += (rollTarget - chassis.rotation.z) * kRoll;
 
     const yawTarget = THREE.MathUtils.clamp(-lateralVelocity * yaw.perSpeed, -yaw.max, yaw.max);
-    group.rotation.y += (yawTarget - group.rotation.y) * perFrame(yaw.easing, dt);
+    group.rotation.y += (yawTarget - group.rotation.y) * settle(yaw.easing, dt);
 
-    steerAngle += (-input * wheelSteer.max - steerAngle) * perFrame(wheelSteer.easing, dt);
+    steerAngle += (-input * wheelSteer.max - steerAngle) * settle(wheelSteer.easing, dt);
     for (const pivot of frontWheels) pivot.rotation.y = steerAngle;
   }
 
@@ -153,15 +160,14 @@ export function createCar({ scene, models, materials }) {
      * @param {SteerInput} input
      */
     update(dt, speedMultiplier, input) {
-      const spin = SPEED.wheelSpin * speedMultiplier * frames(dt);
+      const spin = SPEED.wheelSpin * speedMultiplier * dt;
       for (const wheel of spins) wheel.rotation.x += spin;
 
       const active = this.steering && !resetTween?.isActive();
       const startX = group.position.x;
       if (active) steer(dt, input);
 
-      const f = frames(dt);
-      const lateralVelocity = f > 0 ? (group.position.x - startX) / f : 0;
+      const lateralVelocity = dt > 0 ? (group.position.x - startX) / dt : 0;
       handle(dt, active ? input : 0, lateralVelocity);
     },
 

@@ -2,9 +2,7 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { LAYERS, SHADING } from "../src/config.js";
 import { createFader } from "../src/scene/fade.js";
-import { createMaterials } from "../src/scene/materials.js";
-
-const materials = () => createMaterials({ [String(LAYERS.road.wireMap)]: new THREE.Texture() }, 1);
+import { testMaterials as materials } from "./helpers.js";
 
 describe("solid materials", () => {
   it("are flat shaded per SHADING.flat, unlit layers unlit", () => {

@@ -1,18 +1,19 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { TRAFFIC } from "../config.js";
+import { TRAFFIC_MODELS } from "./trafficModels.js";
 import { dress } from "./wire.js";
 
 /**
- * @typedef {import("../config.js").TrafficModel} TrafficModel
+ * @typedef {import("./trafficModels.js").TrafficModel} TrafficModel
  * @typedef {[number, number]} Point profile point [x, y] in metres: x from the rear bumper
  *   to the front, y up from the ground
  */
 
 /** Segments of each wheel arch (half circle). */
-const ARCH_SEGMENTS = 6;
+export const ARCH_SEGMENTS = 6;
 /** Arch radius relative to the wheel radius. */
-const ARCH_CLEARANCE = 1.15;
+export const ARCH_CLEARANCE = 1.15;
 const WHEEL_SEGMENTS = 8;
 /** Panel grid on the car sides (triangle wireframe), metres. */
 const PANEL = { width: 0.35, height: 0.25 };
@@ -24,13 +25,13 @@ const BUMPER = { y: 0.32, height: 0.1, depth: 0.08, out: 0.03 };
 
 /** Half the widest car, in scene units: the minigame keeps lanes this far from the centre. */
 export function trafficHalfWidth() {
-  const widest = Math.max(...Object.values(TRAFFIC.models).map((model) => model.width));
+  const widest = Math.max(...Object.values(TRAFFIC_MODELS).map((model) => model.width));
   return (widest * TRAFFIC.scale) / 2;
 }
 
 /**
  * Low-poly oncoming cars of the communist era (Fiat 126p, Škoda 120), one template per
- * TRAFFIC model. Each car is a side profile with wheel arches, extruded across its width, a
+ * TRAFFIC_MODELS entry. Each car is a side profile with wheel arches, extruded across its width, a
  * cabin narrowing towards the roof, wheels and headlights; the front faces +z (towards the
  * camera). Body, cabin and wheels are one geometry (one draw call plus its wireframe twin).
  *
@@ -41,7 +42,7 @@ export function trafficHalfWidth() {
  * @returns {THREE.Group[]}
  */
 export function createTrafficModels(materials) {
-  return Object.values(TRAFFIC.models).map((model) => {
+  return Object.values(TRAFFIC_MODELS).map((model) => {
     const body = bodyGeometry(model).scale(TRAFFIC.scale, TRAFFIC.scale, TRAFFIC.scale);
     const lights = lightsGeometry(model).scale(TRAFFIC.scale, TRAFFIC.scale, TRAFFIC.scale);
 

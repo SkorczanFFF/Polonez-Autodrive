@@ -1,6 +1,6 @@
 /*
- * Colors come from config.PALETTE via ui/theme.js (`uiDeep` -> `--ui-deep`).
- * Do not hardcode palette colors here.
+ * Colors come from config.PALETTE via ui/theme.js (`uiDeep` -> `--palette-ui-deep`); the UI
+ * tokens below are made from them. Do not hardcode palette colors here.
  */
 
 /* ---------- tokens ---------- */
@@ -16,6 +16,22 @@
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+
+  /* UI colors. Most take their hue from a scene color while keeping their own lightness and
+     chroma, so panels, buttons and the scene GUI wear the scene's palette ("Randomize all"
+     included) and stay as readable as by default: --scene-*-turn is how far that scene color's
+     hue has turned from its default (ui/theme.js), so the default scene keeps the PALETTE colors.
+     Lines, text and panels follow the ground grid; the primary button, the score and the red of
+     the titles follow the car's lines; NEW BEST and the yellow of the titles follow the sun. */
+  --white: var(--palette-white);
+  --aqua: oklch(from var(--palette-aqua) l c calc(h + var(--scene-terrain-wire-turn, 0)));
+  --ui-deep: oklch(from var(--palette-ui-deep) l c calc(h + var(--scene-terrain-wire-turn, 0)));
+  --ui-loader-bg: oklch(
+    from var(--palette-ui-loader-bg) l c calc(h + var(--scene-terrain-wire-turn, 0))
+  );
+  --red: oklch(from var(--palette-red) l c calc(h + var(--scene-polonez-wire-turn, 0)));
+  --pink: oklch(from var(--palette-pink) l c calc(h + var(--scene-polonez-wire-turn, 0)));
+  --yellow: oklch(from var(--palette-yellow) l c calc(h + var(--scene-sun-top-turn, 0)));
 }
 
 /* ---------- base ---------- */

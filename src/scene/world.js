@@ -55,16 +55,26 @@ export function createWorld(assets) {
   const ordered = /** @type {WorldPart[]} */ (Object.values(parts));
 
   const world = {
-    /** Named parts, e.g. parts.scenery.palms.density for the GUI. */
+    /** Named parts (tests, debugging); the loop only needs update(). */
     parts,
 
-    /** Mountain generator settings; the GUI edits them, then calls regenerate(). */
-    mountains: context.mountains,
+    /**
+     * What the scene panel edits, gathered here so the panel never reaches into a part (a part
+     * can be swapped by changing this list): the mountain generator settings (then
+     * regenerate()), the night sky's uniforms, the city's layout (then city.regenerate()) and
+     * haze, and the roadside spawners (`density`).
+     */
+    settings: {
+      mountains: context.mountains,
+      night: parts.sky.night,
+      city: { params: parts.city.params, haze: parts.city.haze, regenerate: parts.city.regenerate },
+      density: { palms: parts.scenery.palms, rocks: parts.scenery.rocks },
+    },
 
     /** 1 = base speed; the minigame raises it per tier. */
     speedMultiplier: 1,
 
-    /** Rebuilds the landscape from `mountains`: everything that grows from its seed and settings. */
+    /** Rebuilds the landscape from settings.mountains: everything that grows from its seed. */
     regenerate() {
       parts.sideHills.regenerate();
       parts.hills.regenerate();

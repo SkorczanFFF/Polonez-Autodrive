@@ -80,10 +80,8 @@ export function createBloom(renderer, scene, camera) {
     let dim = dimmed.get(material);
     if (!dim) {
       dim = /** @type {THREE.Material & { color: THREE.Color }} */ (material.clone());
-      // clone() keeps a class's shader changes but not one set on the material itself (the
-      // city's haze): without it, what the haze hides would still glow
-      if (Object.hasOwn(material, "onBeforeCompile"))
-        dim.onBeforeCompile = material.onBeforeCompile;
+      // clone() carries a class's shader changes, not ones set on the material itself
+      dim.onBeforeCompile = material.onBeforeCompile;
       dimmed.set(material, dim);
     }
     dim.color.copy(material.color).multiplyScalar(factor); // follows GUI color changes

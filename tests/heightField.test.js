@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { createHeightField, fillHeightField } from "../src/scene/heightField.js";
+import { HIDDEN } from "../src/scene/lines.js";
 
 describe("height field", () => {
   it("builds two up-facing triangles per cell over the grid", () => {
@@ -53,11 +54,11 @@ describe("height field", () => {
   it("draws triangles by default and a square grid on request", () => {
     const geometry = createHeightField({ cols: 1, rows: 1, cell: 4 });
     fillHeightField(geometry, () => 0);
-    expect(geometry.getAttribute("wireEdge").getY(1)).toBeLessThan(1000); // diagonal drawn
+    expect(geometry.getAttribute("wireEdge").getY(1)).toBeLessThan(HIDDEN); // diagonal drawn
     fillHeightField(geometry, () => 0, { hideDiagonals: true });
     const edge = geometry.getAttribute("wireEdge");
     for (let v = 0; v < edge.count; v++) {
-      expect(edge.getY(v)).toBeGreaterThan(1000); // the diagonal
+      expect(edge.getY(v)).toBeGreaterThanOrEqual(HIDDEN); // the diagonal
       // the cell sides: 4 units away from the vertex opposite them, 0 through it
       expect([0, 4]).toContainEqual(Math.round(edge.getX(v)));
       expect([0, 4]).toContainEqual(Math.round(edge.getZ(v)));

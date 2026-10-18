@@ -40,7 +40,7 @@ export function memoByGeometry(derive) {
  * Added to an edge distance to hide that edge: the distance stays linear (the shader needs its
  * screen-space derivatives) but never gets near a line.
  */
-const HIDDEN = 1e4;
+export const HIDDEN = 1e4;
 
 /**
  * The geometry with the `wireEdge` attribute (non-indexed: each triangle needs its own vertices),
@@ -174,57 +174,48 @@ function injectLines(shader, uniforms) {
 const LINE_PARAMETERS = { transparent: true, depthWrite: false, side: THREE.DoubleSide };
 
 /**
- * Unlit lines. `lineUniforms` (per layer) are shared with clones, so fade-in copies follow the
- * GUI; onBeforeCompile is a method, so it survives clone() too.
+ * A material of `Base` drawing the triangle lines instead of its fill. `lineUniforms` (per
+ * layer) are shared with clones, so fade-in copies follow the GUI; onBeforeCompile is a method,
+ * so it survives clone() too.
+ *
+ * @template {new (...args: any[]) => THREE.Material} T
+ * @param {T} Base
  */
-export class BasicLineMaterial extends THREE.MeshBasicMaterial {
-  /** @type {LineUniforms} */
-  lineUniforms = { fade: { value: WIRE.fade }, min: { value: WIRE.min } };
+function withLines(Base) {
+  return class extends Base {
+    /** @type {LineUniforms} */
+    lineUniforms = { fade: { value: WIRE.fade }, min: { value: WIRE.min } };
 
-  /** @param {THREE.MeshBasicMaterialParameters} [parameters] */
-  constructor(parameters) {
-    super({ ...parameters, ...LINE_PARAMETERS });
-  }
+    /** @param {any[]} args the base material's parameters */
+    constructor(...args) {
+      super({ ...args[0], ...LINE_PARAMETERS });
+    }
 
-  /** @param {THREE.WebGLProgramParametersWithUniforms} shader */
-  onBeforeCompile(shader) {
-    injectLines(shader, this.lineUniforms);
-  }
+    /** @param {THREE.WebGLProgramParametersWithUniforms} shader */
+    onBeforeCompile(shader) {
+      injectLines(shader, this.lineUniforms);
+    }
 
-  /** @param {BasicLineMaterial} source */
-  copy(source) {
-    super.copy(source);
-    this.lineUniforms = source.lineUniforms;
-    return this;
-  }
+    /** @param {this} source */
+    copy(source) {
+      super.copy(source);
+      this.lineUniforms = source.lineUniforms;
+      return this;
+    }
+  };
 }
+
+/** Unlit lines. */
+export const BasicLineMaterial = withLines(THREE.MeshBasicMaterial);
 
 /** Lit lines (v1 wireframes were Phong). */
-export class PhongLineMaterial extends THREE.MeshPhongMaterial {
-  /** @type {LineUniforms} */
-  lineUniforms = { fade: { value: WIRE.fade }, min: { value: WIRE.min } };
+export const PhongLineMaterial = withLines(THREE.MeshPhongMaterial);
 
-  /** @param {THREE.MeshPhongMaterialParameters} [parameters] */
-  constructor(parameters) {
-    super({ ...parameters, ...LINE_PARAMETERS });
-  }
-
-  /** @param {THREE.WebGLProgramParametersWithUniforms} shader */
-  onBeforeCompile(shader) {
-    injectLines(shader, this.lineUniforms);
-  }
-
-  /** @param {PhongLineMaterial} source */
-  copy(source) {
-    super.copy(source);
-    this.lineUniforms = source.lineUniforms;
-    return this;
-  }
-}
+/** @typedef {InstanceType<typeof BasicLineMaterial> | InstanceType<typeof PhongLineMaterial>} LineMaterial */
 
 /**
  * @param {THREE.Material} material
- * @returns {material is BasicLineMaterial | PhongLineMaterial}
+ * @returns {material is LineMaterial}
  */
 export const isLineMaterial = (material) =>
   material instanceof BasicLineMaterial || material instanceof PhongLineMaterial;

@@ -48,6 +48,13 @@ npm run format     # Prettier
 
 Press **F10** in the app for the developer stats overlay (FPS, draw calls, triangles, memory).
 
+### Tests
+
+Modules export the pure functions behind a feature (geometry, layouts, color math, formatting)
+as their API, and the tests use them; world parts expose their moving pieces (`car.chassis`,
+`sideHills.meshes`) for tests and debugging. Tests import the constants they check from `src/`
+instead of repeating them, and share fixtures through `tests/helpers.js`.
+
 ### Project layout
 
 ```

@@ -225,12 +225,23 @@ Done: jak wyżej + ręczny przegląd; testy kolorów bez własnego ustawiania Co
 
 ### Faza 3 — Decyzje architektoniczne (każda pozycja osobno do akceptacji)
 
-- [ ] B2 + C2.9 + C4.7 polityka eksportów dla testów (czyste funkcje geometrii zostają publiczne; `car.chassis/frontWheels`, `sideHills.meshes`, `spawner.currentInterval` testowane przez zachowanie), testy importują stałe (`ARCH_*`, `HIDDEN`, `REFERENCE_FPS`, długość chunka), `tests/helpers.js`
-- [ ] A1 tinty UI przez `oklch(from …)` w CSS; znika `turnHue`, `UI_TINTS`, `theme.test.js`
-- [ ] A2 jednostki na sekundę; znika `core/time.js`
-- [ ] D5 jednolite `settings` części świata; GUI buduje foldery z listy
-- [ ] A9 + D7 profile aut do `scene/trafficModels.js`
-- [ ] A3 okna miasta bez `defineProperty` i bez przypadku specjalnego w `bloom.js`; A4 `withLines(Base)`
+- [x] B2 + C2.9 + C4.7 polityka eksportów dla testów (czyste funkcje geometrii zostają publiczne; `car.chassis/frontWheels`, `sideHills.meshes`, `spawner.currentInterval` testowane przez zachowanie), testy importują stałe (`ARCH_*`, `HIDDEN`, `REFERENCE_FPS`, długość chunka), `tests/helpers.js`
+- [x] A1 tinty UI przez `oklch(from …)` w CSS; znika `turnHue`, `UI_TINTS`, `theme.test.js`
+- [x] A2 jednostki na sekundę; znika `core/time.js`
+- [x] D5 jednolite `settings` części świata; GUI buduje foldery z listy
+- [x] A9 + D7 profile aut do `scene/trafficModels.js`
+- [x] A3 okna miasta bez `defineProperty` i bez przypadku specjalnego w `bloom.js`; A4 `withLines(Base)`
+
+**Zrobione 2026-10-18**, siedem commitów od `b09c35b` do `c7b9724` (124 testy, typecheck, build zielone; strona w headless Chrome bez błędów konsoli). Decyzje po drodze:
+
+- B2: polityka spisana w README (sekcja Tests): czyste funkcje za funkcją to API modułu i zostają wyeksportowane; `car.chassis/frontWheels`, `sideHills.meshes`, `spawner.currentInterval` zostają jako "ruchome części" dla testów i debugowania, bo testy przez zachowanie wymagałyby grzebania w strukturze sceny. Wyeksportowane: `ARCH_SEGMENTS`, `ARCH_CLEARANCE`, `HIDDEN`, `CHUNK_LENGTH`, `CONVEYOR_END`. `tests/helpers.js` ma jeden fixture materiałów. Zostawione świadomie: tabela w `state.test.js` (specyfikacja) i wzór na centroid półdysku w `lights.test.js` (matematyka, nie config).
+- A1: CSS liczy tinty jako `oklch(from var(--palette-*) l c calc(h + var(--scene-*-turn)))`; JS podaje tylko obrót odcienia w stopniach oklch (`oklchHue` w `color.js`, ok. 10 linii) dla każdego koloru sceny. `turnHue` i `UI_TINTS` znikły; `applyTheme` pisze paletę jako `--palette-*`, a 7 tokenów UI (`--aqua`, `--ui-deep`, `--ui-loader-bg`, `--red`, `--pink`, `--yellow`, `--white`) definiuje `style.css`. Domyślna scena wygląda identycznie (obrót 0); po "Randomize all" tinty różnią się minimalnie od bisekcji WCAG (teraz percepcyjna L i C). `theme.test.js` został w małej formie (obrót 0 dla domyślnych, stopnie oklch dla innego koloru).
+- A2: `CAR.steer` w jednostkach/s, `decel` w jednostkach/s², łagodzenia jako stałe czasowe w sekundach (`settle(tau, dt) = 1 − e^(−dt/τ)` w `car.js`; τ = 1/(60·−ln(1−k)): 0.158 / 0.103 / 0.075 s), `SPEED.wheelSpin` w rad/s. Przy 60 Hz to te same liczby co przedtem; test 60 vs 144 Hz dalej przechodzi. `core/time.js` i `time.test.js` usunięte.
+- D5: zamiast jednolitego kształtu w każdej części `world.settings` zbiera to, co edytuje panel (`mountains`, `night`, `city.{params,haze,regenerate}`, `density.{palms,rocks}`); GUI nie dotyka już `world.parts`. Wariant "GUI buduje foldery z listy" odrzucony: foldery są tematyczne i ręcznie ułożone.
+- A9/D7: `scene/trafficModels.js` z typedefem i `TRAFFIC_MODELS`; w config został `TRAFFIC` (skala, y, szerokość dachu, opony).
+- A3: okna miasta kopiują `visible` i `glow` z materiału linii w `update()` zamiast getterów; `bloom.js` kopiuje `onBeforeCompile` do przyciemnionego klonu zawsze (komentarz ogólny, bez wzmianki o mieście). Wariant "okna tym samym materiałem co linie" odrzucony: linie są oświetlone (Phong), okna mają być jednolicie jasne.
+- A4: `withLines(Base)` jako mixin; `BasicLineMaterial`/`PhongLineMaterial` to teraz stałe, typ instancji to `LineMaterial` (typedef w `lines.js`).
+- Do ręcznego sprawdzenia przez autora: "Randomize all" (kolory paneli i przycisków), sterowanie w free ride i minigrze (feel po zmianie jednostek), okna miasta przy wyłączonym wireframie i przy glow < 1, przeglądarka bez wsparcia `oklch(from …)` (Firefox < 128) pokaże tokeny UI jako nieprawidłowe: do decyzji, czy dodać fallback `@supports`.
 
 ### Faza 4 — Dokumentacja, CSS, higiena
 

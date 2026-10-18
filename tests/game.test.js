@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { MINIGAME, SCENE } from "../src/config.js";
+import { MINIGAME, SCENE, CAR } from "../src/config.js";
 import { createInput } from "../src/core/input.js";
 import { createTweens } from "../src/core/tween.js";
 import { createGame } from "../src/game/game.js";
@@ -93,8 +93,8 @@ describe("portrait follow", () => {
   });
 
   it("slides the orbit sideways just enough to keep a steered car in view, and back", () => {
-    const { camera, controls, car, run } = portrait([0, 3, 7]);
-    car.group.position.x = 6;
+    const { camera, controls, car, run } = portrait(SCENE.camera.position);
+    car.group.position.x = CAR.steer.maxOffset;
     run(1 / 60);
     expect(camera.position.x).toBeGreaterThan(0);
     expect(camera.position.y).toBeCloseTo(3);
@@ -113,8 +113,8 @@ describe("portrait follow", () => {
   });
 
   it("slides the same for a steered car however the orbit is turned, and not while turning", () => {
-    const { camera, controls, car, run } = portrait([0, 3, 7]);
-    car.group.position.x = 6;
+    const { camera, controls, car, run } = portrait(SCENE.camera.position);
+    car.group.position.x = CAR.steer.maxOffset;
     run(1 / 60);
     const slide = controls.target.x;
     expect(slide).toBeGreaterThan(0);

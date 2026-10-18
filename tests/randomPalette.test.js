@@ -1,8 +1,7 @@
-import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { LAYERS } from "../src/config.js";
 import { mulberry32 } from "../src/core/noise.js";
-import { contrast, hueDistance, hueOf } from "../src/ui/color.js";
+import { contrast, hueDistance, hueOf, hslOf } from "../src/ui/color.js";
 import { MIN_LINE_CONTRAST, createRandomPalette } from "../src/ui/randomPalette.js";
 
 /** Many palettes from fixed seeds, every layer's fill and line from each. */
@@ -39,7 +38,7 @@ describe("random palette", () => {
   it("keeps lines saturated neon, not washed out to white", () => {
     for (const { layers } of samples()) {
       for (const { line } of layers) {
-        const { s, l } = new THREE.Color(line).getHSL({ h: 0, s: 0, l: 0 }, THREE.SRGBColorSpace);
+        const { s, l } = hslOf(line);
         expect(s).toBeGreaterThan(0.8);
         expect(l).toBeGreaterThanOrEqual(0.11); // dark lines on light fills stay colored too
         expect(l).toBeLessThanOrEqual(0.86);
@@ -63,8 +62,7 @@ describe("random palette", () => {
   });
 
   it("goes night, day and mixed: dark and light fills, lines flipping with them", () => {
-    const lightness = (/** @type {string} */ color) =>
-      new THREE.Color(color).getHSL({ h: 0, s: 0, l: 0 }, THREE.SRGBColorSpace).l;
+    const lightness = (/** @type {string} */ color) => hslOf(color).l;
     const moods = new Set();
     let mixedLight = 0;
     let mixedDark = 0;

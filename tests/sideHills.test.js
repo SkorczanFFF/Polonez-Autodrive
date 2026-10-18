@@ -1,15 +1,15 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { LAYERS, MOUNTAINS, WORLD } from "../src/config.js";
-import { createSideHills } from "../src/scene/environment/sideHills.js";
-import { createMaterials } from "../src/scene/materials.js";
+import { MOUNTAINS, WORLD } from "../src/config.js";
+import { createSideHills, CHUNK_LENGTH } from "../src/scene/environment/sideHills.js";
 import { createMountainParams } from "../src/scene/mountains.js";
+import { testMaterials } from "./helpers.js";
 
-const length = MOUNTAINS.chunkRows * MOUNTAINS.cell;
+const length = CHUNK_LENGTH;
 
 function setup() {
   const scene = new THREE.Scene();
-  const materials = createMaterials({ [String(LAYERS.road.wireMap)]: new THREE.Texture() }, 1);
+  const materials = testMaterials();
   const mountains = createMountainParams(1234);
   const hills = createSideHills({ scene, materials, mountains, models: {} });
   return { mountains, hills };

@@ -4,6 +4,15 @@ import { createHeightField, fillHeightField } from "../heightField.js";
 import { createMountainHeight } from "../mountains.js";
 import { dress } from "../wire.js";
 
+/** A chunk's length along the road: MOUNTAINS.chunkRows cells. */
+export const CHUNK_LENGTH = MOUNTAINS.chunkRows * MOUNTAINS.cell;
+/** The conveyor starts here, in full fog. */
+const FAR = -WORLD.length;
+/** Chunks per side: enough to reach past +WORLD.length, plus a spare, so both ends stay in fog. */
+const CHUNK_COUNT = Math.ceil((2 * WORLD.length) / CHUNK_LENGTH) + 1;
+/** Where the conveyor ends behind the car (the city stands past it, CITY.near). */
+export const CONVEYOR_END = FAR + CHUNK_COUNT * CHUNK_LENGTH;
+
 /**
  * @typedef {object} Chunk
  * @property {THREE.Mesh} mesh
@@ -37,13 +46,13 @@ import { dress } from "../wire.js";
  */
 export function createSideHills({ scene, materials, mountains }) {
   const { cell, chunkRows: rows, lift } = MOUNTAINS;
-  const length = rows * cell;
+  const length = CHUNK_LENGTH;
   const cols = (MOUNTAINS.outer - MOUNTAINS.minStart) / cell;
-  const far = -WORLD.length;
-  const count = Math.ceil((2 * WORLD.length) / length) + 1; // one spare: the ends stay in fog
+  const far = FAR;
+  const count = CHUNK_COUNT;
   const growFrom = MOUNTAINS.grow.from;
   const growTo = growFrom + MOUNTAINS.grow.length;
-  const shrinkTo = far + count * length; // the end of the conveyor
+  const shrinkTo = CONVEYOR_END;
   const shrinkFrom = shrinkTo - MOUNTAINS.shrink;
 
   /** @param {number} z */

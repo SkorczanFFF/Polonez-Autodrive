@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { BasicLineMaterial, lineGeometry, writeWireEdges } from "../src/scene/lines.js";
+import { BasicLineMaterial, lineGeometry, writeWireEdges, HIDDEN } from "../src/scene/lines.js";
 import { addWireframe } from "../src/scene/wire.js";
 
 /** Right triangle with legs 3 and 4 (hypotenuse 5). */
@@ -37,7 +37,7 @@ describe("line geometry", () => {
     const geometry = triangle();
     writeWireEdges(geometry, { hideDiagonals: true });
     const edge = geometry.getAttribute("wireEdge");
-    for (let v = 0; v < 3; v++) expect(edge.getY(v)).toBeGreaterThan(1000); // never near a line
+    for (let v = 0; v < 3; v++) expect(edge.getY(v)).toBeGreaterThanOrEqual(HIDDEN); // never near a line
     expect(edge.getY(1) - edge.getY(0)).toBeCloseTo(3); // still linear: the shader needs dFdx
     expect(edge.getX(0)).toBeCloseTo(2.4); // the other edges as without hiding
     expect(edge.getZ(2)).toBeCloseTo(4);
@@ -49,7 +49,7 @@ describe("line geometry", () => {
     writeWireEdges(geometry, { hideDiagonals: true });
     const attribute = geometry.getAttribute("wireEdge");
     expect(lineGeometry(geometry)).toBe(geometry);
-    expect(attribute.getY(0)).toBeGreaterThan(1000);
+    expect(attribute.getY(0)).toBeGreaterThanOrEqual(HIDDEN);
 
     geometry.getAttribute("position").setY(2, 8); // the generator moved a vertex
     writeWireEdges(geometry);

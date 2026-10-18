@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CITY, MOUNTAINS, WORLD } from "../src/config.js";
+import { CITY } from "../src/config.js";
 import { layoutCity } from "../src/scene/environment/city.js";
+import { CONVEYOR_END } from "../src/scene/environment/sideHills.js";
 
 const params = { buildings: CITY.buildings, height: CITY.height, lit: CITY.lit };
 
@@ -8,7 +9,7 @@ describe("city", () => {
   it("stands far behind the side mountains' conveyor, clear of the road", () => {
     for (const b of layoutCity(params, 1)) {
       expect(b.z - b.d / 2).toBeGreaterThanOrEqual(CITY.near - 1e-6);
-      expect(CITY.near).toBeGreaterThan(WORLD.length + MOUNTAINS.chunkRows * MOUNTAINS.cell);
+      expect(CITY.near).toBeGreaterThan(CONVEYOR_END);
       expect(Math.abs(b.x) - b.w / 2).toBeGreaterThanOrEqual(CITY.roadGap - 1e-6);
     }
   });

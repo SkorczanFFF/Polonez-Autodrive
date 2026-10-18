@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createInput } from "../src/core/input.js";
+import { ACTIONS } from "../src/config.js";
 
 /**
  * @param {EventTarget} target
@@ -14,6 +15,10 @@ function key(target, type, code, { repeat = false } = {}) {
   return event;
 }
 
+const [LEFT] = ACTIONS.left.keys;
+const [RIGHT] = ACTIONS.right.keys;
+const [ENTER, NUMPAD_ENTER] = ACTIONS.start.keys;
+
 describe("input", () => {
   it("maps keys to actions and tracks held keys", () => {
     const target = new EventTarget();
@@ -23,12 +28,12 @@ describe("input", () => {
     input.onPress(pressed);
     input.onRelease(released);
 
-    const down = key(target, "keydown", "ArrowLeft");
+    const down = key(target, "keydown", LEFT);
     expect(down.defaultPrevented).toBe(true);
     expect(pressed).toHaveBeenCalledWith("left");
     expect(input.isHeld("left")).toBe(true);
 
-    key(target, "keyup", "ArrowLeft");
+    key(target, "keyup", LEFT);
     expect(released).toHaveBeenCalledWith("left");
     expect(input.isHeld("left")).toBe(false);
   });
@@ -39,8 +44,8 @@ describe("input", () => {
     const pressed = vi.fn();
     input.onPress(pressed);
 
-    key(target, "keydown", "Enter");
-    key(target, "keydown", "Enter", { repeat: true });
+    key(target, "keydown", ENTER);
+    key(target, "keydown", ENTER, { repeat: true });
     const other = key(target, "keydown", "KeyQ");
     expect(pressed).toHaveBeenCalledTimes(1);
     expect(other.defaultPrevented).toBe(false);
@@ -49,7 +54,7 @@ describe("input", () => {
   it("releases held keys when the window loses focus", () => {
     const target = new EventTarget();
     const input = createInput(target);
-    key(target, "keydown", "ArrowRight");
+    key(target, "keydown", RIGHT);
     target.dispatchEvent(new Event("blur"));
     expect(input.isHeld("right")).toBe(false);
   });
@@ -82,11 +87,11 @@ describe("input", () => {
 
     input.hold("left", true, 1);
     input.hold("left", true, 2); // a second finger on the same button
-    key(target, "keydown", "ArrowLeft"); // and the key on a tablet with a keyboard
+    key(target, "keydown", LEFT); // and the key on a tablet with a keyboard
     expect(pressed).toHaveBeenCalledTimes(1);
 
     input.hold("left", false, 1);
-    key(target, "keyup", "ArrowLeft");
+    key(target, "keyup", LEFT);
     expect(input.isHeld("left")).toBe(true);
     expect(released).not.toHaveBeenCalled();
 
@@ -101,12 +106,12 @@ describe("input", () => {
     const released = vi.fn();
     input.onRelease(released);
 
-    key(target, "keydown", "Enter");
-    key(target, "keydown", "NumpadEnter");
-    key(target, "keyup", "Enter");
+    key(target, "keydown", ENTER);
+    key(target, "keydown", NUMPAD_ENTER);
+    key(target, "keyup", ENTER);
     expect(input.isHeld("start")).toBe(true);
 
-    key(target, "keyup", "NumpadEnter");
+    key(target, "keyup", NUMPAD_ENTER);
     expect(input.isHeld("start")).toBe(false);
     expect(released).toHaveBeenCalledTimes(1);
   });

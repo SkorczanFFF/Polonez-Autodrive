@@ -91,7 +91,9 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
     });
     if (layer.toggleSolid) folder.add(solid, "visible").name(L.showModel);
     if (layer.density) {
-      folder.add(world.parts.scenery[layer.density], "density", ...RANGES.density).name(L.density);
+      folder
+        .add(world.settings.density[layer.density], "density", ...RANGES.density)
+        .name(L.density);
     }
     color(folder, params, "wire", L.wireColor, { role: "wire", layer: key }, (v) => {
       wire.color.set(v);
@@ -188,7 +190,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   /** The city's folder: its layer, then its layout and haze. */
   function addCity() {
     const folder = layer("city");
-    const { city } = world.parts;
+    const { city } = world.settings;
     folder
       .add(city.params, "buildings", ...RANGES.cityBuildings)
       .name(L.cityBuildings)
@@ -207,7 +209,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
 
   /** The night sky behind the car. */
   function addNight() {
-    const { night } = world.parts.sky;
+    const { night } = world.settings;
     const nightParams = {
       color: NIGHT.color,
       starColor: NIGHT.starColor,
@@ -236,7 +238,8 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   }
 
   // A rebuild of the landscape takes ~6 ms: live while dragging; the seed when typed in.
-  const { mountains, regenerate } = world;
+  const { mountains } = world.settings;
+  const { regenerate } = world;
 
   /** The mountain generator's shape (the seed is global: it builds the city too). */
   function addMountains() {

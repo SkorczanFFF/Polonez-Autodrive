@@ -48,6 +48,24 @@ export const hueOf = (color) => hslOf(color).h;
 export const hsl = (h, s, l) =>
   `#${new THREE.Color().setHSL(h, s, l, THREE.SRGBColorSpace).getHexString()}`;
 
+/**
+ * Hue in oklch, degrees (0..360): a turn of this hue keeps the perceived lightness and chroma,
+ * which is what CSS `oklch(from …)` does with it (ui/theme.js).
+ *
+ * @param {THREE.ColorRepresentation} color
+ */
+export function oklchHue(color) {
+  const hex = new THREE.Color(color).getHex();
+  const [r, g, b] = [16, 8, 0].map((shift) => toLinear(((hex >> shift) & 255) / 255));
+  // linear sRGB -> LMS (cube roots) -> oklab a, b (Ottosson)
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  return (THREE.MathUtils.radToDeg(Math.atan2(bb, a)) + 360) % 360;
+}
+
 /** Distance between two hues around the color wheel, in turns (0 to 0.5). */
 export const hueDistance = (/** @type {number} */ a, /** @type {number} */ b) => {
   const d = Math.abs(a - b) % 1;

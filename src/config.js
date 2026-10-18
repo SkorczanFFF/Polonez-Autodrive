@@ -1,7 +1,7 @@
 /**
  * Single source of truth: palette, layer defaults, scene, gameplay, assets, keys and UI text.
- * Values are ported 1:1 from v1-legacy unless a comment says otherwise.
- * Per-frame constants are expressed in "units per 60 Hz frame" and scaled with core/time.js.
+ * Values are ported 1:1 from v1-legacy unless a comment says otherwise. Rates are per second;
+ * easings are time constants in seconds (v1 tuned both per 60 Hz frame).
  */
 
 export const PALETTE = {
@@ -217,8 +217,8 @@ export const SUN = {
 
 /**
  * The neon city we drive away from (scene/environment/city.js): a skyline far behind the car,
- * past the end of the side mountains' conveyor (~1.3 * WORLD.length behind), so they pass in
- * front of it. buildings, height, lit, haze and hazeHeight are live settings (GUI).
+ * past the end of the side mountains' conveyor (CONVEYOR_END in environment/sideHills.js), so
+ * they pass in front of it. buildings, height, lit, haze and hazeHeight are live settings (GUI).
  */
 export const CITY = {
   near: 2.3 * WORLD.length, // its front in the middle: far, for depth
@@ -385,11 +385,11 @@ export const CAR = {
     [1.227, 0.56, -2.55],
   ],
   steer: {
-    baseSpeed: 0.08, // units per frame
-    maxSpeed: 0.4, // units per frame
-    holdAccel: 0.04, // extra target speed per second of holding a key
-    speedEasing: 0.1, // per frame
-    decel: 0.04, // units per frame, after release
+    baseSpeed: 4.8, // units/s as soon as a key is held (v1: 0.08 per frame)
+    maxSpeed: 24, // units/s (v1: 0.4 per frame)
+    holdAccel: 2.4, // units/s added to the target speed per second of holding the key
+    speedEasing: 0.158, // s: time constant of the speed catching up with its target (v1: 0.1 per frame)
+    decel: 144, // units/s² after release (v1: 0.04 per frame per frame)
     releaseDamp: 0.45, // speed multiplier on key release
     roadMargin: 1.975, // the car's travel limit stays this far from the road edge
     /** Max distance from the start position (6 with the default road). */
@@ -397,19 +397,20 @@ export const CAR = {
       return ROAD.width / 2 - this.roadMargin;
     },
   },
+  /** Easings are time constants in seconds (v1: 0.15 and 0.2 per frame). */
   handling: {
     /** Body roll (wheels stay upright). outward: true = realistic, false = lean into the turn (v1). */
-    roll: { max: 0.08, easing: 0.15, outward: true },
-    /** Nose turns towards the lane change: radians per unit/frame of lateral velocity. */
-    yaw: { perSpeed: 0.75, max: 0.12, easing: 0.15 },
+    roll: { max: 0.08, easing: 0.103, outward: true },
+    /** Nose turns towards the lane change: radians per unit/s of lateral velocity. */
+    yaw: { perSpeed: 0.0125, max: 0.12, easing: 0.103 },
     /** Front wheel steering angle in radians. */
-    wheelSteer: { max: (5 * Math.PI) / 180, easing: 0.2 },
+    wheelSteer: { max: (5 * Math.PI) / 180, easing: 0.075 },
   },
   resetDuration: 1, // seconds
 };
 
 export const SPEED = {
-  wheelSpin: -0.22, // radians per frame
+  wheelSpin: -13.2, // radians/s at speedMultiplier 1 (v1: -0.22 per frame)
   traffic: 200 / 6, // units per second (v1: boxes crossed the 200-unit world in 6 s)
   tierEvery: 20, // points
   tierStep: 0.15, // speed multiplier added per tier
@@ -452,21 +453,8 @@ export const SPAWN = {
 };
 
 /**
- * @typedef {object} TrafficModel
- * @property {string} label
- * @property {number} width body width
- * @property {{ radius: number, axles: number[] }} wheel axles: x of each axle
- * @property {[number, number][]} profile lower body side outline, x from the rear bumper to the
- *   front, y up from the ground; wheel arches are cut into its bottom edge automatically
- * @property {[number, number][]} cabin greenhouse outline, bottom edge a little below the belt
- *   line (no gap to the body); it narrows to TRAFFIC.roofWidth at the roof
- * @property {{ shape: "round" | "rect", y: number, inset: number, size: number }} lights
- *   headlights on the front: height, inset from the body side, size
- */
-
-/**
  * Minigame obstacles: oncoming low-poly cars of the communist era, built in code
- * (scene/traffic.js) from real dimensions in metres.
+ * (scene/traffic.js) from real dimensions in metres (scene/trafficModels.js).
  */
 export const TRAFFIC = {
   scale: 1.8, // metres -> scene units (the Polonez model is about 1.8x life size)
@@ -476,54 +464,6 @@ export const TRAFFIC = {
   },
   roofWidth: 0.8, // cabin width at the roof, fraction of the body width
   tireWidth: 0.17,
-  /** @type {Record<string, TrafficModel>} */
-  models: {
-    fiat126p: {
-      label: "Fiat 126p",
-      width: 1.38,
-      wheel: { radius: 0.27, axles: [0.6, 2.44] },
-      profile: [
-        [0.04, 0.2],
-        [3.0, 0.2],
-        [3.05, 0.34],
-        [3.02, 0.66],
-        [2.3, 0.86],
-        [0.22, 0.86],
-        [0.04, 0.76],
-        [0, 0.38],
-      ],
-      cabin: [
-        [0.3, 0.83],
-        [2.28, 0.83],
-        [1.85, 1.33],
-        [0.78, 1.33],
-      ],
-      lights: { shape: "round", y: 0.58, inset: 0.24, size: 0.08 },
-    },
-    skoda120: {
-      label: "Škoda 120",
-      width: 1.62,
-      wheel: { radius: 0.29, axles: [0.93, 3.33] },
-      profile: [
-        [0.05, 0.22],
-        [4.1, 0.22],
-        [4.16, 0.4],
-        [4.14, 0.72],
-        [4.0, 0.8],
-        [3.0, 0.86],
-        [0.7, 0.86],
-        [0.05, 0.84],
-        [0, 0.45],
-      ],
-      cabin: [
-        [0.85, 0.83],
-        [2.95, 0.83],
-        [2.45, 1.4],
-        [1.2, 1.4],
-      ],
-      lights: { shape: "rect", y: 0.6, inset: 0.3, size: 0.09 },
-    },
-  },
 };
 
 export const MINIGAME = {
