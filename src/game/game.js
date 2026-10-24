@@ -51,11 +51,14 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
   let shakeFrom = null;
   const shakeOffset = new THREE.Vector3();
   let followX = 0; // sideways camera offset that keeps the car in frame
+  let pinned = false; // free ride: the orbit rides along with the car (followX = car x)
   const carBounds = new THREE.Box3();
   const base = new THREE.Vector3();
   const corner = new THREE.Vector3();
   const toCorner = new THREE.Vector3();
   const forward = new THREE.Vector3();
+  const moveTo = new THREE.Vector3();
+  const moveTarget = new THREE.Vector3();
   let stateTime = 0;
   let best = loadNumber(STORAGE.bestScore);
 
@@ -70,7 +73,8 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
 
   /**
    * Controls stay disabled during the move; controls.update() applies the orbit limits, so the
-   * game camera ends up clamped exactly like in v1.
+   * game camera ends up clamped exactly like in v1. The orbit target eases back to the home
+   * target too (it is off it after free ride); a move into free ride ends pinned to the car.
    *
    * @param {THREE.Vector3} to
    * @param {() => void} [onDone]
@@ -79,11 +83,15 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
     cameraTween?.cancel();
     controls.enabled = false;
     const from = camera.position.clone();
+    const fromTarget = controls.target.clone();
     cameraTween = tweens.add({
       duration: SCENE.camera.transition,
       onUpdate: (t) => {
-        camera.position.lerpVectors(from, to, t);
-        controls.target.copy(cameraTarget);
+        followX = pinned ? car.group.position.x : 0; // the offset the move ends with, for followCar
+        moveTo.copy(to).x += followX;
+        moveTarget.copy(cameraTarget).x += followX;
+        camera.position.lerpVectors(from, moveTo, t);
+        controls.target.lerpVectors(fromTarget, moveTarget, t);
         controls.update();
       },
       onComplete: onDone,
@@ -128,21 +136,25 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
    * keep the fixed camera of the desktop version.
    *
    * The slide is measured against a stand-in camera that looks straight down the road from the
-   * real orbit's distance and tilt. In free ride the orbit can be turned, and the real camera is
-   * then useless as a reference: measured against it, a centred car looked out of frame once the
-   * view was turned to the right (the camera ran away), and a car driving past the lens asked for
-   * wild slides that could not bring it back anyway. Against the stand-in, turning the orbit
+   * real orbit's distance and tilt. The orbit can be turned, and the real camera is then useless
+   * as a reference: measured against it, a centred car looked out of frame once the view was
+   * turned to the right (the camera ran away), and a car driving past the lens asked for wild
+   * slides that could not bring it back anyway. Against the stand-in, turning the orbit
    * changes nothing; the car is simply kept near the orbit centre.
+   *
+   * Free ride pins the orbit to the car instead, on any screen: the camera and its target follow
+   * the car's x one to one, and keep doing so on the way back to the menu until the car is back
+   * in the middle of the road.
    */
   function followCar() {
-    if (cameraTween?.isActive()) {
-      followX = 0; // the move sets absolute positions
-      return;
-    }
+    if (cameraTween?.isActive()) return; // the move sets followX itself
+    if (pinned && machine.state !== "free" && car.group.position.x === 0) pinned = false;
     const portrait = camera.aspect < 1;
-    if (!portrait && followX === 0) return; // landscape: nothing to measure every frame
+    if (!pinned && !portrait && followX === 0) return; // landscape: nothing to measure every frame
     let offset = 0;
-    if (portrait) {
+    if (pinned) {
+      offset = car.group.position.x;
+    } else if (portrait) {
       // the orbit (same with or without the slide) with its turn undone, around the home target
       base.subVectors(camera.position, controls.target);
       base.set(0, base.y, Math.hypot(base.x, base.z)).add(cameraTarget);
@@ -181,6 +193,8 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
     stateTime = 0;
     hud.setState(next);
     car.steering = next === "free" || next === "playing";
+    // ESC from free ride keeps the pin while the car eases back to the middle (see followCar)
+    pinned = next === "free" || (next === "idle" && previous === "free");
 
     switch (next) {
       case "countdown":

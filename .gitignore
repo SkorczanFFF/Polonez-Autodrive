@@ -4,3 +4,7 @@ dist
 
 # local screenshots (Windows "Zrzut ekranu" naming)
 Zrzut ekranu *.png
+
+# review notes, kept local
+RV.md
+docs/history/

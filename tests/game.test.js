@@ -145,6 +145,75 @@ describe("portrait follow", () => {
   });
 });
 
+describe("free ride camera", () => {
+  const home = new THREE.Vector3().fromArray(SCENE.camera.position);
+  const target = new THREE.Vector3().fromArray(SCENE.camera.target);
+
+  it("rides along with the car, however the orbit is turned", () => {
+    const { input, camera, controls, car, run } = setup();
+    camera.position.set(-4, 3, 5); // a turned orbit
+    controls.target.copy(target);
+    input.dispatch("free");
+    for (const x of [2, -3, CAR.steer.maxOffset]) {
+      car.group.position.x = x;
+      run(1 / 60);
+      expect(controls.target.x).toBeCloseTo(x);
+      expect(camera.position.x).toBeCloseTo(x - 4);
+      expect(camera.position.z).toBeCloseTo(5);
+    }
+  });
+
+  it("brings the camera back with the car on ESC, then lets it be", () => {
+    const { game, input, camera, controls, car, run } = setup();
+    camera.position.copy(home);
+    controls.target.copy(target);
+    input.dispatch("free");
+    car.group.position.x = 3;
+    run(1 / 60);
+    input.dispatch("exit");
+    expect(game.state).toBe("idle");
+    car.group.position.x = 1; // the car easing back
+    run(1 / 60);
+    expect(camera.position.x).toBeCloseTo(1);
+    car.group.position.x = 0;
+    run(1 / 60);
+    expect(camera.position.x).toBeCloseTo(0);
+    car.group.position.x = 2; // no longer pinned
+    run(1 / 60);
+    expect(camera.position.x).toBeCloseTo(0);
+  });
+
+  it("eases the orbit target back to the middle when the minigame starts", () => {
+    const { input, camera, controls, car, run } = setup();
+    camera.position.copy(home);
+    controls.target.copy(target);
+    input.dispatch("free");
+    car.group.position.x = 3;
+    run(1 / 60);
+    input.dispatch("start");
+    car.group.position.x = 0;
+    run(1 / 60);
+    expect(controls.target.x).toBeGreaterThan(2.9); // no jump on the first frame
+    run(SCENE.camera.transition);
+    expect(controls.target.distanceTo(target)).toBeCloseTo(0);
+    expect(camera.position.x).toBeCloseTo(0);
+  });
+
+  it("ends the move from game over pinned to the car", () => {
+    const { input, camera, controls, car, run, crash } = setup();
+    crash();
+    run(MINIGAME.crash.lock);
+    car.group.position.x = 2.5; // where it crashed
+    input.dispatch("free");
+    run(SCENE.camera.transition + 1 / 60);
+    expect(controls.target.x).toBeCloseTo(2.5);
+    expect(camera.position.x).toBeCloseTo(2.5);
+    car.group.position.x = -1;
+    run(1 / 60);
+    expect(camera.position.x).toBeCloseTo(-1);
+  });
+});
+
 describe("crash", () => {
   it("brakes the world to a halt and keeps the traffic and the game camera", () => {
     const { game, world, camera, calls, run, crash } = setup();

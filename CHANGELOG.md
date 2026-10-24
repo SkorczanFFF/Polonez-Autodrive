@@ -76,6 +76,8 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 
 ### Changed
 
+- Free ride: the camera rides along with the Polonez (you can still orbit around it) and comes
+  back with it on ESC; the minigame and the menu keep their fixed camera.
 - The Polonez sits 4 cm higher (`CAR.lift`), so its tyres no longer look sunk into the road.
 - The UI tints that follow the scene colors (panels, buttons, titles after "Randomize all") are
   now mixed by the stylesheet in oklch: the same hue turn, lightness and chroma kept perceptually.
