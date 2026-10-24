@@ -78,6 +78,8 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 
 ### Changed
 
+- The scene shows a grab cursor only where it can be orbited (menu, free ride) and a grabbing one
+  while the left button holds it; the minigame keeps the plain cursor.
 - Free ride: the camera rides along with the Polonez (you can still orbit around it) and comes
   back with it on ESC; the minigame and the menu keep their fixed camera.
 - Free ride: the Polonez brakes into the road edge instead of stopping dead (which jolted the

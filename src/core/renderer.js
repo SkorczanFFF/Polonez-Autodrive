@@ -36,6 +36,18 @@ export function createView(container = document.body) {
   controls.target.fromArray(cam.target);
   controls.update();
 
+  // The cursors are style.css's: OrbitControls leaves an inline `cursor: auto` on the canvas (its
+  // constructor connects, and connecting disconnects first), which would always win. Grabbing is
+  // set here while the left button holds the orbit, as :active is unreliable under the pointer
+  // capture of OrbitControls.
+  canvas.style.removeProperty("cursor");
+  canvas.addEventListener("pointerdown", (event) => {
+    if (controls.enabled && event.button === 0) canvas.dataset.grabbing = "";
+  });
+  for (const type of ["pointerup", "pointercancel"]) {
+    window.addEventListener(type, () => delete canvas.dataset.grabbing);
+  }
+
   const bloom = createBloom(renderer, scene, camera);
 
   function resize() {
