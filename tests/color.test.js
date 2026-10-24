@@ -1,6 +1,15 @@
 import * as THREE from "three";
 import { afterEach, describe, expect, it } from "vitest";
-import { contrast, hsl, hslOf, luminance, oklchHue } from "../src/ui/color.js";
+import {
+  contrast,
+  hexToHsv,
+  hsl,
+  hslOf,
+  hsvToHex,
+  luminance,
+  oklchHue,
+  parseHex,
+} from "../src/ui/color.js";
 import { PALETTE } from "../src/config.js";
 
 const managed = THREE.ColorManagement.enabled;
@@ -29,5 +38,25 @@ describe("color math", () => {
     expect(oklchHue("#ff0000")).toBeCloseTo(29.2, 0);
     expect(oklchHue("#00ff00")).toBeCloseTo(142.5, 0);
     expect(oklchHue("#0000ff")).toBeCloseTo(264.1, 0);
+  });
+
+  it("turns HSV into hex and back, for the color picker", () => {
+    expect(hsvToHex(0, 1, 1)).toBe("#ff0000");
+    expect(hsvToHex(1 / 3, 1, 1)).toBe("#00ff00");
+    expect(hsvToHex(1, 1, 1)).toBe("#ff0000"); // the end of the hue strip is red again
+    expect(hsvToHex(0.5, 0, 0.5)).toBe("#808080");
+    expect(hexToHsv("#000000")).toEqual({ h: 0, s: 0, v: 0 });
+    for (const color of Object.values(PALETTE)) {
+      const { h, s, v } = hexToHsv(color);
+      expect(hsvToHex(h, s, v)).toBe(color);
+    }
+  });
+
+  it("reads typed hex colors, with or without the #", () => {
+    expect(parseHex("#FF2A6D")).toBe("#ff2a6d");
+    expect(parseHex(" ff2a6d ")).toBe("#ff2a6d");
+    expect(parseHex("f2a")).toBe("#ff22aa");
+    expect(parseHex("ff2a6")).toBeNull();
+    expect(parseHex("#ggg")).toBeNull();
   });
 });

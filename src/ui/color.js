@@ -71,3 +71,57 @@ export const hueDistance = (/** @type {number} */ a, /** @type {number} */ b) =>
   const d = Math.abs(a - b) % 1;
   return Math.min(d, 1 - d);
 };
+
+/**
+ * HSV to hex, sRGB: what the color picker's square (saturation, brightness) and hue strip show.
+ *
+ * @param {number} h hue, 0..1 (1 is red again)
+ * @param {number} s saturation, 0..1
+ * @param {number} v value (brightness), 0..1
+ * @returns {string} hex
+ */
+export function hsvToHex(h, s, v) {
+  /** @param {number} n */
+  const channel = (n) => {
+    const k = (n + h * 6) % 6;
+    return v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+  };
+  const byte = (/** @type {number} */ c) =>
+    Math.round(c * 255)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${byte(channel(5))}${byte(channel(3))}${byte(channel(1))}`;
+}
+
+/**
+ * Hex to HSV, sRGB; the inverse of hsvToHex. Grays and black have no hue: theirs is 0.
+ *
+ * @param {THREE.ColorRepresentation} color
+ * @returns {{ h: number, s: number, v: number }} each 0..1
+ */
+export function hexToHsv(color) {
+  const hex = new THREE.Color(color).getHex();
+  const [r, g, b] = [16, 8, 0].map((shift) => ((hex >> shift) & 255) / 255);
+  const max = Math.max(r, g, b);
+  const range = max - Math.min(r, g, b);
+  let h = 0;
+  if (range) {
+    if (max === r) h = ((g - b) / range + 6) % 6;
+    else if (max === g) h = (b - r) / range + 2;
+    else h = (r - g) / range + 4;
+  }
+  return { h: h / 6, s: max ? range / max : 0, v: max };
+}
+
+/**
+ * A typed or pasted hex color, with or without the "#", 3 or 6 digits, as "#rrggbb"; null while
+ * it is not one (yet).
+ *
+ * @param {string} text
+ */
+export function parseHex(text) {
+  const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(text.trim());
+  if (!match) return null;
+  const digits = match[1].length === 3 ? match[1].replace(/./g, "$&$&") : match[1];
+  return `#${digits.toLowerCase()}`;
+}

@@ -4,6 +4,7 @@ import { GUI as RANGES, LAYERS, NIGHT, SCENE, SUN, TEXT } from "../config.js";
 import { isLineMaterial, lineWidth } from "../scene/lines.js";
 import { randomSeed } from "../scene/mountains.js";
 import { createRandomPalette } from "./randomPalette.js";
+import { createColorPicker } from "./colorPicker.js";
 import { withKey } from "./labels.js";
 import { setSceneColor } from "./theme.js";
 
@@ -49,6 +50,8 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   // touchStyles: lil-gui would make every row taller and its font smaller on touch screens;
   // the compact terminal look reads better there too (its typings say number, it is a boolean)
   const gui = new GUI({ title: L.title, touchStyles: /** @type {any} */ (false) });
+  // the app's own color picker, the same on every device (the browser's differs on each OS)
+  const picker = createColorPicker({ touch, small, beside: gui.domElement });
 
   /**
    * What "Randomize all" gives a color control (ui/randomPalette.js); a layer's line is picked
@@ -72,6 +75,7 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
   function color(folder, params, key, label, as, apply) {
     const controller = folder.addColor(params, key).name(label).onChange(apply);
     showHash(controller);
+    picker.attach(controller);
     colors.push({ ...as, controller });
   }
 
@@ -352,7 +356,10 @@ export function createSceneGui({ scene, materials, world, crt, tweens, bloom, de
 
   return {
     show: () => gui.show(),
-    hide: () => gui.hide(),
+    hide: () => {
+      picker.close();
+      gui.hide();
+    },
     randomize,
   };
 }

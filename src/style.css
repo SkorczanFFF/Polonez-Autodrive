@@ -6,6 +6,7 @@
 /* ---------- tokens ---------- */
 :root {
   --z-hud: 900; /* lil-gui sits at 1001 */
+  --z-picker: 1100; /* the color picker opens over the scene panel */
   --z-loader: 1200;
   --z-devstats: 1300;
   --z-crt: 9999;
@@ -1143,6 +1144,15 @@ kbd {
   flex: none;
   width: var(--widget-height);
   margin-left: var(--spacing);
+  cursor: pointer;
+}
+
+/* the swatch opens the app's picker (ui/colorPicker.js); the open one stays marked */
+.lil-gui .lil-controller.lil-color .lil-display:focus-visible,
+.lil-gui .lil-controller.lil-color .lil-display[aria-expanded="true"] {
+  outline: 2px solid var(--aqua);
+  outline-offset: 2px;
+  box-shadow: 0 0 10px var(--aqua);
 }
 
 /* Randomize all: a roomier button, the emoji centered on the label */
@@ -1170,6 +1180,304 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   text-shadow: 0 0 6px var(--aqua);
+}
+
+/* ---------- color picker (ui/colorPicker.js) ----------
+   A terminal window like the loader's: aqua title bar, deep blue panel in a neon glow. A popover
+   beside the scene panel with a mouse; a bottom sheet with larger targets on touch or small
+   screens (data-layout). */
+.picker {
+  --picker-pad: 10px;
+  --picker-thumb: 16px;
+  --picker-hue-height: 16px;
+  --picker-area-height: 150px;
+  --picker-swatch: 26px;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-picker);
+  font-family: var(--font-terminal);
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--aqua);
+}
+
+/* closed in every layout: the sheet's display: flex must not win */
+.picker[hidden] {
+  display: none !important;
+}
+
+.picker[data-layout="popover"] {
+  pointer-events: none; /* the page stays usable around it; a press there closes it */
+}
+
+.picker__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgb(0 0 0 / 0.45);
+}
+
+.picker[data-layout="popover"] .picker__backdrop {
+  display: none;
+}
+
+.picker__dialog {
+  position: absolute;
+  display: grid;
+  grid-template-areas:
+    "title"
+    "area"
+    "hue"
+    "row"
+    "swatches"
+    "actions";
+  gap: var(--picker-pad);
+  box-sizing: border-box;
+  width: 264px;
+  padding: 0 var(--picker-pad) var(--picker-pad);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+  animation: picker-in 0.15s ease-out;
+}
+
+@keyframes picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.picker__title {
+  grid-area: title;
+  margin: 0 calc(-1 * var(--picker-pad));
+  padding: 3px var(--picker-pad);
+  overflow: hidden;
+  font-size: 18px;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ui-deep);
+  background-color: var(--aqua);
+}
+
+/* saturation left to right, brightness bottom to top, over the hue at full strength */
+.picker__area,
+.picker__hue {
+  position: relative;
+  touch-action: none; /* drags pick colors, never scroll or zoom */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+  border: 1px solid var(--aqua);
+}
+
+.picker__area {
+  grid-area: area;
+  height: var(--picker-area-height);
+  background:
+    linear-gradient(to top, black, transparent), linear-gradient(to right, white, transparent),
+    var(--picker-hue);
+}
+
+.picker__hue {
+  grid-area: hue;
+  height: var(--picker-hue-height);
+  cursor: ew-resize;
+  background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
+}
+
+.picker__area:focus-visible,
+.picker__hue:focus-visible,
+.picker__swatch:focus-visible,
+.picker__previous:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.picker__thumb {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  border: 2px solid white;
+  box-shadow:
+    0 0 0 1px black,
+    inset 0 0 0 1px black;
+}
+
+.picker__area .picker__thumb {
+  width: var(--picker-thumb);
+  height: var(--picker-thumb);
+  border-radius: 50%;
+  background-color: var(--picker-color);
+  translate: -50% -50%;
+}
+
+.picker__hue .picker__thumb {
+  top: -4px;
+  bottom: -4px;
+  width: calc(var(--picker-thumb) / 2);
+  background-color: var(--picker-hue);
+  translate: -50% 0;
+}
+
+/* the color when opened (a press brings it back) beside the new one, then the hex code */
+.picker__row {
+  grid-area: row;
+  display: flex;
+  gap: var(--picker-pad);
+  align-items: stretch;
+  height: 34px;
+}
+
+.picker__compare {
+  display: flex;
+  flex: 1;
+  border: 1px solid var(--aqua);
+}
+
+.picker__previous,
+.picker__current {
+  flex: 1;
+}
+
+.picker__previous {
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.picker__current {
+  background-color: var(--picker-color);
+}
+
+.picker__hex {
+  display: flex;
+  align-items: center;
+  padding-inline: 6px;
+  background-color: color-mix(in srgb, var(--ui-deep) 70%, black);
+  border: 1px solid var(--aqua);
+  cursor: text;
+}
+
+.picker__hex:focus-within {
+  box-shadow: 0 0 8px var(--aqua);
+}
+
+.picker__hex input {
+  width: 6.5ch;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: lowercase;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+.picker__swatches {
+  grid-area: swatches;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.picker__swatch {
+  height: var(--picker-swatch);
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--aqua) 45%, transparent);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s;
+}
+
+.picker__swatch:hover {
+  transform: scale(1.08);
+}
+
+.picker__swatch[aria-pressed="true"] {
+  border: 2px solid white;
+  box-shadow:
+    0 0 0 1px black,
+    0 0 10px var(--aqua);
+}
+
+.picker__actions {
+  grid-area: actions;
+  display: flex;
+  gap: var(--picker-pad);
+}
+
+.button.picker__button {
+  flex: 1;
+  justify-content: center;
+  padding: 0.15em 0.6em;
+  font-size: 20px;
+}
+
+/* touch and small screens: a bottom sheet, as compact as the popover; only what fingers drag or
+   tap grows a little */
+.picker[data-layout="sheet"] {
+  --picker-thumb: 22px;
+  --picker-hue-height: 22px;
+  --picker-area-height: min(140px, 24vh);
+  --picker-swatch: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.picker[data-layout="sheet"] .picker__dialog {
+  position: relative;
+  width: min(100%, 360px);
+  margin-bottom: var(--picker-keyboard, 0px); /* above the on-screen keyboard */
+  padding: 0 calc(var(--picker-pad) + var(--safe-right))
+    calc(var(--picker-pad) + var(--safe-bottom)) calc(var(--picker-pad) + var(--safe-left));
+  border-bottom: none;
+  animation-name: picker-up;
+  animation-duration: 0.2s;
+}
+
+@keyframes picker-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.picker[data-layout="sheet"] .picker__title {
+  margin-inline: calc(-1 * var(--picker-pad) - var(--safe-left))
+    calc(-1 * var(--picker-pad) - var(--safe-right));
+}
+
+.picker[data-layout="sheet"] .picker__row {
+  height: 36px;
+}
+
+.picker[data-layout="sheet"] .button.picker__button {
+  min-height: 36px;
+}
+
+.picker[data-layout="sheet"] .picker__swatch:hover {
+  transform: none;
+}
+
+/* phones held sideways: the square on the left, the rest beside it */
+@media (orientation: landscape) and (max-height: 500px) {
+  .picker[data-layout="sheet"] {
+    --picker-area-height: auto;
+    --picker-swatch: 26px;
+  }
+
+  .picker[data-layout="sheet"] .picker__dialog {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "title title"
+      "area row"
+      "area swatches"
+      "hue actions";
+    width: min(100%, 520px);
+  }
 }
 
 /* ---------- narrow screens (phones held upright; core/device.js sets data-screen from SCREEN.phone) ---------- */
@@ -1250,7 +1558,8 @@ kbd {
   .loader,
   .loader *,
   .loader::before,
-  .hud * {
+  .hud *,
+  .picker * {
     animation: none !important;
     transition: none !important;
   }

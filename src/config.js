@@ -571,6 +571,28 @@ export const GUI = {
   randomizeDuration: 1, // seconds
 };
 
+/** The scene panel's color picker (ui/colorPicker.js). */
+export const PICKER = {
+  // ready-made colors: the default scene's neons, then its darks
+  swatches: [
+    PALETTE.neonPink,
+    PALETTE.neonMagenta,
+    PALETTE.neonViolet,
+    PALETTE.neonCyan,
+    PALETTE.sunYellow,
+    PALETTE.neonOrange,
+    PALETTE.horizon,
+    PALETTE.sunset,
+    PALETTE.starlight,
+    PALETTE.polonezBody,
+    PALETTE.dusk,
+    PALETTE.void,
+  ],
+  step: 0.01, // an arrow key moves saturation, brightness or hue this much (0..1)
+  bigStep: 0.1, // with Shift
+  gap: 8, // px between the popover and the panel or the screen edges
+};
+
 /** Screens the UI adapts to (core/device.js). */
 export const SCREEN = {
   phone: 600, // px; narrower (the HUD stacks its buttons) or lower (the scene panel starts folded)
@@ -693,6 +715,18 @@ export const TEXT = {
     cityLit: "Lit windows",
     cityHaze: "Haze",
     cityHazeHeight: "Haze height",
+  },
+  picker: {
+    area: "Saturation and brightness",
+    saturation: "saturation",
+    brightness: "brightness",
+    hue: "Hue",
+    previous: "Previous color: restore it",
+    current: "New color",
+    hex: "Hex color",
+    swatches: "Palette",
+    cancel: "Cancel",
+    done: "OK",
   },
   statsPanel: {
     title: "SYS.MONITOR",

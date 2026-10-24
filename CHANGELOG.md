@@ -78,6 +78,12 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 
 ### Changed
 
+- Side panel: the color swatches open the app's own color picker instead of the browser's (a
+  different system dialog on every OS): a saturation / brightness square, a hue strip, the hex
+  code, the palette's colors, and the old color beside the new one (tap it to bring it back);
+  the scene follows every change. With a mouse it opens beside the panel (ENTER or a click
+  elsewhere keeps the color, ESC brings the old one back, arrows fine-tune it); on touch and small
+  screens it is a compact bottom sheet with OK and CANCEL.
 - The scene shows a grab cursor only where it can be orbited (menu, free ride) and a grabbing one
   while the left button holds it; the minigame keeps the plain cursor.
 - Free ride: the camera rides along with the Polonez (you can still orbit around it) and comes
