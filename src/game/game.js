@@ -193,6 +193,7 @@ export function createGame({ view, world, car, minigame, tweens, input, hud, men
     stateTime = 0;
     hud.setState(next);
     car.steering = next === "free" || next === "playing";
+    car.softEdges = next === "free";
     // ESC from free ride keeps the pin while the car eases back to the middle (see followCar)
     pinned = next === "free" || (next === "idle" && previous === "free");
 

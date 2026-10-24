@@ -397,6 +397,7 @@ export const CAR = {
     speedEasing: 0.158, // s: time constant of the speed catching up with its target (v1: 0.1 per frame)
     decel: 144, // units/s² after release (v1: 0.04 per frame per frame)
     releaseDamp: 0.45, // speed multiplier on key release
+    edgeBrake: 30, // units/s²: free ride brakes into the road edge instead of stopping dead
     roadMargin: 1.975, // the car's travel limit stays this far from the road edge
     /** Max distance from the start position (6 with the default road). */
     get maxOffset() {
@@ -410,7 +411,7 @@ export const CAR = {
     /** Nose turns towards the lane change: radians per unit/s of lateral velocity. */
     yaw: { perSpeed: 0.0125, max: 0.12, easing: 0.103 },
     /** Front wheel steering angle in radians. */
-    wheelSteer: { max: (5 * Math.PI) / 180, easing: 0.075 },
+    wheelSteer: { max: (12 * Math.PI) / 180, easing: 0.075 },
   },
   resetDuration: 1, // seconds
 };

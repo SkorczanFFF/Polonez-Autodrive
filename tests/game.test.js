@@ -21,6 +21,7 @@ function setup() {
   const group = new THREE.Group();
   const car = {
     steering: false,
+    softEdges: false,
     group,
     reset() {},
     update() {},
@@ -161,6 +162,16 @@ describe("free ride camera", () => {
       expect(camera.position.x).toBeCloseTo(x - 4);
       expect(camera.position.z).toBeCloseTo(5);
     }
+  });
+
+  it("softens the road edges in free ride only", () => {
+    const { input, car, run } = setup();
+    input.dispatch("free");
+    expect(car.softEdges).toBe(true);
+    input.dispatch("start");
+    expect(car.softEdges).toBe(false);
+    run(MINIGAME.countdown + 0.1);
+    expect(car.softEdges).toBe(false);
   });
 
   it("brings the camera back with the car on ESC, then lets it be", () => {

@@ -44,7 +44,7 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   switches off like a CRT; `prefers-reduced-motion` turns UI animations and the CRT flicker off.
 - F10 developer stats restyled as a SYS.MONITOR terminal panel.
 - Car handling: the body rolls outwards on its own pivot while the wheels stay on the road, the
-  front wheels steer (5°) and the car yaws with its sideways speed.
+  front wheels steer (12°) and the car yaws with its sideways speed.
 - Minigame traffic instead of boxes: low-poly Fiat 126p and Škoda 120 built in code from real
   dimensions (wheel arches, cabin, side windows, chrome bumpers, headlights), burnt-orange bodies
   with yellow lines.
@@ -78,6 +78,9 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 
 - Free ride: the camera rides along with the Polonez (you can still orbit around it) and comes
   back with it on ESC; the minigame and the menu keep their fixed camera.
+- Free ride: the Polonez brakes into the road edge instead of stopping dead (which jolted the
+  whole view, worst on phones), stops before turning back, and no longer shows steering while it
+  pushes against the edge. The minigame keeps its handling.
 - The Polonez sits 4 cm higher (`CAR.lift`), so its tyres no longer look sunk into the road.
 - The UI tints that follow the scene colors (panels, buttons, titles after "Randomize all") are
   now mixed by the stylesheet in oklch: the same hue turn, lightness and chroma kept perceptually.

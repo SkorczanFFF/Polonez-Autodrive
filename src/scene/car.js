@@ -102,23 +102,39 @@ export function createCar({ scene, models, materials }) {
   /**
    * Lateral motion (v1 feel): hold to speed up, momentum after release.
    *
+   * Soft edges (free ride, where the camera rides along and every jolt shakes the whole view): the
+   * car brakes into the road edge instead of stopping dead there, comes to a standstill before it
+   * turns back, and pushing against the edge builds up no speed.
+   *
    * @param {number} dt
    * @param {SteerInput} input
+   * @param {boolean} soft
+   * @returns {boolean} the input pushes the car against the edge (soft edges only)
    */
-  function steer(dt, input) {
+  function steer(dt, input, soft) {
     if (input !== 0) {
       if (input !== lastInput) holdTime = 0;
-      holdTime += dt;
-      direction = input;
-      const target = Math.min(s.baseSpeed + s.holdAccel * holdTime, s.maxSpeed);
-      speed += (target - speed) * settle(s.speedEasing, dt);
-      moveBy(direction * speed * dt);
+      if (soft && input !== direction && speed > 0) {
+        speed = Math.max(0, speed - s.decel * dt); // still sliding the other way
+      } else {
+        holdTime += dt;
+        direction = input;
+        const target = Math.min(s.baseSpeed + s.holdAccel * holdTime, s.maxSpeed);
+        speed += (target - speed) * settle(s.speedEasing, dt);
+      }
     } else {
       speed = Math.max(0, speed - s.decel * dt);
-      if (speed > 0) moveBy(direction * speed * dt);
     }
+    if (soft) {
+      const room = s.maxOffset - direction * group.position.x;
+      speed = Math.min(speed, Math.sqrt(2 * s.edgeBrake * room)); // stops right at the edge
+    }
+    if (speed > 0) moveBy(direction * speed * dt);
 
     lastInput = input;
+    const blocked = soft && input * group.position.x >= s.maxOffset;
+    if (blocked) stop();
+    return blocked;
   }
 
   /**
@@ -153,6 +169,8 @@ export function createCar({ scene, models, materials }) {
     frontWheels,
     /** Steering is only active in free ride and while playing. */
     steering: false,
+    /** Free ride: soft road edges (see steer), and no steering shown against them. */
+    softEdges: false,
 
     /**
      * @param {number} dt
@@ -165,10 +183,10 @@ export function createCar({ scene, models, materials }) {
 
       const active = this.steering && !resetTween?.isActive();
       const startX = group.position.x;
-      if (active) steer(dt, input);
+      const blocked = active && steer(dt, input, this.softEdges);
 
       const lateralVelocity = dt > 0 ? (group.position.x - startX) / dt : 0;
-      handle(dt, active ? input : 0, lateralVelocity);
+      handle(dt, active && !blocked ? input : 0, lateralVelocity);
     },
 
     /** A steering key was released (v1: speed drops right away). */

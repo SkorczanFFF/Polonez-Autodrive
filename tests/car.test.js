@@ -86,6 +86,61 @@ describe("car steering", () => {
     expect(Math.abs(car.group.rotation.y)).toBeLessThan(0.01);
   });
 
+  it("free ride brakes into the edge instead of stopping dead", () => {
+    const car = setup();
+    car.softEdges = true;
+    let last = 0;
+    let jolt = 0; // the biggest change of lateral speed within one frame
+    for (let i = 0; i < 3 * 60; i++) {
+      const x = car.group.position.x;
+      car.update(1 / 60, 1, -1);
+      const velocity = (car.group.position.x - x) * 60;
+      jolt = Math.max(jolt, Math.abs(velocity - last));
+      last = velocity;
+    }
+    expect(car.group.position.x).toBe(-CAR.steer.maxOffset);
+    expect(jolt).toBeLessThan(1.5); // the hard edge: about 9 units/s gone in one frame
+  });
+
+  it("free ride shows no steering while pushing against the edge", () => {
+    const car = setup();
+    car.softEdges = true;
+    drive(car, 3, -1, 60);
+    expect(Math.abs(car.chassis.rotation.z)).toBeLessThan(0.01);
+    expect(Math.abs(car.group.rotation.y)).toBeLessThan(0.01);
+    for (const pivot of car.frontWheels) expect(Math.abs(pivot.rotation.y)).toBeLessThan(0.01);
+  });
+
+  it("free ride turns back from the edge and mid-road through a standstill", () => {
+    const car = setup();
+    car.softEdges = true;
+    drive(car, 3, -1, 60);
+    const x = car.group.position.x;
+    car.update(1 / 60, 1, 1);
+    expect((car.group.position.x - x) * 60).toBeLessThan(1); // no speed built up against the edge
+
+    drive(car, 1, 1, 60);
+    let previous = car.group.position.x;
+    let lowest = Infinity;
+    for (let i = 0; i < 30; i++) {
+      car.update(1 / 60, 1, -1);
+      const velocity = (car.group.position.x - previous) * 60;
+      lowest = Math.min(lowest, Math.abs(velocity));
+      previous = car.group.position.x;
+    }
+    expect(previous).toBeLessThan(x + CAR.steer.maxOffset * 2); // it did turn back
+    expect(lowest).toBeLessThan(1);
+  });
+
+  it("the minigame keeps the hard edges", () => {
+    const car = setup();
+    drive(car, 3, -1, 60);
+    expect(car.chassis.rotation.z).toBeCloseTo(-CAR.handling.roll.max, 2); // still steering
+    const x = car.group.position.x;
+    car.update(1 / 60, 1, 1);
+    expect((car.group.position.x - x) * 60).toBeGreaterThan(5); // off at the speed built up
+  });
+
   it("keeps sliding after release and settles to neutral", () => {
     const car = setup();
     drive(car, 1, 1, 60);
