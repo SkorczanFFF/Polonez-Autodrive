@@ -43,8 +43,10 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
 - Self-hosted fonts: VT323 (HUD, terminal, side panel) and Yellowtail (logo, titles); the loader
   switches off like a CRT; `prefers-reduced-motion` turns UI animations and the CRT flicker off.
 - F10 developer stats restyled as a SYS.MONITOR terminal panel.
-- Car handling: the body rolls outwards on its own pivot while the wheels stay on the road, the
-  front wheels steer (12°) and the car yaws with its sideways speed.
+- Car handling like a real lane change: the nose turns towards where the car really goes, the
+  body leans out on its own pivot (wheels stay on the road) on the way in and rocks the other way
+  when the car straightens out; the front wheels steer (12°) and counter-steer as the nose swings
+  back.
 - Minigame traffic instead of boxes: low-poly Fiat 126p and Škoda 120 built in code from real
   dimensions (wheel arches, cabin, side windows, chrome bumpers, headlights), burnt-orange bodies
   with yellow lines.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { CAR } from "../src/config.js";
+import { CAR, WORLD } from "../src/config.js";
 import { createCar } from "../src/scene/car.js";
 import { createTweens } from "../src/core/tween.js";
 
@@ -70,6 +70,33 @@ describe("car steering", () => {
     for (const pivot of car.frontWheels) expect(worldUp(pivot).y).toBeCloseTo(1, 5);
   });
 
+  it("leans out into a lane change, the other way as it straightens out, and settles", () => {
+    const car = setup();
+    drive(car, 0.3, 1, 60); // a tap to the right
+    expect(car.chassis.rotation.z).toBeGreaterThan(0.5 * CAR.handling.roll.max); // left side dips
+    car.release();
+    let back = 0;
+    let rocked = 0; // past level again after leaning back: a spring would do that
+    for (let i = 0; i < 120; i++) {
+      car.update(1 / 60, 1, 0);
+      back = Math.min(back, car.chassis.rotation.z);
+      if (back < -0.01) rocked = Math.max(rocked, car.chassis.rotation.z);
+    }
+    expect(back).toBeLessThan(-0.3 * CAR.handling.roll.max);
+    expect(rocked).toBeLessThan(0.001);
+    expect(Math.abs(car.chassis.rotation.z)).toBeLessThan(0.005);
+  });
+
+  it("points the nose towards where the car goes, part of the way", () => {
+    const car = setup();
+    drive(car, 0.8, 1, 60);
+    const x = car.group.position.x;
+    car.update(1 / 60, 1, 1);
+    const heading = Math.atan2((car.group.position.x - x) * 60, WORLD.speed);
+    expect(-car.group.rotation.y).toBeGreaterThan(0.3 * heading);
+    expect(-car.group.rotation.y).toBeLessThan(0.6 * heading);
+  });
+
   it("steers the front wheels and turns the nose towards the lane change", () => {
     const car = setup();
     drive(car, 0.5, -1, 60);
@@ -135,7 +162,8 @@ describe("car steering", () => {
   it("the minigame keeps the hard edges", () => {
     const car = setup();
     drive(car, 3, -1, 60);
-    expect(car.chassis.rotation.z).toBeCloseTo(-CAR.handling.roll.max, 2); // still steering
+    for (const pivot of car.frontWheels)
+      expect(pivot.rotation.y).toBeCloseTo(CAR.handling.wheelSteer.max); // still steering
     const x = car.group.position.x;
     car.update(1 / 60, 1, 1);
     expect((car.group.position.x - x) * 60).toBeGreaterThan(5); // off at the speed built up

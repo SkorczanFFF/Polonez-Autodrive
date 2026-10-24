@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CAR, SPEED } from "../config.js";
+import { CAR, SPEED, WORLD } from "../config.js";
 import { pruneEmpty, wheelCenter } from "./model.js";
 import { dress } from "./wire.js";
 
@@ -89,7 +89,6 @@ export function createCar({ scene, models, materials }) {
   let holdTime = 0; // seconds the current direction has been held
   /** @type {SteerInput} */
   let lastInput = 0;
-  let rollTarget = 0; // eased target of the body roll (v1 eases twice)
   let steerAngle = 0;
   /** @type {import("../core/tween.js").TweenHandle | null} */
   let resetTween = null;
@@ -138,22 +137,28 @@ export function createCar({ scene, models, materials }) {
   }
 
   /**
-   * Body roll, yaw and front wheel angle. Runs every frame, so everything settles back to
-   * neutral on its own (also while the reset tween moves the car).
+   * Body roll, yaw and front wheel angle (CAR.handling). Runs every frame, so everything settles
+   * back to neutral on its own (also while the reset tween moves the car).
    *
    * @param {number} dt
    * @param {SteerInput} input
    * @param {number} lateralVelocity units/s, measured this frame
+   * @param {number} speedMultiplier
    */
-  function handle(dt, input, lateralVelocity) {
-    const kRoll = settle(roll.easing, dt);
-    rollTarget += (input * roll.max * rollSign - rollTarget) * kRoll;
-    chassis.rotation.z += (rollTarget - chassis.rotation.z) * kRoll;
+  function handle(dt, input, lateralVelocity, speedMultiplier) {
+    const { clamp } = THREE.MathUtils;
+    const heading = Math.atan2(lateralVelocity, WORLD.speed * speedMultiplier); // 0 when standing
+    const yawTarget = -yaw.max * Math.tanh((heading * yaw.share) / yaw.max);
+    const lastYaw = group.rotation.y;
+    group.rotation.y += (yawTarget - lastYaw) * settle(yaw.easing, dt);
+    const yawRate = dt > 0 ? (group.rotation.y - lastYaw) / dt : 0; // < 0 while the nose swings right
 
-    const yawTarget = THREE.MathUtils.clamp(-lateralVelocity * yaw.perSpeed, -yaw.max, yaw.max);
-    group.rotation.y += (yawTarget - group.rotation.y) * settle(yaw.easing, dt);
+    const rollTarget = clamp(-yawRate * roll.perYawRate * rollSign, -roll.max, roll.max);
+    chassis.rotation.z += (rollTarget - chassis.rotation.z) * settle(roll.easing, dt);
 
-    steerAngle += (-input * wheelSteer.max - steerAngle) * settle(wheelSteer.easing, dt);
+    const { max } = wheelSteer;
+    const steerTarget = clamp(-input * max + yawRate * wheelSteer.perYawRate, -max, max);
+    steerAngle += (steerTarget - steerAngle) * settle(wheelSteer.easing, dt);
     for (const pivot of frontWheels) pivot.rotation.y = steerAngle;
   }
 
@@ -186,7 +191,7 @@ export function createCar({ scene, models, materials }) {
       const blocked = active && steer(dt, input, this.softEdges);
 
       const lateralVelocity = dt > 0 ? (group.position.x - startX) / dt : 0;
-      handle(dt, active && !blocked ? input : 0, lateralVelocity);
+      handle(dt, active && !blocked ? input : 0, lateralVelocity, speedMultiplier);
     },
 
     /** A steering key was released (v1: speed drops right away). */

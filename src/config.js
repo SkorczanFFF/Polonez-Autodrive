@@ -404,14 +404,24 @@ export const CAR = {
       return ROAD.width / 2 - this.roadMargin;
     },
   },
-  /** Easings are time constants in seconds (v1: 0.15 and 0.2 per frame). */
+  /**
+   * How the body follows the steering; easings are time constants in seconds. The roll reacts to
+   * the nose swinging (yaw rate), so the body leans out on the way into a lane change and the
+   * other way when the car straightens out, like a real lane change.
+   */
   handling: {
-    /** Body roll (wheels stay upright). outward: true = realistic, false = lean into the turn (v1). */
-    roll: { max: 0.08, easing: 0.103, outward: true },
-    /** Nose turns towards the lane change: radians per unit/s of lateral velocity. */
-    yaw: { perSpeed: 0.0125, max: 0.12, easing: 0.103 },
-    /** Front wheel steering angle in radians. */
-    wheelSteer: { max: (12 * Math.PI) / 180, easing: 0.075 },
+    /**
+     * The nose turns towards where the car really goes (sideways speed against the road's
+     * WORLD.speed), by this share of that angle (all of it looks like drifting), softly up to max.
+     */
+    yaw: { share: 0.4, max: 0.22, easing: 0.12 },
+    /** Body roll (wheels stay upright) per rad/s of yaw rate. outward: false = lean into the turn (v1). */
+    roll: { perYawRate: 0.2, max: 0.08, easing: 0.1, outward: true },
+    /**
+     * Front wheel angle in radians: where the player steers, plus the swing of the nose (so they
+     * counter-steer as the car straightens out).
+     */
+    wheelSteer: { max: (12 * Math.PI) / 180, perYawRate: 0.15, easing: 0.075 },
   },
   resetDuration: 1, // seconds
 };
