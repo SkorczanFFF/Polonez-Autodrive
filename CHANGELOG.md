@@ -30,7 +30,7 @@ lets you recolor and tweak everything.
 
 ## [Unreleased]
 
-Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
+Everything after the 2.0 parity rebuild.
 
 ### Added
 
@@ -75,6 +75,10 @@ Everything after the 2.0 parity rebuild, on the `vite-three-refactor` branch.
   yet.
 - **R** randomizes all the scene colors, like the side panel's "Randomize all" button, in the
   menu and mid-game alike (the button says "Randomize all (R)").
+- A GITHUB link to the source code in the menu's bottom right corner (under the buttons on
+  phones); it hides with the menu (**H**).
+- Vercel Web Analytics (cookieless page views) on the Vercel deployment; the GitHub Pages one
+  sends nothing.
 
 ### Changed
 

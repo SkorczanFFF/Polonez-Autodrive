@@ -665,6 +665,33 @@ kbd {
   display: inline;
 }
 
+/* source code link: plain text in the bottom right corner of the menu, lit on hover */
+.hud__source {
+  position: fixed;
+  right: calc(var(--corner-gap) + var(--safe-right));
+  bottom: calc(var(--corner-gap) + var(--safe-bottom));
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  color: var(--aqua);
+  text-decoration: none;
+  text-shadow: 2px 2px 0 var(--ui-deep);
+  opacity: 0.6;
+  pointer-events: auto;
+  transition:
+    opacity 0.3s,
+    visibility 0.3s,
+    text-shadow 0.3s;
+}
+
+.hud__source:hover,
+.hud__source:focus-visible {
+  outline: none;
+  opacity: 1;
+  text-shadow:
+    2px 2px 0 var(--ui-deep),
+    0 0 8px var(--aqua);
+}
+
 /* top-left hints (free ride, countdown, playing) */
 .hud__corner {
   position: fixed;
@@ -1484,6 +1511,12 @@ kbd {
 /* the logo starts below the HIDE toggle in the corner */
 [data-screen="narrow"] .hud__menu {
   padding-top: calc(64px + var(--safe-top));
+}
+
+/* the source link goes under the buttons: in the corner the stacked buttons would reach it */
+[data-screen="narrow"] .hud__source {
+  position: static;
+  margin-top: 12px;
 }
 
 /* buttons stack: side by side they run off the screen */

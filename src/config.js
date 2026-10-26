@@ -662,6 +662,7 @@ export const TEXT = {
   menuHide: "Hide menu",
   menuShow: "Show menu",
   hide: "HIDE",
+  source: "SkorczanFFF",
   gui: {
     title: "Controls",
     color: "Color",

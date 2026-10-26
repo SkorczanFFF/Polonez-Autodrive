@@ -20,6 +20,7 @@ import { createHud } from "./ui/hud.js";
 import { createCrt } from "./ui/crt.js";
 import { createSceneGui } from "./ui/gui.js";
 import { createDevStats } from "./ui/devstats.js";
+import { inject } from "@vercel/analytics";
 
 async function main() {
   // Match the v1 (r116) look: colors are used as-is and the output stays linear (ui/color.js and
@@ -92,5 +93,8 @@ async function main() {
       },
     });
 }
+
+// Page views, also of visits where the scene fails to start (vite.config.js sets the flag).
+if (import.meta.env.VERCEL) inject();
 
 main().catch((error) => console.error("Failed to initialize application:", error));

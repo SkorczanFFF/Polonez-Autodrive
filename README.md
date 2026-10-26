@@ -88,6 +88,7 @@ tests/             Vitest unit tests
   - The horizon range in front of the sun is static and parted like a sea for the road, so the striped sun shows in the pass.
   - The side panel (**Mountains**) sets their height, roughness and where they start, and the seed: a new landscape on every visit, or **New landscape**. The line style (triangles or squares) is `MOUNTAINS.lines` in `src/config.js`.
 - The road starts lined with palms and rocks; they come from far ahead (`SPAWN` in `src/config.js`) and fade in and out.
+- The Vercel deployment counts page views with Vercel Web Analytics (enabled only in Vercel builds, see `vite.config.js`); local and GitHub Pages builds load nothing.
 
 ---
 
